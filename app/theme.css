@@ -5,32 +5,32 @@
 @tailwind utilities;
 
 :root {
-  --app-background: #ffffff;
-  --app-foreground: #111111;
-  --app-foreground-muted: #58585c;
-  --app-accent: #0052ff;
-  --app-accent-hover: #0047e1;
-  --app-accent-active: #003db8;
-  --app-accent-light: #e6edff;
-  --app-gray: #f5f5f5;
-  --app-gray-dark: #e0e0e0;
-  --app-card-bg: rgba(255, 255, 255, 0.4);
-  --app-card-border: rgba(0, 0, 0, 0.1);
+  --app-background: #4c6fff;
+  --app-foreground: #ffffff;
+  --app-foreground-muted: rgba(255, 255, 255, 0.8);
+  --app-accent: #ffffff;
+  --app-accent-hover: rgba(255, 255, 255, 0.9);
+  --app-accent-active: rgba(255, 255, 255, 0.8);
+  --app-accent-light: rgba(255, 255, 255, 0.1);
+  --app-gray: rgba(255, 255, 255, 0.1);
+  --app-gray-dark: rgba(255, 255, 255, 0.2);
+  --app-card-bg: rgba(255, 255, 255, 0.1);
+  --app-card-border: rgba(255, 255, 255, 0.2);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --app-background: #111111;
+    --app-background: #4c6fff;
     --app-foreground: #ffffff;
-    --app-foreground-muted: #c8c8d1;
-    --app-accent: #0052ff;
-    --app-accent-hover: #0047e1;
-    --app-accent-active: #003db8;
-    --app-accent-light: #1e293b;
-    --app-gray: #1e1e1e;
-    --app-gray-dark: #2e2e2e;
-    --app-card-bg: rgba(17, 17, 17, 0.4);
-    --app-card-border: rgba(115, 115, 115, 0.5);
+    --app-foreground-muted: rgba(255, 255, 255, 0.8);
+    --app-accent: #ffffff;
+    --app-accent-hover: rgba(255, 255, 255, 0.9);
+    --app-accent-active: rgba(255, 255, 255, 0.8);
+    --app-accent-light: rgba(255, 255, 255, 0.1);
+    --app-gray: rgba(255, 255, 255, 0.1);
+    --app-gray-dark: rgba(255, 255, 255, 0.2);
+    --app-card-bg: rgba(255, 255, 255, 0.1);
+    --app-card-border: rgba(255, 255, 255, 0.2);
   }
 }
 
