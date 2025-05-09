@@ -5,8 +5,10 @@ const POOLS_STORAGE_KEY = "pools";
 // Helper function to get pools from local storage
 const getStoredPools = (): Pool[] => {
   if (typeof window === "undefined") {
+    // On server, return empty array to avoid hydration issues
     return [];
   }
+  
   const storedPools = localStorage.getItem(POOLS_STORAGE_KEY);
   return storedPools ? JSON.parse(storedPools) : [];
 };
@@ -19,10 +21,52 @@ const saveStoredPools = (pools: Pool[]): void => {
   localStorage.setItem(POOLS_STORAGE_KEY, JSON.stringify(pools));
 };
 
+// Initialize empty pools storage if it doesn't exist
+export const initializePoolsStorage = (): void => {
+  if (typeof window === "undefined") return;
+  
+  const storedPools = localStorage.getItem(POOLS_STORAGE_KEY);
+  if (!storedPools) {
+    saveStoredPools([]);
+  }
+};
+
+// Helper to properly format image paths
+const formatImagePath = (imagePath: string): string => {
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  
+  // If it's a template format (template-1, template-2, etc.)
+  if (imagePath.startsWith('template-')) {
+    // Extract the template number
+    const templateMatch = imagePath.match(/template-(\d+)/);
+    if (templateMatch) {
+      const templateNum = parseInt(templateMatch[1], 10);
+      // Use the new image path format
+      return `/images/image${templateNum}.png`;
+    }
+    
+    // Fallback to old path format if parsing fails
+    return `/images/${imagePath}.jpg`;
+  }
+  
+  // Ensure path starts with slash
+  return imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+};
+
 export const createPool = (poolData: Omit<Pool, "id" | "createdAt">): Pool => {
   const pools = getStoredPools();
-  const newPool: Pool = {
+  
+  // Format the image path if provided
+  const formattedData = {
     ...poolData,
+    selectedImage: poolData.selectedImage ? formatImagePath(poolData.selectedImage) : poolData.selectedImage
+  };
+  
+  const newPool: Pool = {
+    ...formattedData,
     id: crypto.randomUUID(),
     createdAt: new Date(),
   };
@@ -49,7 +93,13 @@ export const updatePool = (
   if (poolIndex === -1) {
     return undefined;
   }
-  pools[poolIndex] = { ...pools[poolIndex], ...updates };
+  
+  // Format the image path if it's being updated
+  const formattedUpdates = updates.selectedImage 
+    ? { ...updates, selectedImage: formatImagePath(updates.selectedImage) }
+    : updates;
+    
+  pools[poolIndex] = { ...pools[poolIndex], ...formattedUpdates };
   saveStoredPools(pools);
   return pools[poolIndex];
 };
@@ -63,4 +113,10 @@ export const deletePool = (id: string): boolean => {
     return true;
   }
   return false;
+};
+
+// Clear all pools (for testing purposes)
+export const clearAllPools = (): void => {
+  if (typeof window === "undefined") return;
+  saveStoredPools([]);
 };

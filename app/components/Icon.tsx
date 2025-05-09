@@ -1,7 +1,7 @@
-import { LucideIcon, RefreshCw, User, BookOpen, Lock } from "lucide-react";
+import { LucideIcon, RefreshCw, User, Droplet, Lock, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface IconProps {
-  name: "refresh" | "user" | "droplet" | "lock";
+  name: "refresh" | "user" | "droplet" | "lock" | "chevron-left" | "chevron-right";
   className?: string;
 }
 
@@ -9,8 +9,10 @@ export function Icon({ name, className = "" }: IconProps) {
   const icons: Record<IconProps["name"], LucideIcon> = {
     refresh: RefreshCw,
     user: User,
-    droplet: BookOpen,
+    droplet: Droplet,
     lock: Lock,
+    "chevron-left": ChevronLeft,
+    "chevron-right": ChevronRight,
   };
 
   const IconComponent = icons[name];

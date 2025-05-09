@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 interface ChooseImageStepProps {
   onNext: (data: { selectedImage: string }) => void;
@@ -29,18 +30,26 @@ export function ChooseImageStep({ onNext }: ChooseImageStepProps) {
       </p>
 
       <div className="grid grid-cols-4 gap-4 mb-8 w-full max-w-md">
-        {imageTemplates.map((template) => (
-          <button
-            key={template}
-            onClick={() => handleImageSelect(template)}
-            className={`aspect-video bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors
-                        ${selectedImage === template ? "ring-2 ring-blue-500 ring-offset-2" : ""}`}
-            aria-label={`Select image ${template}`}
-          >
-            {/* Placeholder for image content or name */}
-            {/* <span className="text-xs text-gray-500">{template}</span> */}
-          </button>
-        ))}
+        {imageTemplates.map((template, index) => {
+          const imageNumber = index + 1;
+          return (
+            <button
+              key={template}
+              onClick={() => handleImageSelect(template)}
+              className={`aspect-video bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors overflow-hidden
+                          ${selectedImage === template ? "ring-2 ring-blue-500 ring-offset-2" : ""}`}
+              aria-label={`Select image ${template}`}
+            >
+              <div className="relative w-full h-full">
+                <img
+                  src={`/images/image${imageNumber}.png`}
+                  alt={`Template ${imageNumber}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       <button

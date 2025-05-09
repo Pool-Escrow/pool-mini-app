@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useCallback, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useMemo, useState, forwardRef } from "react";
 import { useAccount } from "wagmi";
 import {
   Transaction,
@@ -28,7 +28,7 @@ type ButtonProps = {
   icon?: ReactNode;
 }
 
-export function Button({
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   children,
   variant = "primary",
   size = "md",
@@ -37,7 +37,7 @@ export function Button({
   disabled = false,
   type = "button",
   icon,
-}: ButtonProps) {
+}, ref) => {
   const baseClasses =
     "inline-flex items-center justify-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0052FF] disabled:opacity-50 disabled:pointer-events-none";
 
@@ -60,6 +60,7 @@ export function Button({
 
   return (
     <button
+      ref={ref}
       type={type}
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
       onClick={onClick}
@@ -69,7 +70,9 @@ export function Button({
       {children}
     </button>
   );
-}
+});
+
+Button.displayName = "Button";
 
 type CardProps = {
   title?: string;

@@ -6,6 +6,10 @@ const nextConfig = {
     config.externals.push("pino-pretty", "lokijs", "encoding");
     return config;
   },
+  // Add image domain configuration to allow randomuser.me images
+  images: {
+    domains: ['randomuser.me'],
+  },
 };
 
 export default nextConfig;

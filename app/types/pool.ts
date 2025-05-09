@@ -7,4 +7,9 @@ export interface Pool {
   softCap: number; // Assuming this is a numerical value
   rulesLink: string;
   createdAt: Date;
+  registrations: number;
+  startTime: Date;
+  registrationStart: string;
+  registrationEnd: string;
+  registrationEnabled: boolean;
 }
