@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
     // },
     // Add image domain configuration to allow randomuser.me images
     images: {
-        domains: ['randomuser.me'],
+        remotePatterns: [{ hostname: 'randomuser.me' }],
     },
     serverExternalPackages: ['pino-pretty', 'lokijs', 'encoding'],
     devIndicators: false,
