@@ -5,7 +5,7 @@ import { NameDescriptionStep } from '@/components/steps/NameDescriptionStep'
 import { PoolConfigStep } from '@/components/steps/PoolConfigStep'
 import { RegistrationTimeStep } from '@/components/steps/RegistrationTimeStep'
 import { ReviewAndCreateStep } from '@/components/steps/ReviewAndCreateStep'
-import { Pool } from '@/types/pool'
+import type { Pool } from '@/types/pool'
 
 export type StepData =
     | { selectedImage: string }
