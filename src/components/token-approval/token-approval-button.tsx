@@ -45,14 +45,14 @@ export const TokenApprovalButton: React.FC<TokenApprovalButtonProps> = ({
     const [internalTxHash, setInternalTxHash] = useState<Address | undefined>(undefined)
     const [transactionState, setTransactionState] = useState<TransactionState>('idle')
 
-    const {
-        allowance,
-        isLoadingAllowance,
-        refetch: refetchAllowance,
-    } = useTokenAllowance(tokenAddress, ownerAddress, spenderAddress, tokenDecimals)
+    const { allowance, isLoadingAllowance, refetchAllowance } = useTokenAllowance(
+        tokenAddress,
+        ownerAddress,
+        spenderAddress,
+        tokenDecimals,
+    )
 
-    const { approveToken, isApprovingToken, approveTokenHash, approveTokenError, isApproveTokenSuccess } =
-        useApproveToken(tokenDecimals)
+    const { approveToken, isApprovingToken, approveTokenHash, approveTokenError } = useApproveToken(tokenDecimals)
 
     const requiredAmountBigInt = useMemo(() => {
         try {
@@ -91,31 +91,28 @@ export const TokenApprovalButton: React.FC<TokenApprovalButtonProps> = ({
 
     // Effect for final transaction success/error based on hook state
     useEffect(() => {
-        if (isApproveTokenSuccess && internalTxHash) {
+        // Check for success: hash is present, no error, and no longer actively approving
+        if (approveTokenHash && !approveTokenError && !isApprovingToken && transactionState === 'pendingConfirmation') {
             setTransactionState('success')
-            refetchAllowance()
-            onApprovalSuccess?.(internalTxHash)
+            void refetchAllowance() // Ensured refetchAllowance is called, added void for potential promise return
+            onApprovalSuccess?.(approveTokenHash)
         } else if (approveTokenError) {
-            // approveTokenError is BlockchainErrorMessageProps | null
             setTransactionState('error')
             setInternalTxHash(undefined)
-            // onApprovalError is now called in handleApprove's catch block
         }
         // Reset to idle if no longer approving, no hash, and no error (e.g., user cancelled before submitting to wallet)
+        // This condition might need review based on exact state transitions desired
         if (!isApprovingToken && !approveTokenHash && transactionState === 'submitting' && !approveTokenError) {
             setTransactionState('idle')
         }
     }, [
-        isApproveTokenSuccess,
-        approveTokenError, // This is BlockchainErrorMessageProps
-        internalTxHash,
+        approveTokenError,
+        internalTxHash, // Keep internalTxHash if used for other logic, but success is now tied to approveTokenHash
         refetchAllowance,
         onApprovalSuccess,
-        // onApprovalError, // Removed from here
         isApprovingToken,
         approveTokenHash,
         transactionState,
-        // rawApproveTokenError, // Not directly used for onApprovalError callback here anymore
     ])
 
     const handleApprove = async () => {
@@ -173,7 +170,9 @@ export const TokenApprovalButton: React.FC<TokenApprovalButtonProps> = ({
     return (
         <>
             <Button
-                onClick={handleApprove}
+                onClick={() => {
+                    void handleApprove()
+                }}
                 disabled={
                     transactionState === 'submitting' ||
                     transactionState === 'pendingConfirmation' ||
