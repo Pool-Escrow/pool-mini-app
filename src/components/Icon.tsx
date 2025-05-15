@@ -1,4 +1,5 @@
-import { LucideIcon, RefreshCw, User, Droplet, Lock, ChevronLeft, ChevronRight } from "lucide-react";
+import type { LucideIcon} from "lucide-react";
+import { RefreshCw, User, Droplet, Lock, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface IconProps {
   name: "refresh" | "user" | "droplet" | "lock" | "chevron-left" | "chevron-right";

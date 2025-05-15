@@ -1,7 +1,7 @@
 'use client'
 
-import { Giveaway } from '@/components/GiveawayWizard'
-import { Pool } from '@/types/pool'
+import type { Giveaway } from '@/components/GiveawayWizard'
+import type { Pool } from '@/types/pool'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -12,21 +12,23 @@ interface PoolListProps {
 
 export function PoolList({ pools, giveaways = [] }: PoolListProps) {
     // Format pools for display
-    const formattedPools = pools.map(pool => ({
-        id: pool.id,
-        name: pool.name,
-        registeredCount: pool.registrations || 0,
-        maxParticipants: pool.softCap || 100,
-        startTime: new Date(pool.startTime),
-        image: pool.selectedImage,
-        isGiveaway: false,
-        data: pool,
-        amount: pool.buyIn,
-    }))
+    const formattedPools = pools.map(pool => {
+        return {
+            id: pool.id,
+            name: pool.name,
+            registeredCount: pool.registrations ?? 0,
+            maxParticipants: pool.maxEntries,
+            startTime: new Date(pool.startTime),
+            image: pool.selectedImage,
+            isGiveaway: false,
+            data: pool,
+            amount: pool.depositAmount,
+        }
+    })
 
     // Format giveaways for display
     const formattedGiveaways = giveaways.map(giveaway => ({
-        id: giveaway.id || '',
+        id: giveaway.id ?? '',
         name: 'Giveaway',
         registeredCount: 0, // This could be updated if giveaways track registrations
         maxParticipants: giveaway.participantLimit,
@@ -43,11 +45,11 @@ export function PoolList({ pools, giveaways = [] }: PoolListProps) {
     // Sort by most recent creation date
     allEvents.sort((a, b) => {
         const dateA = a.isGiveaway
-            ? new Date((a.data as Giveaway).createdAt || '')
+            ? new Date((a.data as Giveaway).createdAt ?? '')
             : new Date((a.data as Pool).createdAt)
 
         const dateB = b.isGiveaway
-            ? new Date((b.data as Giveaway).createdAt || '')
+            ? new Date((b.data as Giveaway).createdAt ?? '')
             : new Date((b.data as Pool).createdAt)
 
         return dateB.getTime() - dateA.getTime()
@@ -148,7 +150,8 @@ export function PoolList({ pools, giveaways = [] }: PoolListProps) {
                                                 strokeLinecap='round'
                                                 strokeLinejoin='round'
                                                 strokeWidth='2'
-                                                d='M9 5l7 7-7 7'></path>
+                                                d='M9 5l7 7-7 7'
+                                            />
                                         </svg>
                                     </div>
                                 </div>
@@ -222,7 +225,8 @@ export function PoolList({ pools, giveaways = [] }: PoolListProps) {
                                                     strokeLinecap='round'
                                                     strokeLinejoin='round'
                                                     strokeWidth='2'
-                                                    d='M9 5l7 7-7 7'></path>
+                                                    d='M9 5l7 7-7 7'
+                                                />
                                             </svg>
                                         </div>
                                     </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { PoolCard } from '@/components/PoolCard'
-import { Pool } from '@/types/pool'
+import type { Pool } from '@/types/pool'
 
 interface PoolShowcaseProps {
     title?: string

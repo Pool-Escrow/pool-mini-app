@@ -1,6 +1,6 @@
 'use client'
 
-import { Pool } from '@/types/pool'
+import type { Pool } from '@/types/pool'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -28,12 +28,12 @@ const getTemplateColor = (templateStr: string): string => {
     let templateNum = 1
 
     if (templateStr.includes('template-')) {
-        const templateMatch = templateStr.match(/template-(\d+)/)
+        const templateMatch = /template-(\d+)/.exec(templateStr)
         if (templateMatch) {
             templateNum = parseInt(templateMatch[1], 10)
         }
     } else if (templateStr.includes('/images/image')) {
-        const templateMatch = templateStr.match(/\/images\/image(\d+)\.png/)
+        const templateMatch = /\/images\/image(\d+)\.png/.exec(templateStr)
         if (templateMatch) {
             templateNum = parseInt(templateMatch[1], 10)
         }
@@ -59,7 +59,8 @@ export function PoolCard({ pool, creatorName = 'Anonymous', creatorAvatar = '', 
                             strokeLinecap='round'
                             strokeLinejoin='round'
                             strokeWidth='1'
-                            d='M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z'></path>
+                            d='M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z'
+                        />
                     </svg>
                 </div>
             )
@@ -71,10 +72,10 @@ export function PoolCard({ pool, creatorName = 'Anonymous', creatorAvatar = '', 
         // Extract template number for the fallback
         let templateNum = '?'
         if (pool.selectedImage.includes('template-')) {
-            const match = pool.selectedImage.match(/template-(\d+)/)
+            const match = /template-(\d+)/.exec(pool.selectedImage)
             if (match) templateNum = match[1]
         } else if (pool.selectedImage.includes('/images/image')) {
-            const match = pool.selectedImage.match(/\/images\/image(\d+)\.png/)
+            const match = /\/images\/image(\d+)\.png/.exec(pool.selectedImage)
             if (match) templateNum = match[1]
         }
 
@@ -125,9 +126,9 @@ export function PoolCard({ pool, creatorName = 'Anonymous', creatorAvatar = '', 
                     {renderPoolImage()}
 
                     {/* Buy-in badge */}
-                    {pool.buyIn > 0 && (
+                    {pool.depositAmount > 0 && (
                         <div className='absolute top-3 right-3 rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-gray-900 shadow-sm backdrop-blur-sm'>
-                            Buy-in: ${`${pool.buyIn}`}
+                            Buy-in: ${`${pool.depositAmount}`}
                         </div>
                     )}
                 </div>
@@ -136,9 +137,9 @@ export function PoolCard({ pool, creatorName = 'Anonymous', creatorAvatar = '', 
                 <div className='p-4'>
                     <div className='mb-2 flex items-start justify-between'>
                         <h3 className='mr-2 truncate font-bold text-gray-900'>{pool.name}</h3>
-                        {pool.softCap > 0 && (
+                        {pool.maxEntries > 0 && (
                             <span className='rounded-full bg-blue-50 px-2 py-1 text-xs text-blue-600'>
-                                Cap: {pool.softCap}
+                                Cap: {pool.maxEntries}
                             </span>
                         )}
                     </div>

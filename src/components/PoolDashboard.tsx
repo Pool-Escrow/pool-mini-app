@@ -10,7 +10,7 @@ import {
     isUserRegisteredForPool,
     registerUserForPool,
 } from '@/lib/registrationStorage'
-import { Pool } from '@/types/pool'
+import type { Pool } from '@/types/pool'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
@@ -34,6 +34,9 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
     const [showAdminMenu, setShowAdminMenu] = useState(false)
     const adminMenuRef = useRef<HTMLDivElement>(null)
     const [refreshKey, setRefreshKey] = useState(0)
+
+    // Calculate participant count
+    const participantCount: number = pool.registrations ?? pool.participants?.length ?? 0
 
     // Initialize registrations storage and check user status
     useEffect(() => {
@@ -156,18 +159,18 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
     }
 
     const getRegistrationButtonText = () => {
-        if (pool.buyIn > 0) {
-            return `Register for $${pool.buyIn} USDC`
+        if (pool.depositAmount > 0) {
+            return `Register for $${pool.depositAmount} USDC`
         }
         return 'Register'
     }
 
     // Calculate progress percentage for the progress bar
     const getProgressPercentage = () => {
-        if (pool.softCap === 0) return 0
+        // if (pool.softCap === 0) return 0
         // Calculate total amount raised based on registrations and buy-in
-        const totalRaised = pool.registrations * pool.buyIn
-        const percentage = (totalRaised / pool.softCap) * 100
+        const totalRaised = pool.registrations * (pool.depositAmount ?? 0)
+        const percentage = (totalRaised / (pool.maxEntries * pool.depositAmount)) * 100
         return Math.min(percentage, 100) // Cap at 100%
     }
 
@@ -190,6 +193,9 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
         }
     }, [])
 
+    // Calculate softCap for progress bar logic
+    const softCap = pool.maxEntries * pool.depositAmount
+
     return (
         <div className='flex min-h-screen flex-col bg-white'>
             {/* Header with back button */}
@@ -201,7 +207,7 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
                         stroke='currentColor'
                         viewBox='0 0 24 24'
                         xmlns='http://www.w3.org/2000/svg'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M15 19l-7-7 7-7'></path>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M15 19l-7-7 7-7' />
                     </svg>
                     Back
                 </Link>
@@ -230,10 +236,10 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
                                 let bgClass = 'bg-gradient-to-r from-blue-100 to-blue-300'
 
                                 if (pool.selectedImage.includes('template-')) {
-                                    const match = pool.selectedImage.match(/template-(\d+)/)
+                                    const match = /template-(\d+)/.exec(pool.selectedImage)
                                     if (match) templateNum = match[1]
                                 } else if (pool.selectedImage.includes('/images/image')) {
-                                    const match = pool.selectedImage.match(/\/images\/image(\d+)\.png/)
+                                    const match = /\/images\/image(\d+)\.png/.exec(pool.selectedImage)
                                     if (match) {
                                         templateNum = match[1]
 
@@ -333,11 +339,11 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
             <div className='grid grid-cols-2 gap-x-4 gap-y-2 bg-white px-4 pb-4 text-sm text-gray-700 sm:grid-cols-4'>
                 <div>
                     <span className='font-medium text-gray-500'>Soft Cap:</span>{' '}
-                    {pool.softCap > 0 ? pool.softCap : 'N/A'}
+                    {pool.maxEntries > 0 ? formatCurrency(pool.maxEntries * pool.depositAmount) : 'N/A'}
                 </div>
                 <div>
                     <span className='font-medium text-gray-500'>Buy-in:</span>{' '}
-                    {pool.buyIn > 0 ? formatCurrency(pool.buyIn) : 'Free'}
+                    {pool.depositAmount > 0 ? formatCurrency(pool.depositAmount) : 'Free'}
                 </div>
                 <div className='col-span-2 sm:col-span-1'>
                     <span className='font-medium text-gray-500'>Status:</span>{' '}
@@ -349,11 +355,9 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
             </div>
 
             {/* Progress Bar Section */}
-            {pool.softCap > 0 && (
+            {softCap > 0 && (
                 <div className='mt-2 h-2 w-full rounded-full bg-gray-200'>
-                    <div
-                        className='h-full rounded-full bg-blue-500'
-                        style={{ width: `${getProgressPercentage()}%` }}></div>
+                    <div className='h-full rounded-full bg-blue-500' style={{ width: `${getProgressPercentage()}%` }} />
                 </div>
             )}
 
@@ -367,7 +371,7 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
                                 ? 'border-blue-500 text-blue-600'
                                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                         }`}>
-                        Participants ({pool.registrations ?? pool.participants?.length ?? 0})
+                        Participants ({participantCount})
                     </button>
                     <button
                         onClick={() => setActiveTab('description')}
@@ -403,11 +407,11 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
 
                         <div className='mt-6'>
                             <h3 className='text-md mb-2 font-bold'>Buy-In</h3>
-                            <p>${pool.buyIn} USD</p>
+                            <p>${pool.depositAmount} USD</p>
                         </div>
                     </div>
                 ) : (
-                    <ParticipantsList key={refreshKey} poolId={pool.id} poolAmount={pool.buyIn} />
+                    <ParticipantsList key={refreshKey} poolId={pool.id} poolAmount={pool.depositAmount} />
                 )}
             </div>
 

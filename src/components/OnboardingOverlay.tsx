@@ -1,6 +1,5 @@
-'use client'
-
-import { useState, useEffect, ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 
 interface OnboardingOverlayProps {
     isOpen: boolean
@@ -64,7 +63,7 @@ export function OnboardingOverlay({ isOpen, onClose, screens, onComplete }: Onbo
                             strokeWidth='2'
                             viewBox='0 0 24 24'
                             stroke='currentColor'>
-                            <path d='M6 18L18 6M6 6l12 12'></path>
+                            <path d='M6 18L18 6M6 6l12 12' />
                         </svg>
                     </button>
                 </div>

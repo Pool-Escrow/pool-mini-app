@@ -1,5 +1,3 @@
-'use client'
-
 import { Button } from '@/components/DemoComponents'
 import Image from 'next/image'
 import { useCallback, useEffect, useState } from 'react'
@@ -67,7 +65,7 @@ export function PayoutForm({ participants, totalAmount, onSubmit, onCancel }: Pa
         setIsEqualDistribution(false)
 
         // Calculate remaining amount
-        const totalPayout = updatedParticipants.reduce((sum, p) => sum + (p.payoutAmount || 0), 0)
+        const totalPayout = updatedParticipants.reduce((sum, p) => sum + (p.payoutAmount ?? 0), 0)
         setRemainingAmount(+(totalAmount - totalPayout).toFixed(2))
     }
 
@@ -76,7 +74,7 @@ export function PayoutForm({ participants, totalAmount, onSubmit, onCancel }: Pa
     }
 
     const getTotalPayoutAmount = () => {
-        return payoutParticipants.reduce((sum, p) => sum + (p.payoutAmount || 0), 0)
+        return payoutParticipants.reduce((sum, p) => sum + (p.payoutAmount ?? 0), 0)
     }
 
     const isFormValid = () => {
@@ -151,7 +149,8 @@ export function PayoutForm({ participants, totalAmount, onSubmit, onCancel }: Pa
                                                                 strokeLinecap='round'
                                                                 strokeLinejoin='round'
                                                                 strokeWidth='2'
-                                                                d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'></path>
+                                                                d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
+                                                            />
                                                         </svg>
                                                     )}
                                                 </div>
@@ -174,7 +173,7 @@ export function PayoutForm({ participants, totalAmount, onSubmit, onCancel }: Pa
                                                 </div>
                                                 <input
                                                     type='text'
-                                                    value={participant.payoutAmount?.toString() || ''}
+                                                    value={participant.payoutAmount?.toString() ?? ''}
                                                     onChange={e => handlePayoutChange(participant.id, e.target.value)}
                                                     className='block w-32 rounded-md border border-gray-300 py-2 pr-3 pl-8 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm'
                                                     placeholder='0.00'
