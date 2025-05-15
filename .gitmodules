@@ -1,0 +1,4 @@
+[submodule "contracts"]
+	path = contracts
+	url = https://github.com/Pool-Escrow/Pool-Contracts.git
+	branch = frame
