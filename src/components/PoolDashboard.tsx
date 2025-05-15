@@ -283,105 +283,100 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
                 )}
             </div>
 
-            {/* Event Details with Admin Menu */}
-            <div className='p-4'>
-                <div className='flex items-start justify-between'>
-                    <h1 className='text-2xl font-bold text-gray-900'>{pool.name}</h1>
+            {/* Pool Title and Admin Menu */}
+            <div className='flex items-center justify-between bg-white p-4'>
+                <h1 className='truncate text-2xl font-bold text-gray-900'>{pool.name}</h1>
+                {isPoolAdmin && (
+                    <div className='relative' ref={adminMenuRef}>
+                        <button
+                            onClick={() => setShowAdminMenu(!showAdminMenu)}
+                            className='rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700'>
+                            <svg
+                                className='h-6 w-6'
+                                fill='currentColor'
+                                viewBox='0 0 24 24'
+                                xmlns='http://www.w3.org/2000/svg'>
+                                <circle cx='5' cy='12' r='2' />
+                                <circle cx='12' cy='12' r='2' />
+                                <circle cx='19' cy='12' r='2' />
+                            </svg>
+                        </button>
 
-                    {/* Admin menu (3 dots) for pool organizers - Horizontal dots */}
-                    {isPoolAdmin && (
-                        <div className='relative' ref={adminMenuRef}>
-                            <button
-                                onClick={() => setShowAdminMenu(!showAdminMenu)}
-                                className='p-2 text-gray-600 hover:text-gray-900'
-                                aria-label='Pool management options'>
-                                <svg
-                                    className='h-6 w-6'
-                                    fill='currentColor'
-                                    viewBox='0 0 24 24'
-                                    xmlns='http://www.w3.org/2000/svg'>
-                                    <circle cx='5' cy='12' r='2' />
-                                    <circle cx='12' cy='12' r='2' />
-                                    <circle cx='19' cy='12' r='2' />
-                                </svg>
-                            </button>
-
-                            {/* Dropdown menu */}
-                            {showAdminMenu && (
-                                <div className='absolute right-0 z-10 mt-2 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg'>
-                                    <button
-                                        className='w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100'
-                                        onClick={() => {
-                                            alert(
-                                                'Prize distribution feature will be enabled when there are participants',
-                                            )
+                        {/* Dropdown menu */}
+                        {showAdminMenu && (
+                            <div className='absolute right-0 z-10 mt-2 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg'>
+                                <button
+                                    className='w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100'
+                                    onClick={() => {
+                                        alert('Prize distribution feature will be enabled when there are participants')
+                                        setShowAdminMenu(false)
+                                    }}>
+                                    Distribute Prize Equally
+                                </button>
+                                <button
+                                    className='w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100'
+                                    onClick={() => {
+                                        if (window.confirm('Are you sure you want to cancel this event?')) {
+                                            alert('Event cancelled')
                                             setShowAdminMenu(false)
-                                        }}>
-                                        Distribute Prize Equally
-                                    </button>
-                                    <button
-                                        className='w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100'
-                                        onClick={() => {
-                                            if (window.confirm('Are you sure you want to cancel this event?')) {
-                                                alert('Event cancelled')
-                                                setShowAdminMenu(false)
-                                            }
-                                        }}>
-                                        Cancel Event
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-                <p className='text-gray-600'>{formatPoolTime()}</p>
-
-                <div className='mt-4 flex items-center justify-between'>
-                    <div>
-                        <span className='font-bold text-gray-900'>{formatCurrency(pool.buyIn)} USDC</span>
+                                        }
+                                    }}>
+                                    Cancel Event
+                                </button>
+                            </div>
+                        )}
                     </div>
-                    <div>
-                        <span className='text-gray-600'>Goal of {formatCurrency(pool.softCap)} Prize Pool</span>
-                    </div>
-                </div>
+                )}
+            </div>
 
-                {/* Progress Bar */}
+            {/* Pool Details: Soft Cap, Buy-in, Timing, Status */}
+            <div className='grid grid-cols-2 gap-x-4 gap-y-2 bg-white px-4 pb-4 text-sm text-gray-700 sm:grid-cols-4'>
+                <div>
+                    <span className='font-medium text-gray-500'>Soft Cap:</span>{' '}
+                    {pool.softCap > 0 ? pool.softCap : 'N/A'}
+                </div>
+                <div>
+                    <span className='font-medium text-gray-500'>Buy-in:</span>{' '}
+                    {pool.buyIn > 0 ? formatCurrency(pool.buyIn) : 'Free'}
+                </div>
+                <div className='col-span-2 sm:col-span-1'>
+                    <span className='font-medium text-gray-500'>Status:</span>{' '}
+                    {pool.status ? pool.status.charAt(0).toUpperCase() + pool.status.slice(1) : 'Unknown'}
+                </div>
+                <div className='col-span-2 sm:col-span-1'>
+                    <span className='font-medium text-gray-500'>Timing:</span> {formatPoolTime()}
+                </div>
+            </div>
+
+            {/* Progress Bar Section */}
+            {pool.softCap > 0 && (
                 <div className='mt-2 h-2 w-full rounded-full bg-gray-200'>
                     <div
                         className='h-full rounded-full bg-blue-500'
                         style={{ width: `${getProgressPercentage()}%` }}></div>
                 </div>
-            </div>
-
-            {/* Admin Badge (if user is admin for this pool) */}
-            {isPoolAdmin && (
-                <div className='mx-4 mb-2'>
-                    <span className='inline-block rounded-md bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800'>
-                        You are the organizer
-                    </span>
-                </div>
             )}
 
-            {/* Tabs */}
-            <div className='border-b border-gray-200'>
-                <nav className='flex'>
+            {/* Tabs: Description and Participants */}
+            <div className='border-b border-gray-200 bg-white px-4'>
+                <nav className='-mb-px flex space-x-6' aria-label='Tabs'>
                     <button
-                        className={`px-4 py-3 text-sm font-medium ${
+                        onClick={() => setActiveTab('participants')}
+                        className={`border-b-2 px-1 py-3 text-sm font-medium whitespace-nowrap ${
                             activeTab === 'participants'
-                                ? 'border-b-2 border-blue-500 text-blue-600'
-                                : 'text-gray-500 hover:text-gray-700'
-                        }`}
-                        onClick={() => setActiveTab('participants')}>
-                        Participants
+                                ? 'border-blue-500 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                        }`}>
+                        Participants ({pool.registrations ?? pool.participants?.length ?? 0})
                     </button>
                     <button
-                        className={`px-4 py-3 text-sm font-medium ${
+                        onClick={() => setActiveTab('description')}
+                        className={`border-b-2 px-1 py-3 text-sm font-medium whitespace-nowrap ${
                             activeTab === 'description'
-                                ? 'border-b-2 border-blue-500 text-blue-600'
-                                : 'text-gray-500 hover:text-gray-700'
-                        }`}
-                        onClick={() => setActiveTab('description')}>
-                        Description
+                                ? 'border-blue-500 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                        }`}>
+                        Description & Rules
                     </button>
                 </nav>
             </div>
@@ -412,7 +407,7 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
                         </div>
                     </div>
                 ) : (
-                    <ParticipantsList poolId={pool.id} isAdmin={isPoolAdmin} poolAmount={pool.buyIn} key={refreshKey} />
+                    <ParticipantsList key={refreshKey} poolId={pool.id} poolAmount={pool.buyIn} />
                 )}
             </div>
 
