@@ -1,26 +1,21 @@
-"use client";
+'use client'
 
-import { Icon } from "@/app/components/Icon";
-import { POOL_TEMPLATES, PoolTemplate } from "@/app/lib/poolTemplates";
+// import { POOL_TEMPLATES } from "@/lib/poolTemplates";
 
 interface TemplateSelectionStepProps {
-  onTemplateSelect: (templateId: string) => void;
+    onTemplateSelect: (templateId: string) => void
 }
 
-export function TemplateSelectionStep({
-  onTemplateSelect,
-}: TemplateSelectionStepProps) {
-  return (
-    <div className="flex flex-col items-center p-4 sm:p-8 w-full max-w-2xl mx-auto">
-      <h2 className="text-2xl font-semibold mb-2 text-center text-gray-900">
-        Choose Pool Type
-      </h2>
-      <p className="text-sm text-gray-500 mb-8 text-center">
-        Select a template or start from scratch
-      </p>
+export function TemplateSelectionStep({ onTemplateSelect }: TemplateSelectionStepProps) {
+    console.log('TemplateSelectionStep', onTemplateSelect)
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-        {POOL_TEMPLATES.map((template) => (
+    return (
+        <div className='mx-auto flex w-full max-w-2xl flex-col items-center p-4 sm:p-8'>
+            <h2 className='mb-2 text-center text-2xl font-semibold text-gray-900'>Choose Pool Type</h2>
+            <p className='mb-8 text-center text-sm text-gray-500'>Select a template or start from scratch</p>
+
+            <div className='grid w-full grid-cols-1 gap-4 sm:grid-cols-2'>
+                {/* {POOL_TEMPLATES.map((template) => (
           <button
             key={template.id}
             onClick={() => onTemplateSelect(template.id)}
@@ -34,8 +29,8 @@ export function TemplateSelectionStep({
             </h3>
             <p className="text-sm text-gray-500">{template.description}</p>
           </button>
-        ))}
-      </div>
-    </div>
-  );
+        ))} */}
+            </div>
+        </div>
+    )
 }
