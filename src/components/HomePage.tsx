@@ -12,7 +12,14 @@ import { PoolList } from '@/components/PoolList'
 import { ProgressBar } from '@/components/ProgressBar'
 import { WelcomeScreen } from '@/components/WelcomeScreen'
 import { useUserRole } from '@/components/providers'
-import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
+import {
+    Drawer,
+    DrawerContent,
+    DrawerDescription,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from '@/components/ui/drawer'
 import { getGiveaways, createGiveaway as saveGiveaway } from '@/lib/giveawayStorage'
 import { getPools, createPool as savePool } from '@/lib/poolStorage'
 import { Pool } from '@/types/pool'
@@ -133,25 +140,10 @@ export function HomePage() {
                                     Create an Event
                                 </Button>
                             </DrawerTrigger>
-                            <DrawerContent className='flex h-full flex-col bg-white'>
-                                <DrawerHeader className='flex items-center justify-between border-b border-gray-200 p-4 text-black'>
-                                    <DrawerTitle className='text-sm font-medium text-gray-500'>
-                                        Create Event Pool
-                                    </DrawerTitle>
-                                    <DrawerClose asChild>
-                                        <button className='text-gray-400 hover:text-gray-600' aria-label='Close wizard'>
-                                            <svg
-                                                className='h-6 w-6'
-                                                fill='none'
-                                                strokeLinecap='round'
-                                                strokeLinejoin='round'
-                                                strokeWidth='2'
-                                                viewBox='0 0 24 24'
-                                                stroke='currentColor'>
-                                                <path d='M6 18L18 6M6 6l12 12'></path>
-                                            </svg>
-                                        </button>
-                                    </DrawerClose>
+                            <DrawerContent className='min-h-11/12'>
+                                <DrawerHeader>
+                                    <DrawerTitle>Create Event Pool</DrawerTitle>
+                                    <DrawerDescription />
                                 </DrawerHeader>
                                 <ProgressBar currentStep={currentPoolWizardStep} totalSteps={TOTAL_STEPS_WIZARD} />
                                 <CreatePoolWizard
@@ -173,25 +165,10 @@ export function HomePage() {
                                     Create a Giveaway
                                 </Button>
                             </DrawerTrigger>
-                            <DrawerContent className='flex h-full flex-col bg-white'>
-                                <DrawerHeader className='flex items-center justify-between border-b border-gray-200 p-4 text-black'>
-                                    <DrawerTitle className='text-sm font-medium text-gray-500'>
-                                        Create Giveaway
-                                    </DrawerTitle>
-                                    <DrawerClose asChild>
-                                        <button className='text-gray-400 hover:text-gray-600' aria-label='Close wizard'>
-                                            <svg
-                                                className='h-6 w-6'
-                                                fill='none'
-                                                strokeLinecap='round'
-                                                strokeLinejoin='round'
-                                                strokeWidth='2'
-                                                viewBox='0 0 24 24'
-                                                stroke='currentColor'>
-                                                <path d='M6 18L18 6M6 6l12 12'></path>
-                                            </svg>
-                                        </button>
-                                    </DrawerClose>
+                            <DrawerContent className='min-h-11/12'>
+                                <DrawerHeader>
+                                    <DrawerTitle>Create Giveaway</DrawerTitle>
+                                    <DrawerDescription />
                                 </DrawerHeader>
                                 <ProgressBar
                                     currentStep={currentGiveawayWizardStep}
