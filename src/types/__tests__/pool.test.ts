@@ -1,4 +1,4 @@
-import { Participant, Pool } from '../pool'
+import type { Participant, Pool } from '../pool'
 
 describe('Pool Interface', () => {
     it('should allow creating a basic Pool object', () => {
@@ -7,8 +7,9 @@ describe('Pool Interface', () => {
             selectedImage: '/img/template-1.jpg',
             name: 'Test Pool',
             description: 'A simple test pool',
-            buyIn: 10,
-            softCap: 100,
+            depositAmount: 10,
+            maxEntries: 100,
+            amountPerWinner: 10,
             rulesLink: 'http://example.com/rules',
             createdAt: new Date('2024-01-01T00:00:00.000Z'),
             registrations: 5,
@@ -31,8 +32,9 @@ describe('Pool Interface', () => {
             selectedImage: '/img/template-2.jpg',
             name: 'On-Chain Test Pool',
             description: 'A test pool with on-chain data',
-            buyIn: 0.5,
-            softCap: 50,
+            depositAmount: 0.5,
+            maxEntries: 50,
+            amountPerWinner: 0.5,
             rulesLink: 'http://example.com/rules2',
             createdAt: new Date('2024-03-01T00:00:00.000Z'),
             registrations: 10,
@@ -45,7 +47,6 @@ describe('Pool Interface', () => {
             tokenAddress: '0xdef456',
             tokenSymbol: 'TST',
             tokenDecimals: 18,
-            depositAmount: '100 TST',
             totalDeposited: '5000 TST',
             winnerCount: 0,
             status: 'draft',
@@ -64,8 +65,9 @@ describe('Pool Interface', () => {
             selectedImage: '/img/template-3.jpg',
             name: 'Minimal On-Chain Pool',
             description: 'A test pool with minimal on-chain data',
-            buyIn: 1,
-            softCap: 20,
+            depositAmount: 1,
+            maxEntries: 20,
+            amountPerWinner: 1,
             rulesLink: 'http://example.com/rules3',
             createdAt: new Date('2024-05-01T00:00:00.000Z'),
             registrations: 2,

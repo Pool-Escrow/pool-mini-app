@@ -5,6 +5,7 @@ export interface Pool {
     description: string
     // New on-chain properties from parent task 6
     contractAddress?: string
+    chainId?: number // Added for network context
     tokenAddress?: string
     tokenSymbol?: string
     tokenDecimals?: number
