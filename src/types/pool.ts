@@ -19,6 +19,7 @@ export interface Pool {
     txHash?: string // Transaction hash of pool creation or a significant state change
     // UI/Wizard state helper
     selectedTokenKey?: string // e.g., 'usdc', 'droplet', 'custom' - for wizard state
+    customTokenAddress?: string // Added for wizard state if selectedTokenKey is 'custom'
     // Existing properties
     rulesLink: string
     createdAt: Date

@@ -19,12 +19,11 @@ export type StepData =
           depositAmount: number
           maxEntries: number
           rulesLink: string
-          tokenAddress?: string
-          tokenSymbol?: string
-          tokenDecimals?: number
-          selectedTokenKey?: string
-          winnerCount?: number
-          amountPerWinner?: number
+          tokenAddress: string
+          selectedTokenKey: string
+          customTokenAddress?: string
+          winnerCount: number
+          amountPerWinner: number
       }
 
 export const TOTAL_STEPS_WIZARD = 5
@@ -80,8 +79,6 @@ export function CreatePoolWizard({ currentStep, poolData, onStepChange, onComple
                         maxEntries: poolData.maxEntries,
                         rulesLink: poolData.rulesLink,
                         tokenAddress: poolData.tokenAddress,
-                        tokenSymbol: poolData.tokenSymbol,
-                        tokenDecimals: poolData.tokenDecimals,
                         selectedTokenKey: poolData.selectedTokenKey,
                         winnerCount: poolData.winnerCount,
                         amountPerWinner: poolData.amountPerWinner,

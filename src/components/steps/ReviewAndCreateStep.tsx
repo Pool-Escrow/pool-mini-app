@@ -166,23 +166,12 @@ export function ReviewAndCreateStep({ poolData, onConfirm, onBack }: ReviewAndCr
                 <div>
                     <p className='text-sm font-medium text-gray-500'>Token</p>
                     {poolData.selectedTokenKey && PREDEFINED_TOKENS[poolData.selectedTokenKey] ? (
-                        <p className='text-gray-700'>
-                            {PREDEFINED_TOKENS[poolData.selectedTokenKey].symbol} (
-                            <span className='truncate text-xs text-gray-500'>
-                                {PREDEFINED_TOKENS[poolData.selectedTokenKey].address}
-                            </span>
-                            , {PREDEFINED_TOKENS[poolData.selectedTokenKey].decimals} decimals)
-                        </p>
-                    ) : poolData.selectedTokenKey === 'custom' ? (
-                        <p className='text-gray-700'>
-                            {displayValue(poolData.tokenSymbol)} (
-                            <span className='truncate text-xs text-gray-500'>
-                                {displayValue(poolData.tokenAddress)}
-                            </span>
-                            ,{displayValue(poolData.tokenDecimals)} decimals)
-                        </p>
+                        <p className='text-gray-700'>Token: {PREDEFINED_TOKENS[poolData.selectedTokenKey].symbol}</p>
+                    ) : poolData.selectedTokenKey === 'custom' && poolData.tokenAddress ? (
+                        <p className='text-gray-700'>Token: Custom - {poolData.tokenAddress}</p>
                     ) : (
-                        <p className='text-gray-700'>{displayValue(poolData.tokenAddress)}</p> // Fallback if key is missing
+                        // Fallback display if selectedTokenKey is not set or tokenAddress is missing for custom
+                        <p className='text-gray-700'>{displayValue(poolData.tokenAddress, 'Token not specified')}</p>
                     )}
                 </div>
                 <div>

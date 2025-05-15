@@ -22,11 +22,10 @@ interface PoolConfigStepProps {
         maxEntries: number
         rulesLink: string
         tokenAddress: string
-        tokenSymbol: string
-        tokenDecimals: number
         winnerCount: number
         amountPerWinner: number
-        selectedTokenKey: string // Pass the selected key for continuity
+        selectedTokenKey: string
+        customTokenAddress?: string
     }) => void
     onBack?: () => void
 }
@@ -89,11 +88,13 @@ export function PoolConfigStep({ initialData, onNext, onBack }: PoolConfigStepPr
         let finalTokenAddress = ''
         let finalTokenSymbol = ''
         let finalTokenDecimalsNum = NaN
+        let customAddressForStepData: string | undefined = undefined
 
         if (selectedTokenKey === CUSTOM_TOKEN_KEY) {
             finalTokenAddress = customTokenAddress.trim()
             finalTokenSymbol = customTokenSymbol.trim()
             finalTokenDecimalsNum = parseInt(customTokenDecimals, 10)
+            customAddressForStepData = finalTokenAddress
         } else if (PREDEFINED_TOKENS[selectedTokenKey]) {
             const predefined = PREDEFINED_TOKENS[selectedTokenKey]
             finalTokenAddress = predefined.address
@@ -121,11 +122,10 @@ export function PoolConfigStep({ initialData, onNext, onBack }: PoolConfigStepPr
                 maxEntries: maxEntriesNum,
                 rulesLink,
                 tokenAddress: finalTokenAddress,
-                tokenSymbol: finalTokenSymbol,
-                tokenDecimals: finalTokenDecimalsNum,
                 winnerCount: winnerCountNum,
                 amountPerWinner: amountPerWinnerNum,
                 selectedTokenKey: selectedTokenKey,
+                customTokenAddress: customAddressForStepData,
             })
         }
     }
