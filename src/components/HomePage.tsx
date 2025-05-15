@@ -2,8 +2,8 @@
 
 import { Balance } from '@/components/Balance'
 import { CreatePoolWizard, TOTAL_STEPS_WIZARD, type StepData } from '@/components/CreatePoolWizard'
+import type { Giveaway } from '@/components/GiveawayWizard'
 import {
-    Giveaway,
     TOTAL_STEPS_WIZARD as GIVEAWAY_TOTAL_STEPS,
     GiveawayWizard,
     type GiveawayStepData,
@@ -22,9 +22,8 @@ import {
 } from '@/components/ui/drawer'
 import { getGiveaways, createGiveaway as saveGiveaway } from '@/lib/giveawayStorage'
 import { getPools, createPool as savePool } from '@/lib/poolStorage'
-import { Pool } from '@/types/pool'
+import type { Pool } from '@/types/pool'
 import { useEffect, useState } from 'react'
-import { Button } from './ui/button'
 
 export function HomePage() {
     // Get user role
@@ -47,7 +46,7 @@ export function HomePage() {
     // Load pools on component mount
     useEffect(() => {
         // Initialize pools storage to create empty storage if none exists
-        import('@/lib/poolStorage').then(({ initializePoolsStorage }) => {
+        void import('@/lib/poolStorage').then(({ initializePoolsStorage }) => {
             initializePoolsStorage()
             const storedPools = getPools()
             setPools(storedPools)
@@ -77,7 +76,13 @@ export function HomePage() {
     const openPoolDrawerAndResetState = () => {
         setCurrentPoolWizardStep(1)
         setWizardPoolData({})
-        setIsPoolDrawerOpen(true)
+        // Explicitly blur the active element before opening the drawer
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur()
+        }
+        requestAnimationFrame(() => {
+            setIsPoolDrawerOpen(true)
+        })
     }
 
     // Giveaway Wizard Handlers
@@ -100,7 +105,13 @@ export function HomePage() {
     const openGiveawayDrawerAndResetState = () => {
         setCurrentGiveawayWizardStep(1)
         setWizardGiveawayData({})
-        setIsGiveawayDrawerOpen(true)
+        // Explicitly blur the active element before opening the drawer
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur()
+        }
+        requestAnimationFrame(() => {
+            setIsGiveawayDrawerOpen(true)
+        })
     }
 
     return (
@@ -132,13 +143,10 @@ export function HomePage() {
                     <>
                         {/* Pool Creation Button & Drawer */}
                         <Drawer open={isPoolDrawerOpen} onOpenChange={setIsPoolDrawerOpen}>
-                            <DrawerTrigger asChild>
-                                <Button
-                                    variant='default'
-                                    className='w-full rounded-xl bg-[#4C6FFF] py-7 text-base font-medium text-white hover:bg-[#4C6FFF]/90'
-                                    onClick={openPoolDrawerAndResetState}>
-                                    Create an Event
-                                </Button>
+                            <DrawerTrigger
+                                className='w-full rounded-xl bg-[#4C6FFF] py-4 text-base font-medium text-white hover:bg-[#4C6FFF]/90'
+                                onClick={openPoolDrawerAndResetState}>
+                                Create an Event
                             </DrawerTrigger>
                             <DrawerContent className='min-h-11/12'>
                                 <DrawerHeader>
@@ -157,13 +165,10 @@ export function HomePage() {
 
                         {/* Giveaway Creation Button & Drawer */}
                         <Drawer open={isGiveawayDrawerOpen} onOpenChange={setIsGiveawayDrawerOpen}>
-                            <DrawerTrigger asChild>
-                                <Button
-                                    variant='default'
-                                    className='w-full rounded-xl bg-[#4C6FFF] py-7 text-base font-medium text-white hover:bg-[#4C6FFF]/90'
-                                    onClick={openGiveawayDrawerAndResetState}>
-                                    Create a Giveaway
-                                </Button>
+                            <DrawerTrigger
+                                className='w-full rounded-xl bg-[#4C6FFF] py-4 text-base font-medium text-white hover:bg-[#4C6FFF]/90'
+                                onClick={openGiveawayDrawerAndResetState}>
+                                Create a Giveaway
                             </DrawerTrigger>
                             <DrawerContent className='min-h-11/12'>
                                 <DrawerHeader>
