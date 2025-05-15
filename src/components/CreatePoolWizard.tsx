@@ -1,15 +1,19 @@
 "use client";
 
-import { Pool } from "@/app/types/pool";
-import { ChooseImageStep } from "@/app/components/steps/ChooseImageStep";
-import { NameDescriptionStep } from "@/app/components/steps/NameDescriptionStep";
-import { DetailsStep } from "@/app/components/steps/DetailsStep";
-import { RegistrationTimeStep } from "@/app/components/steps/RegistrationTimeStep";
+import { Pool } from "@/types/pool";
+import { ChooseImageStep } from "@/components/steps/ChooseImageStep";
+import { NameDescriptionStep } from "@/components/steps/NameDescriptionStep";
+import { DetailsStep } from "@/components/steps/DetailsStep";
+import { RegistrationTimeStep } from "@/components/steps/RegistrationTimeStep";
 
 export type StepData =
   | { selectedImage: string }
   | { name: string; description: string }
-  | { registrationStart: string; registrationEnd: string; registrationEnabled: boolean }
+  | {
+      registrationStart: string;
+      registrationEnd: string;
+      registrationEnabled: boolean;
+    }
   | { buyIn: number; softCap: number; rulesLink: string };
 
 export const TOTAL_STEPS_WIZARD = 4;

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { GiveawayInfoStep } from "@/app/components/steps/GiveawayInfoStep";
-import { GiveawayRequirementsStep } from "@/app/components/steps/GiveawayRequirementsStep";
+import { GiveawayInfoStep } from "@/components/steps/GiveawayInfoStep";
+import { GiveawayRequirementsStep } from "@/components/steps/GiveawayRequirementsStep";
 
 export interface Giveaway {
   id?: string;
@@ -19,7 +18,13 @@ export interface Giveaway {
 
 export type GiveawayStepData =
   | { amount: number; participantLimit: number; description: string }
-  | { requiresApproval: boolean; pageFollowRequired: boolean; registrationEnabled: boolean; registrationStart: string; registrationEnd: string };
+  | {
+      requiresApproval: boolean;
+      pageFollowRequired: boolean;
+      registrationEnabled: boolean;
+      registrationStart: string;
+      registrationEnd: string;
+    };
 
 export const TOTAL_STEPS_WIZARD = 2;
 
@@ -27,7 +32,9 @@ interface GiveawayWizardProps {
   currentStep: number;
   giveawayData: Partial<Giveaway>;
   onStepChange: (step: number, data?: GiveawayStepData) => void;
-  onComplete: (completedGiveawayData: Omit<Giveaway, "id" | "createdAt">) => void;
+  onComplete: (
+    completedGiveawayData: Omit<Giveaway, "id" | "createdAt">,
+  ) => void;
 }
 
 export function GiveawayWizard({
@@ -72,10 +79,10 @@ export function GiveawayWizard({
             registrationStart: giveawayData.registrationStart,
             registrationEnd: giveawayData.registrationEnd,
           }}
-          onNext={(data) => handleNext(data)}
-          onBack={handleBack}
+          onNextAction={(data: GiveawayStepData) => handleNext(data)}
+          onBackAction={handleBack}
         />
       )}
     </div>
   );
-} 
+}

@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { Modal } from "@/app/components/Modal";
-import { Button } from "@/app/components/DemoComponents";
-import { Pool } from "@/app/types/pool";
+import { Modal } from "@/components/Modal";
+import { Button } from "@/components/DemoComponents";
+import { Pool } from "@/types/pool";
 
 interface RegistrationModalProps {
   isOpen: boolean;
@@ -47,21 +47,17 @@ export function RegistrationModal({
     <Modal isOpen={isOpen} onClose={onCloseAction}>
       <div className="bg-white rounded-lg overflow-hidden w-full max-w-md mx-auto">
         <div className="p-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">
-            Join {pool.name}
-          </h2>
+          <h2 className="text-xl font-bold text-gray-900">Join {pool.name}</h2>
         </div>
-        
+
         <div className="p-6">
           {renderBuyInConfirmation()}
-          
+
           <div className="mb-6">
             <h3 className="font-medium text-gray-800 mb-2">
               About this event:
             </h3>
-            <p className="text-gray-600">
-              {pool.description}
-            </p>
+            <p className="text-gray-600">{pool.description}</p>
           </div>
 
           <div className="flex space-x-3">
@@ -82,4 +78,4 @@ export function RegistrationModal({
       </div>
     </Modal>
   );
-} 
+}
