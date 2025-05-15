@@ -1,4 +1,4 @@
-import { Pool } from '@/types/pool'
+import type { Pool } from '@/types/pool'
 
 const POOLS_STORAGE_KEY = 'pools'
 
@@ -10,7 +10,7 @@ const getStoredPools = (): Pool[] => {
     }
 
     const storedPools = localStorage.getItem(POOLS_STORAGE_KEY)
-    return storedPools ? JSON.parse(storedPools) : []
+    return storedPools ? (JSON.parse(storedPools) as Pool[]) : []
 }
 
 // Helper function to save pools to local storage
@@ -41,7 +41,7 @@ const formatImagePath = (imagePath: string): string => {
     // If it's a template format (template-1, template-2, etc.)
     if (imagePath.startsWith('template-')) {
         // Extract the template number
-        const templateMatch = imagePath.match(/template-(\d+)/)
+        const templateMatch = /template-(\d+)/.exec(imagePath)
         if (templateMatch) {
             const templateNum = parseInt(templateMatch[1], 10)
             // Use the new image path format

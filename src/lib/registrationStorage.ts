@@ -14,7 +14,7 @@ export const getStoredRegistrations = (): Registration[] => {
     }
 
     const storedRegistrations = localStorage.getItem(REGISTRATIONS_STORAGE_KEY)
-    return storedRegistrations ? JSON.parse(storedRegistrations) : []
+    return storedRegistrations ? (JSON.parse(storedRegistrations) as Registration[]) : []
 }
 
 // Helper function to save registrations to local storage
@@ -57,10 +57,10 @@ export const registerUserForPool = (poolId: string, userAddress: string): boolea
     saveStoredRegistrations(registrations)
 
     // Update the pool's registration count
-    import('./poolStorage').then(({ getPoolById, updatePool }) => {
+    void import('./poolStorage').then(({ getPoolById, updatePool }) => {
         const pool = getPoolById(poolId)
         if (pool) {
-            updatePool(poolId, { registrations: (pool.registrations || 0) + 1 })
+            updatePool(poolId, { registrations: (pool.registrations ?? 0) + 1 })
         }
     })
 
@@ -78,7 +78,7 @@ export const cancelUserRegistration = (poolId: string, userAddress: string): boo
         saveStoredRegistrations(registrations)
 
         // Update the pool's registration count
-        import('./poolStorage').then(({ getPoolById, updatePool }) => {
+        void import('./poolStorage').then(({ getPoolById, updatePool }) => {
             const pool = getPoolById(poolId)
             if (pool && pool.registrations > 0) {
                 updatePool(poolId, { registrations: pool.registrations - 1 })

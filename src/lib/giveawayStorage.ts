@@ -1,4 +1,4 @@
-import { Giveaway } from '@/components/GiveawayWizard'
+import type { Giveaway } from '@/components/GiveawayWizard'
 
 const GIVEAWAYS_STORAGE_KEY = 'giveaways'
 
@@ -8,7 +8,7 @@ const getStoredGiveaways = (): Giveaway[] => {
         return []
     }
     const storedGiveaways = localStorage.getItem(GIVEAWAYS_STORAGE_KEY)
-    return storedGiveaways ? JSON.parse(storedGiveaways) : []
+    return storedGiveaways ? (JSON.parse(storedGiveaways) as Giveaway[]) : []
 }
 
 // Helper function to save giveaways to local storage
