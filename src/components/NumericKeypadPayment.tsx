@@ -44,7 +44,7 @@ export function NumericKeypadPayment({ participant, onBack, onSubmit }: NumericK
                                 strokeLinecap='round'
                                 strokeLinejoin='round'
                                 strokeWidth='2'
-                                d='M15 19l-7-7 7-7'></path>
+                                d='M15 19l-7-7 7-7' />
                         </svg>
                     </button>
                     <h1 className='mr-5 flex-1 text-center text-xl font-semibold'>User Profile</h1>
@@ -73,7 +73,7 @@ export function NumericKeypadPayment({ participant, onBack, onSubmit }: NumericK
                                     strokeLinecap='round'
                                     strokeLinejoin='round'
                                     strokeWidth='2'
-                                    d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'></path>
+                                    d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' />
                             </svg>
                         </div>
                     )}
@@ -109,7 +109,7 @@ export function NumericKeypadPayment({ participant, onBack, onSubmit }: NumericK
 
             {/* Home Indicator for iOS-style UI */}
             <div className='flex items-center justify-center py-8'>
-                <div className='h-1 w-1/3 rounded-full bg-gray-300'></div>
+                <div className='h-1 w-1/3 rounded-full bg-gray-300' />
             </div>
         </div>
     )

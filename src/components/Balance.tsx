@@ -55,7 +55,7 @@ export function Balance() {
                             <ConnectWallet />
                         ) : (
                             <DrawerTrigger onClick={() => setIsDrawerOpen(true)}>
-                                <div className='h-10 w-10 rounded-full bg-gray-300'></div>
+                                <div className='h-10 w-10 rounded-full bg-gray-300' />
                             </DrawerTrigger>
                         )}
 

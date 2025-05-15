@@ -1,6 +1,6 @@
 'use client'
 
-import { Giveaway } from '@/components/GiveawayWizard'
+import type { Giveaway } from '@/components/GiveawayWizard'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -40,7 +40,7 @@ export function GiveawayCard({
     // Function to safely render the giveaway image with fallback
     const renderGiveawayImage = () => {
         // Get gradient colors based on giveaway ID
-        const gradientClass = getGiveawayColor(giveaway.id || '0')
+        const gradientClass = getGiveawayColor(giveaway.id ?? '0')
 
         return (
             <div className={`h-full w-full bg-gradient-to-r ${gradientClass} flex items-center justify-center`}>
