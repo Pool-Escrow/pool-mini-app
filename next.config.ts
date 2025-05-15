@@ -1,20 +1,24 @@
 import type { NextConfig } from 'next'
 
+const externals = ['pino-pretty']
+
 const nextConfig: NextConfig = {
-    // // Silence warnings
-    // // https://github.com/WalletConnect/walletconnect-monorepo/issues/1908
-    // webpack: config => {
-    //     config.externals.push('pino-pretty', 'lokijs', 'encoding')
-    //     return config
-    // },
-    // turbopack: {
-    //     rules: {},
-    // },
-    // Add image domain configuration to allow randomuser.me images
-    images: {
-        remotePatterns: [{ hostname: 'randomuser.me' }],
+    // Silence warnings
+    // https://github.com/WalletConnect/walletconnect-monorepo/issues/1908
+    webpack: (config: NextConfig['webpack'] & { externals: string[] }) => ({
+        ...config,
+        externals: [...(config?.externals ?? []), ...externals],
+    }),
+    turbopack: { rules: { externals } },
+    images: { remotePatterns: [{ hostname: 'randomuser.me' }] },
+    serverExternalPackages: externals,
+
+    // Optimize CSS loading
+    experimental: {
+        optimizeCss: true,
     },
-    serverExternalPackages: ['pino-pretty', 'lokijs', 'encoding'],
+
+    poweredByHeader: false,
     devIndicators: false,
 }
 
