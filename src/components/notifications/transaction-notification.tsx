@@ -1,5 +1,4 @@
 import { useTransactionStatus } from '@/hooks/use-transaction-status'
-import { DefaultError } from '@tanstack/react-query'
 import { CheckCircleIcon, ExternalLinkIcon, LoaderCircleIcon, XCircleIcon } from 'lucide-react'
 import React, { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
@@ -82,7 +81,7 @@ const TransactionToastInternal: React.FC<TransactionToastInternalProps> = ({
         isIdle: transactionIsIdle,
     } = useTransactionStatus(initialHash)
 
-    const effectiveHash = initialHash || transaction?.transactionHash
+    const effectiveHash = initialHash ?? transaction?.transactionHash
 
     useEffect(() => {
         // Auto-dismissal for final states
@@ -101,7 +100,7 @@ const TransactionToastInternal: React.FC<TransactionToastInternalProps> = ({
 
     if (!effectiveHash && (transactionIsIdle || transactionIsLoading)) {
         currentTitle = `${title} (Initializing)`
-        currentDescription = initialDescription || 'Waiting for transaction details...'
+        currentDescription = initialDescription ?? 'Waiting for transaction details...'
         icon = <LoaderCircleIcon className='mr-2 h-4 w-4 animate-spin text-gray-500 dark:text-gray-400' />
     } else if (transactionIsLoading) {
         currentTitle = `${title} (Pending)`
@@ -117,12 +116,11 @@ const TransactionToastInternal: React.FC<TransactionToastInternalProps> = ({
         icon = <CheckCircleIcon className='mr-2 h-4 w-4 text-green-500 dark:text-green-400' />
     } else if (transactionIsError) {
         currentTitle = `${title} (Failed)`
-        const specificError =
-            (transactionHookError as DefaultError)?.message || (transactionHookError as Error)?.message
-        currentDescription = specificError || 'Transaction failed.'
+        const specificError = transactionHookError?.message ?? transactionHookError?.message
+        currentDescription = specificError ?? 'Transaction failed.'
         if (effectiveHash) {
             currentDescription =
-                `Tx ${effectiveHash.substring(0, 6)}...${effectiveHash.substring(effectiveHash.length - 4)} failed. ${specificError || ''}`.trim()
+                `Tx ${effectiveHash.substring(0, 6)}...${effectiveHash.substring(effectiveHash.length - 4)} failed. ${specificError ?? ''}`.trim()
         }
         icon = <XCircleIcon className='mr-2 h-4 w-4 text-red-500 dark:text-red-400' />
     } else if (effectiveHash && transactionIsIdle) {
@@ -138,7 +136,7 @@ const TransactionToastInternal: React.FC<TransactionToastInternalProps> = ({
             // Default for idle with hash but no definitive prior status from hook
             currentTitle = title
             currentDescription =
-                initialDescription ||
+                initialDescription ??
                 (effectiveHash
                     ? `Tx: ${effectiveHash.substring(0, 6)}...${effectiveHash.substring(effectiveHash.length - 4)}`
                     : 'Awaiting status...')

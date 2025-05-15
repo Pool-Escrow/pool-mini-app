@@ -2,12 +2,12 @@ import { useTransactionStatus } from '@/hooks/use-transaction-status'
 import { ExternalLinkIcon, Loader2 } from 'lucide-react'
 import React, { useCallback, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
-import { BaseError, type Hash, type TransactionReceipt } from 'viem'
+import { BaseError, type Hash } from 'viem'
 
 // Placeholder for utility function - should be created in @/lib/utils.ts or similar
 // IMPORTANT: This needs to be chain-aware in a real app.
 const getBlockExplorerUrl = (hash: Hash): string => {
-    const L2_EXPLORER_URL = process.env.NEXT_PUBLIC_L2_EXPLORER_URL || 'https://sepolia.basescan.org'
+    const L2_EXPLORER_URL = process.env.NEXT_PUBLIC_L2_EXPLORER_URL ?? 'https://sepolia.basescan.org'
     return `${L2_EXPLORER_URL}/tx/${hash}`
 }
 
@@ -84,7 +84,7 @@ export function useTransactionNotifier() {
                         <ToastUpdater
                             {...props}
                             hash={newHash}
-                            chainId={newChainId || props.chainId}
+                            chainId={newChainId ?? props.chainId}
                             internalToastId={t}
                         />
                     ),
@@ -129,7 +129,7 @@ const ToastUpdater: React.FC<ToastUpdaterProps> = ({
         let toastType: 'loading' | 'success' | 'error' | 'message' = 'message'
 
         // Typed toastProps using a subset of Sonner's possible properties
-        const sonnerProps: Partial<SonnerToastProps> & { [key: string]: unknown } = {
+        const sonnerProps: Partial<SonnerToastProps> & Record<string, unknown> = {
             id: internalToastId,
             duration: 5000, // Default for success/error
         }
@@ -139,7 +139,7 @@ const ToastUpdater: React.FC<ToastUpdaterProps> = ({
             sonnerProps.description = (
                 <ToastContent
                     title={title}
-                    description={pendingDescription || 'Transaction submitted, waiting for confirmation...'}
+                    description={pendingDescription ?? 'Transaction submitted, waiting for confirmation...'}
                 />
             )
             sonnerProps.icon = <Loader2 className='h-5 w-5 animate-spin' />
@@ -149,30 +149,30 @@ const ToastUpdater: React.FC<ToastUpdaterProps> = ({
             sonnerProps.description = (
                 <ToastContent
                     title={`${title} (Pending)`}
-                    description={pendingDescription || `Processing ${hash?.substring(0, 10)}...`}
+                    description={pendingDescription ?? `Processing ${hash?.substring(0, 10)}...`}
                     explorerLink={explorerLink}
                 />
             )
             sonnerProps.duration = Infinity
         } else if (isSuccess) {
             toastType = 'success'
-            const successMsg = (transaction as TransactionReceipt)?.transactionHash
-                ? `Confirmed ${(transaction as TransactionReceipt).transactionHash.substring(0, 10)}...`
+            const successMsg = transaction?.transactionHash
+                ? `Confirmed ${transaction.transactionHash.substring(0, 10)}...`
                 : 'Transaction confirmed!'
             sonnerProps.description = (
                 <ToastContent
                     title={`${title} (Success)`}
-                    description={successDescription || successMsg}
+                    description={successDescription ?? successMsg}
                     explorerLink={explorerLink}
                 />
             )
         } else if (isError) {
             toastType = 'error'
             let userFriendlyMessage = 'Transaction failed.'
-            let techDetails = error?.message || 'No additional details.'
+            let techDetails = error?.message ?? 'No additional details.'
 
             if (error instanceof BaseError) {
-                techDetails = `Name: ${error.name}\nMessage: ${error.message}${error.cause ? `\nCause: ${error.cause}` : ''}${error.metaMessages ? `\nMeta: ${error.metaMessages.join('\n')}` : ''}`
+                techDetails = `Name: ${error.name}\nMessage: ${error.message}${error.cause ? `\nCause: ${JSON.stringify(error.cause)}` : ''}${error.metaMessages ? `\nMeta: ${JSON.stringify(error.metaMessages)}` : ''}`
                 // Attempt to provide more user-friendly messages for common errors
                 if (error.shortMessage.includes('rejected') || error.name === 'UserRejectedRequestError') {
                     userFriendlyMessage = 'Transaction rejected by user.'
@@ -192,7 +192,7 @@ const ToastUpdater: React.FC<ToastUpdaterProps> = ({
             }
 
             const finalErrorDesc =
-                errorDescription ||
+                errorDescription ??
                 (hash
                     ? `Failed ${hash.substring(0, 10)}... Error: ${userFriendlyMessage}`
                     : `Error: ${userFriendlyMessage}`)
@@ -210,17 +210,17 @@ const ToastUpdater: React.FC<ToastUpdaterProps> = ({
         // Sonner reuses the ID to update the toast if it exists.
         switch (toastType) {
             case 'loading':
-                toast.loading(sonnerProps.description as React.ReactNode, sonnerProps)
+                toast.loading(sonnerProps.description, sonnerProps)
                 break
             case 'success':
-                toast.success(sonnerProps.description as React.ReactNode, sonnerProps)
+                toast.success(sonnerProps.description, sonnerProps)
                 break
             case 'error':
-                toast.error(sonnerProps.description as React.ReactNode, sonnerProps)
+                toast.error(sonnerProps.description, sonnerProps)
                 break
             case 'message': // For initial state before hash, or other neutral messages
             default:
-                toast(sonnerProps.description as React.ReactNode, sonnerProps)
+                toast(sonnerProps.description, sonnerProps)
                 break
         }
     }, [
