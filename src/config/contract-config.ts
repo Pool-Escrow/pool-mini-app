@@ -1,9 +1,7 @@
 import { base, baseSepolia } from 'wagmi/chains'
 
 // Types
-interface ContractAddresses {
-    [chainId: number]: `0x${string}`
-}
+type ContractAddresses = Record<number, `0x${string}`>;
 
 // Environment variables should be set in .env.local or similar
 // Example: NEXT_PUBLIC_POOL_CONTRACT_BASE=0xYourBaseAddress
