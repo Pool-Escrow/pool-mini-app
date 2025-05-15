@@ -1,21 +1,17 @@
-"use client";
+'use client'
 
-import { useMiniKit } from "@coinbase/onchainkit/minikit";
-import { useEffect } from "react";
+import { useMiniKit } from '@coinbase/onchainkit/minikit'
+import { useEffect } from 'react'
 
-export default function FrameProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const { setFrameReady, isFrameReady } = useMiniKit();
+export default function FrameProvider({ children }: { children: React.ReactNode }) {
+    const { setFrameReady, isFrameReady } = useMiniKit()
 
-  useEffect(() => {
-    if (!isFrameReady) {
-      console.log("App: Setting frame ready");
-      setFrameReady();
-    }
-  }, [setFrameReady, isFrameReady]);
+    useEffect(() => {
+        if (!isFrameReady) {
+            console.log('App: Setting frame ready')
+            void setFrameReady()
+        }
+    }, [setFrameReady, isFrameReady])
 
-  return <>{children}</>;
+    return <>{children}</>
 }

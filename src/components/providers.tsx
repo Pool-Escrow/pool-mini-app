@@ -1,13 +1,14 @@
 'use client'
 
 import { MiniKitProvider } from '@coinbase/onchainkit/minikit'
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { Toaster } from 'sonner'
 import { base } from 'wagmi/chains'
 import FrameProvider from './frame-provider'
 
 // Create UserRole context
-type UserRoleContextType = {
+interface UserRoleContextType {
     userRole: 'admin' | 'regular'
     isAdmin: boolean
     toggleUserRole: () => void
@@ -50,29 +51,38 @@ function UserRoleProvider({ children }: { children: ReactNode }) {
 
 export default function Providers({ children }: { children: React.ReactNode }) {
     // Disable auto-connection by setting this flag in localStorage during development
-    useEffect(() => {
-        if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-            // Only in development, to ensure proper wallet dialog behavior with React's strict mode
-            if (!localStorage.getItem('_devConnectionAttempted')) {
-                localStorage.setItem('poolMiniUserManuallyDisconnected', 'true')
-                localStorage.setItem('_devConnectionAttempted', 'true')
-            }
-        }
-    }, [])
+    // useEffect(() => {
+    //     if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    //         // Only in development, to ensure proper wallet dialog behavior with React's strict mode
+    //         if (!localStorage.getItem('_devConnectionAttempted')) {
+    //             localStorage.setItem('poolMiniUserManuallyDisconnected', 'true')
+    //             localStorage.setItem('_devConnectionAttempted', 'true')
+    //         }
+    //     }
+    // }, [])
 
     // Use useMemo to prevent unnecessary rerenders of MiniKitProvider
-    const miniKitConfig = useMemo(
-        () => ({
-            appearance: {
-                mode: 'auto' as const,
-                theme: 'pool-theme',
-            },
-            connection: {
-                autoConnect: false,
-            },
-        }),
-        [],
-    )
+    // const miniKitConfig = useMemo(
+    //     () => ({
+    //         appearance: {
+    //             mode: 'auto' as const,
+    //             theme: 'pool-theme',
+    //         },
+    //         connection: {
+    //             autoConnect: false,
+    //         },
+    //     }),
+    //     [],
+    // )
+    const miniKitConfig = {
+        appearance: {
+            mode: 'auto' as const,
+            theme: 'pool-theme',
+        },
+        connection: {
+            autoConnect: false,
+        },
+    }
 
     return (
         <MiniKitProvider chain={base} config={miniKitConfig}>
