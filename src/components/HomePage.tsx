@@ -120,7 +120,7 @@ export function HomePage() {
             </div>
 
             {/* Admin Action Buttons or Empty Space for Regular Users */}
-            <div className='space-y-4 px-4 py-4'>
+            <div className='flex flex-col gap-4 p-4'>
                 {isAdmin && (
                     <>
                         {/* Pool Creation Button & Drawer */}
@@ -128,7 +128,7 @@ export function HomePage() {
                             <DrawerTrigger asChild>
                                 <Button
                                     variant='default'
-                                    className='w-full rounded-xl bg-[#4C6FFF] py-4 font-medium text-white hover:bg-[#4C6FFF]/90'
+                                    className='w-full rounded-xl bg-[#4C6FFF] py-7 text-base font-medium text-white hover:bg-[#4C6FFF]/90'
                                     onClick={openPoolDrawerAndResetState}>
                                     Create an Event
                                 </Button>
@@ -166,11 +166,12 @@ export function HomePage() {
                         {/* Giveaway Creation Button & Drawer */}
                         <Drawer open={isGiveawayDrawerOpen} onOpenChange={setIsGiveawayDrawerOpen}>
                             <DrawerTrigger asChild>
-                                <button
-                                    className='w-full rounded-xl bg-[#4C6FFF] py-4 font-medium text-white hover:bg-[#4C6FFF]/90'
+                                <Button
+                                    variant='default'
+                                    className='w-full rounded-xl bg-[#4C6FFF] py-7 text-base font-medium text-white hover:bg-[#4C6FFF]/90'
                                     onClick={openGiveawayDrawerAndResetState}>
                                     Create a Giveaway
-                                </button>
+                                </Button>
                             </DrawerTrigger>
                             <DrawerContent className='flex h-full flex-col bg-white'>
                                 <DrawerHeader className='flex items-center justify-between border-b border-gray-200 p-4 text-black'>

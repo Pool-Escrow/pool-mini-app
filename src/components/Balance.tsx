@@ -4,9 +4,8 @@ import { useUserRole } from '@/components/providers'
 import { clearAllPools } from '@/lib/poolStorage'
 import { clearAllRegistrations } from '@/lib/registrationStorage'
 import { Address, Avatar, EthBalance, Identity, Name } from '@coinbase/onchainkit/identity'
-import { ConnectWallet, Wallet, WalletDropdown, WalletDropdownDisconnect } from '@coinbase/onchainkit/wallet'
-import { Button } from './ui/button'
-import { Drawer } from './ui/drawer'
+import { ConnectWallet, Wallet, WalletDropdownDisconnect } from '@coinbase/onchainkit/wallet'
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from './ui/drawer'
 
 export function Balance() {
     const { userRole, toggleUserRole } = useUserRole()
@@ -39,24 +38,22 @@ export function Balance() {
                 <Drawer>
                     <Wallet>
                         <ConnectWallet>
-                            {/* <DrawerTrigger asChild> */}
-                            <div className='h-10 w-10 rounded-full bg-gray-300'></div>
-                            {/* </DrawerTrigger> */}
+                            <DrawerTrigger asChild>
+                                <div className='h-10 w-10 rounded-full bg-gray-300'></div>
+                            </DrawerTrigger>
                         </ConnectWallet>
 
-                        <WalletDropdown>
-                            <Identity className='px-4 pt-3 pb-2' hasCopyAddressOnClick>
+                        <DrawerContent className='flex gap-2 bg-white p-4'>
+                            <DrawerHeader>
+                                <DrawerTitle>Wallet</DrawerTitle>
+                            </DrawerHeader>
+                            {/* <WalletDropdown> */}
+                            <Identity hasCopyAddressOnClick>
                                 <Avatar />
                                 <Name />
                                 <Address />
                                 <EthBalance />
                             </Identity>
-                            {/* </WalletDropdown> */}
-                            {/* 
-                        <DrawerContent className='bg-white'>
-                            <DrawerHeader>
-                                <DrawerTitle>Wallet</DrawerTitle>
-                            </DrawerHeader> */}
 
                             {/* Developer toggle for admin/regular user role */}
                             <div className='border-t border-gray-200 px-4 py-2'>
@@ -82,12 +79,12 @@ export function Balance() {
                                     </button>
                                 )}
                             </div>
+                            {/* <DisconnectButton className='mx-auto my-4 w-11/12' /> */}
+                            <WalletDropdownDisconnect className='text-lime-500' />
 
-                            <Button variant='outline' className='w-full' asChild>
-                                <WalletDropdownDisconnect />
-                            </Button>
-                        </WalletDropdown>
-                        {/* </DrawerContent> */}
+                            {/* <Button variant='outline' asChild></Button> */}
+                            {/* </WalletDropdown> */}
+                        </DrawerContent>
                     </Wallet>
                 </Drawer>
             </header>

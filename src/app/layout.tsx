@@ -1,4 +1,5 @@
 import Providers from '@/components/providers'
+import '@coinbase/onchainkit/styles.css'
 import { Metadata, Viewport } from 'next'
 
 import '@/styles/globals.css'
