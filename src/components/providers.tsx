@@ -1,7 +1,8 @@
 'use client'
 
 import { MiniKitProvider } from '@coinbase/onchainkit/minikit'
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react'
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react'
+import { Toaster } from 'sonner'
 import { base } from 'wagmi/chains'
 import FrameProvider from './frame-provider'
 
@@ -48,19 +49,38 @@ function UserRoleProvider({ children }: { children: ReactNode }) {
 }
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-    console.log('hello')
+    // Disable auto-connection by setting this flag in localStorage during development
+    useEffect(() => {
+        if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+            // Only in development, to ensure proper wallet dialog behavior with React's strict mode
+            if (!localStorage.getItem('_devConnectionAttempted')) {
+                localStorage.setItem('poolMiniUserManuallyDisconnected', 'true')
+                localStorage.setItem('_devConnectionAttempted', 'true')
+            }
+        }
+    }, [])
+
+    // Use useMemo to prevent unnecessary rerenders of MiniKitProvider
+    const miniKitConfig = useMemo(
+        () => ({
+            appearance: {
+                mode: 'auto' as const,
+                theme: 'pool-theme',
+            },
+            connection: {
+                autoConnect: false,
+            },
+        }),
+        [],
+    )
 
     return (
-        <MiniKitProvider
-            chain={base}
-            config={{
-                appearance: {
-                    mode: 'auto',
-                    theme: 'pool-theme',
-                },
-            }}>
+        <MiniKitProvider chain={base} config={miniKitConfig}>
             <FrameProvider>
-                <UserRoleProvider>{children}</UserRoleProvider>
+                <UserRoleProvider>
+                    {children}
+                    <Toaster />
+                </UserRoleProvider>
             </FrameProvider>
         </MiniKitProvider>
     )
