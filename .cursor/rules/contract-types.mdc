@@ -1,0 +1,53 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+- **Use Generated Contract Types and ABIs**
+  - Always import contract ABIs (e.g., `poolAbi`, `tokenAbi`) and typechain types from `src/types/contracts.ts` instead of defining them manually within hooks or components.
+  - This ensures consistency with the deployed contracts as defined in `wagmi-cli.config.ts` and reduces redundancy.
+
+  - **Rationale:**
+    - `wagmi-cli` generates these files based on your contract artifacts and configuration.
+    - Using generated files ensures that your frontend is always interacting with the correct contract interface.
+    - Avoids manual ABI definitions which can become outdated or contain errors.
+
+  - ✅ **DO:**
+    ```typescript
+    import { poolAbi, tokenAbi } from '@/types/contracts';
+    import { useReadContract } from 'wagmi';
+
+    function useMyHook() {
+      const result = useReadContract({
+        address: '0xYourContractAddress',
+        abi: poolAbi, // Correct: Using imported ABI
+        functionName: 'someFunction',
+      });
+    }
+    ```
+
+  - ❌ **DON'T:**
+    ```typescript
+    import { useReadContract } from 'wagmi';
+
+    const manualErc20Abi = [
+      { /* ... entire ABI ... */ }
+    ] as const;
+
+    function useMyHook() {
+      const result = useReadContract({
+        address: '0xYourTokenAddress',
+        abi: manualErc20Abi, // Incorrect: Manual ABI definition
+        functionName: 'balanceOf',
+      });
+    }
+    ```
+
+- **Reference `wagmi-cli.config.ts`**
+  - The source of truth for contract addresses and included ABIs is [`wagmi-cli.config.ts`](mdc:wagmi-cli.config.ts).
+  - Any changes to contract interfaces or deployments should be reflected there first, then re-generate types using the CLI (`bunx wagmi generate`).
+
+- **Specific Token ABIs**
+  - If you need to interact with a specific token that has functions beyond the standard ERC20 interface (and these are included in your `wagmi-cli.config.ts` for that token), ensure you use the ABI generated for that specific token if available, rather than a generic `erc20Abi`.
+  - For generic ERC20 interactions, the `erc20Abi` from `viem` or a generated one for a generic "Token" contract is acceptable if a more specific one isn't needed or available for the specific token instance.
+    However, `src/types/contracts.ts` should be the first place to look for any token ABI used in the project.
