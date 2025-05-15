@@ -1,7 +1,12 @@
 import React from 'react'
 import { formatUnits, parseUnits, type Address } from 'viem'
 import { useReadContract, useWriteContract } from 'wagmi'
-import { parseBlockchainError, type BlockchainError, type BlockchainErrorMessageProps } from '../utils/error-handling'
+import {
+    parseBlockchainError,
+    type BlockchainError,
+    type BlockchainErrorMessageProps,
+    type ParsedBlockchainError,
+} from '../utils/error-handling'
 
 // Minimal ERC20 ABI for token interactions
 export const erc20Abi = [
@@ -120,9 +125,13 @@ export function useApproveToken(decimals: number = 18) {
             })
             return result
         } catch (err) {
-            const parsed = parseBlockchainError(err as BlockchainError)
-            setParsedApproveError(parsed)
-            throw parsed
+            const parsed: ParsedBlockchainError = parseBlockchainError(err as BlockchainError)
+            setParsedApproveError({
+                type: parsed.type,
+                message: parsed.message,
+                suggestion: parsed.suggestion,
+            })
+            throw parsed // Re-throw the full ParsedBlockchainError for other potential catchers/logging
         }
     }
 
