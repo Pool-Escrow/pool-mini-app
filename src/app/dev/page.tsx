@@ -19,10 +19,10 @@ import {
   WalletDropdownDisconnect,
 } from "@coinbase/onchainkit/wallet";
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { Button } from "@/app/components/DemoComponents";
-import { Icon } from "@/app/components/DemoComponents";
-import { Home } from "@/app/components/DemoComponents";
-import { Features } from "@/app/components/DemoComponents";
+import { Button } from "@/components/DemoComponents";
+import { Icon } from "@/components/DemoComponents";
+import { Home } from "@/components/DemoComponents";
+import { Features } from "@/components/DemoComponents";
 
 export default function App() {
   const { setFrameReady, isFrameReady, context } = useMiniKit();
@@ -34,6 +34,7 @@ export default function App() {
 
   useEffect(() => {
     if (!isFrameReady) {
+      console.log("App: Setting frame ready");
       setFrameReady();
     }
   }, [setFrameReady, isFrameReady]);
