@@ -3,11 +3,15 @@
 import { CONTRACT_CONFIG } from '@/config/contract-config'
 import { PREDEFINED_TOKENS } from '@/config/tokens'
 import { useCreatePool } from '@/hooks/use-pool-contract'
-import { Pool } from '@/types/pool'
+import { useTransactionStatus } from '@/hooks/use-transaction-status'
+import type { Pool } from '@/types/pool'
+import { BlockchainErrorType } from '@/utils/error-handling'
 import Image from 'next/image'
-import { useState } from 'react'
-import { parseUnits, type Address } from 'viem'
+import { useEffect, useState } from 'react'
+import { parseUnits, type Address, type Hash } from 'viem'
 import { useChainId } from 'wagmi'
+import { BlockchainErrorMessage } from '../BlockchainErrorMessage'
+import { TransactionStatusDisplay } from '../TransactionStatusDisplay'
 
 interface ReviewAndCreateStepProps {
     poolData: Partial<Pool>
@@ -19,8 +23,18 @@ export function ReviewAndCreateStep({ poolData, onConfirm, onBack }: ReviewAndCr
     const chainId = useChainId()
     const poolContractAddress = CONTRACT_CONFIG.getPoolContractAddress(chainId)
 
-    const { createPool, createPoolData, rawCreatePoolError, parsedCreatePoolError, isCreatingPool } = useCreatePool()
+    const { createPool, parsedCreatePoolError, isCreatingPool: isSubmittingCreateTx } = useCreatePool()
     const [creationError, setCreationError] = useState<string | null>(null)
+    const [submittedTxHash, setSubmittedTxHash] = useState<Hash | undefined>(undefined)
+
+    const {
+        // status: _txStatus,
+        // transaction: _txData,
+        error: txConfirmError,
+        isLoading: isTxLoading,
+        isSuccess: isTxSuccess,
+        // isError: _isTxConfirmedError,
+    } = useTransactionStatus(submittedTxHash)
 
     const displayValue = (value: string | number | boolean | Date | undefined | null, placeholder = 'Not set') =>
         value !== undefined && value !== null && value !== '' ? String(value) : placeholder
@@ -47,6 +61,7 @@ export function ReviewAndCreateStep({ poolData, onConfirm, onBack }: ReviewAndCr
         }
 
         setCreationError(null)
+        setSubmittedTxHash(undefined)
 
         try {
             const timeStart = BigInt(Math.floor(new Date(poolData.registrationStart).getTime() / 1000))
@@ -64,17 +79,20 @@ export function ReviewAndCreateStep({ poolData, onConfirm, onBack }: ReviewAndCr
 
             const txHash = await createPool(poolContractAddress, args)
             if (txHash) {
-                onConfirm(txHash)
+                setSubmittedTxHash(txHash)
             }
         } catch (error: unknown) {
-            // The useCreatePool hook already catches, parses, and sets parsedCreatePoolError.
-            // It then re-throws the parsed error. We can log it here if needed.
             console.error('Error during createPool call in ReviewAndCreateStep:', error)
-            // No need to setCreationError here for errors from createPool,
-            // as parsedCreatePoolError will be updated by the hook and trigger UI changes.
-            // The local `creationError` state is primarily for client-side pre-flight checks.
         }
     }
+
+    useEffect(() => {
+        if (isTxSuccess && submittedTxHash) {
+            onConfirm(submittedTxHash)
+        }
+    }, [isTxSuccess, submittedTxHash, onConfirm])
+
+    const overallIsLoading = isSubmittingCreateTx || (submittedTxHash && isTxLoading)
 
     return (
         <div className='space-y-6'>
@@ -180,57 +198,56 @@ export function ReviewAndCreateStep({ poolData, onConfirm, onBack }: ReviewAndCr
                 </div>
             </div>
 
-            {isCreatingPool && (
+            {isSubmittingCreateTx && !submittedTxHash && (
                 <div className='mt-4 text-center text-indigo-600'>
-                    <p>Processing pool creation...</p>
-                    <p>Please confirm the transaction in your wallet.</p>
+                    <p>Submitting pool creation transaction...</p>
+                    <p>Please confirm in your wallet.</p>
                 </div>
             )}
 
-            {rawCreatePoolError && !parsedCreatePoolError && (
-                <div className='mt-4 rounded-md bg-red-50 p-3'>
-                    <p className='text-sm font-medium text-red-700'>
-                        An error occurred. Please check your wallet and try again.
-                    </p>
-                    <p className='text-xs text-red-600'>{rawCreatePoolError.message.split('Details:')[0]}</p>
-                </div>
+            {submittedTxHash && (
+                <TransactionStatusDisplay hash={submittedTxHash} chainId={chainId} title='Pool Creation Status' />
             )}
-            {parsedCreatePoolError && (
-                <div className='mt-4 rounded-md bg-red-50 p-3'>
-                    <p className='text-sm font-semibold text-red-700 capitalize'>
-                        {parsedCreatePoolError.type.replace(/_/g, ' ')}
-                    </p>
-                    <p className='text-sm text-red-600'>{parsedCreatePoolError.message}</p>
-                    <p className='mt-1 text-xs text-red-500'>{parsedCreatePoolError.suggestion}</p>
-                </div>
+
+            {parsedCreatePoolError && !submittedTxHash && (
+                <BlockchainErrorMessage error={parsedCreatePoolError} className='mt-4' />
             )}
-            {creationError && !parsedCreatePoolError && !rawCreatePoolError && (
+            {txConfirmError && submittedTxHash && (
+                <BlockchainErrorMessage
+                    error={{
+                        type: BlockchainErrorType.UNKNOWN,
+                        message: txConfirmError.message,
+                        suggestion:
+                            'The transaction was submitted but may have failed to confirm or was reverted. Check the block explorer.',
+                    }}
+                    className='mt-4'
+                />
+            )}
+
+            {creationError && !parsedCreatePoolError && !submittedTxHash && (
                 <div className='mt-4 rounded-md bg-red-50 p-3'>
                     <p className='text-sm font-medium text-red-700'>{creationError}</p>
-                </div>
-            )}
-
-            {createPoolData && (
-                <div className='mt-4 rounded-md bg-green-50 p-3'>
-                    <p className='text-sm font-medium text-green-700'>Pool creation transaction submitted!</p>
-                    <p className='truncate text-xs text-green-600'>Transaction Hash: {createPoolData}</p>
-                    {/* Optionally, add a link to a block explorer */}
-                    {/* <a href={`https://etherscan.io/tx/${createPoolData}`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">View on Etherscan</a> */}
                 </div>
             )}
 
             <div className='flex justify-between pt-2'>
                 <button
                     onClick={onBack}
-                    disabled={isCreatingPool || !!createPoolData}
+                    disabled={overallIsLoading ?? isTxSuccess}
                     className='rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50'>
                     Back
                 </button>
                 <button
-                    onClick={handleConfirmAndCreate}
-                    disabled={isCreatingPool || !!createPoolData}
+                    onClick={() => void handleConfirmAndCreate()}
+                    disabled={overallIsLoading ?? isTxSuccess}
                     className='rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50'>
-                    {isCreatingPool ? 'Creating...' : createPoolData ? 'Created!' : 'Confirm and Create Pool'}
+                    {isSubmittingCreateTx
+                        ? 'Submitting...'
+                        : submittedTxHash && isTxLoading
+                          ? 'Processing...'
+                          : isTxSuccess
+                            ? 'Pool Created!'
+                            : 'Confirm and Create Pool'}
                 </button>
             </div>
         </div>

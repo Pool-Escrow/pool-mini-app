@@ -33,34 +33,34 @@ interface PoolConfigStepProps {
 const CUSTOM_TOKEN_KEY = 'custom'
 
 export function PoolConfigStep({ initialData, onNext, onBack }: PoolConfigStepProps) {
-    const [depositAmount, setDepositAmount] = useState<string>(initialData?.depositAmount?.toString() || '')
-    const [maxEntries, setMaxEntries] = useState<string>(initialData?.maxEntries?.toString() || '')
-    const [rulesLink, setRulesLink] = useState(initialData?.rulesLink || '')
-    const [winnerCount, setWinnerCount] = useState<string>(initialData?.winnerCount?.toString() || '')
-    const [amountPerWinner, setAmountPerWinner] = useState<string>(initialData?.amountPerWinner?.toString() || '')
+    const [depositAmount, setDepositAmount] = useState<string>(initialData?.depositAmount?.toString() ?? '')
+    const [maxEntries, setMaxEntries] = useState<string>(initialData?.maxEntries?.toString() ?? '')
+    const [rulesLink, setRulesLink] = useState(initialData?.rulesLink ?? '')
+    const [winnerCount, setWinnerCount] = useState<string>(initialData?.winnerCount?.toString() ?? '')
+    const [amountPerWinner, setAmountPerWinner] = useState<string>(initialData?.amountPerWinner?.toString() ?? '')
 
     // Token selection state
     const [selectedTokenKey, setSelectedTokenKey] = useState<string>(
-        initialData?.selectedTokenKey || Object.keys(PREDEFINED_TOKENS)[0] || CUSTOM_TOKEN_KEY,
+        initialData?.selectedTokenKey ?? Object.keys(PREDEFINED_TOKENS)[0] ?? CUSTOM_TOKEN_KEY,
     )
 
     // State for custom token inputs - only used if selectedTokenKey is 'custom'
     const [customTokenAddress, setCustomTokenAddress] = useState(
-        initialData?.selectedTokenKey === CUSTOM_TOKEN_KEY ? initialData?.tokenAddress || '' : '',
+        initialData?.selectedTokenKey === CUSTOM_TOKEN_KEY ? (initialData?.tokenAddress ?? '') : '',
     )
     const [customTokenSymbol, setCustomTokenSymbol] = useState(
-        initialData?.selectedTokenKey === CUSTOM_TOKEN_KEY ? initialData?.tokenSymbol || '' : '',
+        initialData?.selectedTokenKey === CUSTOM_TOKEN_KEY ? (initialData?.tokenSymbol ?? '') : '',
     )
     const [customTokenDecimals, setCustomTokenDecimals] = useState<string>(
-        initialData?.selectedTokenKey === CUSTOM_TOKEN_KEY ? initialData?.tokenDecimals?.toString() || '' : '',
+        initialData?.selectedTokenKey === CUSTOM_TOKEN_KEY ? (initialData?.tokenDecimals?.toString() ?? '') : '',
     )
 
     // Effect to update custom fields if initialData changes and custom is selected
     useEffect(() => {
         if (initialData?.selectedTokenKey === CUSTOM_TOKEN_KEY) {
-            setCustomTokenAddress(initialData.tokenAddress || '')
-            setCustomTokenSymbol(initialData.tokenSymbol || '')
-            setCustomTokenDecimals(initialData.tokenDecimals?.toString() || '')
+            setCustomTokenAddress(initialData.tokenAddress ?? '')
+            setCustomTokenSymbol(initialData.tokenSymbol ?? '')
+            setCustomTokenDecimals(initialData.tokenDecimals?.toString() ?? '')
         } else if (initialData?.selectedTokenKey && PREDEFINED_TOKENS[initialData.selectedTokenKey]) {
             // If a predefined token was initially set, ensure custom fields are cleared
             setCustomTokenAddress('')
@@ -331,7 +331,15 @@ export function PoolConfigStep({ initialData, onNext, onBack }: PoolConfigStepPr
                 />
             </div>
 
-            <div className='flex w-full flex-col gap-4 sm:flex-row'>
+            <div className='mb-6 w-full border-t border-gray-200 pt-6'>
+                <h3 className='mb-2 text-center text-lg font-semibold text-gray-900'>Fees</h3>
+                <p className='text-center text-sm text-gray-600'>
+                    A small platform fee may apply to pool creation. Details will be shown at confirmation. Network fees
+                    (gas) will also apply.
+                </p>
+            </div>
+
+            <div className='flex w-full flex-col space-y-4 sm:flex-row sm:justify-between sm:space-y-0'>
                 {onBack && (
                     <button
                         onClick={onBack}

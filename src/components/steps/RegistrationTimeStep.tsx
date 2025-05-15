@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 
 interface RegistrationTimeStepProps {
@@ -13,9 +11,7 @@ interface RegistrationTimeStepProps {
 }
 
 export function RegistrationTimeStep({ initialData, onNext, onBack }: RegistrationTimeStepProps) {
-    const [registrationEnabled, setRegistrationEnabled] = useState(
-        initialData?.registrationEnabled !== undefined ? initialData.registrationEnabled : true,
-    )
+    const [registrationEnabled, setRegistrationEnabled] = useState(initialData?.registrationEnabled ?? true)
 
     const [startDate, setStartDate] = useState(
         initialData?.registrationStart
@@ -108,7 +104,8 @@ export function RegistrationTimeStep({ initialData, onNext, onBack }: Registrati
                         <div
                             className={`relative h-6 w-12 rounded-full transition-colors ${registrationEnabled ? 'bg-blue-500' : 'bg-gray-300'}`}>
                             <div
-                                className={`absolute top-1 left-1 h-4 w-4 rounded-full bg-white transition-transform ${registrationEnabled ? 'translate-x-6 transform' : ''}`}></div>
+                                className={`absolute top-1 left-1 h-4 w-4 rounded-full bg-white transition-transform ${registrationEnabled ? 'translate-x-6 transform' : ''}`}
+                            />
                         </div>
                     </label>
                 </div>
