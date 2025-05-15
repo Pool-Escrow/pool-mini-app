@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
         domains: ['randomuser.me'],
     },
     serverExternalPackages: ['pino-pretty', 'lokijs', 'encoding'],
+    devIndicators: false,
 }
 
 export default nextConfig
