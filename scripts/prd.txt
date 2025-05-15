@@ -1,187 +1,205 @@
+<context>
 # Overview  
-Pool is a Farcaster mini-app that enables creators to organize event pools and giveaways for their community. The platform solves the problem of community engagement and reward distribution by providing a seamless interface for creating, managing, and participating in pools. It's designed for Farcaster users who want to create engagement-driven events or distribute rewards to their community in a transparent way.
-
-# Existing Codebase Considerations
-## Preservation Requirements
-- **Important**: This project has an existing codebase structure that must be preserved and extended.
-- The current implementation already includes OnchainKit integration, color schemes, typography, and basic UI components.
-- All new development must build upon the existing foundation without replacing or refactoring current functionality.
-- The existing event creation flow must be maintained and used as a pattern for new wizard implementations.
-
-## Critical Preserved Components
-- **OnchainKit Integration**: The wallet connection functionality must not be modified.
-- **Balance Component**: The existing balance display must be maintained.
-- **CreatePoolWizard**: The current event creation wizard serves as a template for new wizards.
-- **UI Components**: Existing UI components, styling patterns, and color schemes must be reused for consistency.
-
-## Development Approach
-- Analyze existing code structure before implementation to understand patterns and conventions.
-- Extend the current component architecture rather than introducing new patterns.
-- Reuse existing styling, layout patterns, and component organization.
-- When in doubt, prefer consistency with existing code over introducing new approaches.
+Pool is a Farcaster mini-app that enables creators to organize event pools and giveaways for their community on-chain. The platform solves the problem of community engagement and reward distribution by providing a seamless interface for creating, managing, and participating in pools backed by smart contracts. It's designed for Farcaster users who want to create trustless, transparent engagement-driven events or distribute rewards to their community in a decentralized way.
 
 # Core Features  
-## Admin Features
-1. **Event Pool Creation**
-   - What: A multi-step wizard allowing admins to create event pools with custom images, names, descriptions, buy-in amounts, and participant caps
-   - Why: Enables monetization of community engagement and creation of exclusive events
-   - How: Three-step wizard with visual selection, text inputs, and numerical configuration
+## Smart Contract Integration
+1. **Pool Contract SDK Layer**
+   - What: A set of hooks and utilities for interacting with the Pool smart contract
+   - Why: Enables seamless interaction with on-chain pools without complex blockchain code
+   - How: Using wagmi-cli generated types and custom hooks for contract functions
 
-2. **Giveaway Creation**
-   - What: A two-step wizard for setting up giveaways with specified amounts, participant limits, and distribution rules
-   - Why: Provides a straightforward way to reward community members and boost engagement
-   - How: Form-based interface with toggles for participation requirements and time constraints
+2. **On-Chain Pool Creation**
+   - What: Enhancing the existing pool creation wizard to create pools on-chain
+   - Why: Provides transparency and trustlessness to pool creation and management
+   - How: Integration with the Pool smart contract's createPool function
 
-3. **Pool Dashboard**
-   - What: Detailed view of each pool/giveaway with participant management and prize distribution
-   - Why: Allows tracking of participation and simplified distribution of rewards
-   - How: Tabbed interface showing pool details and participant list with payment functionality
+3. **On-Chain Pool Participation**
+   - What: Functionality to join pools by depositing tokens to the smart contract
+   - Why: Ensures secure, verifiable participation in community pools
+   - How: Integration with the deposit function of the Pool contract
 
-## Regular User Features
-1. **Onboarding Experience**
-   - What: Two-screen overlay explaining the purpose and functionality of Pool
-   - Why: Introduces new users to the concept and improves user retention
-   - How: Modal overlay with informational content and navigation controls
+4. **Prize Distribution System**
+   - What: Interface for pool creators to select winners and distribute prizes
+   - Why: Enables transparent and verifiable reward distribution
+   - How: Integration with contract functions for winner selection and claiming
 
-2. **Non-whitelisted User Interface**
-   - What: Welcome screen showing community pools and whitelist signup
-   - Why: Provides value even to users who aren't yet creators
-   - How: Grid of community OG avatars linking to their pools and email capture form
+## Frame Integration Features
+1. **Shareable Pool Frames**
+   - What: Dynamic frame generation for created pools with join functionality
+   - Why: Enables simple sharing and participation through Farcaster
+   - How: Frame metadata generation with pool details and action buttons
 
-3. **Pool Participation**
-   - What: Ability to join pools/giveaways directly through Farcaster Frames
-   - Why: Seamless integration with Farcaster for frictionless participation
-   - How: Frame-based interaction model within the Farcaster ecosystem
+2. **Pool Status Information**
+   - What: Display of pool participants, balance, and status in frames
+   - Why: Provides transparency about pool state directly in Farcaster
+   - How: Dynamic frame content generation based on on-chain data
+
+3. **Winner Announcement Frames**
+   - What: Auto-generated frames for announcing pool winners
+   - Why: Creates excitement and visibility for successful participants
+   - How: Special frame templates for displaying winner information
 
 # User Experience  
 ## User Personas
-1. **Admin/Creator**
-   - Whitelisted Farcaster users with established communities
-   - Looking to engage followers through events and rewards
-   - Needs simple tools to manage participant engagement and distribute prizes
+1. **Pool Creator**
+   - Farcaster users with established communities
+   - Seeking to create token-based pools or giveaways
+   - Needs simple tools to create pools and distribute prizes on-chain
 
-2. **Regular Participant**
-   - Farcaster users interested in joining community events
-   - Seeking valuable engagement opportunities and potential rewards
-   - Requires clear instructions on how to participate in pools
+2. **Pool Participant**
+   - Farcaster users interested in joining community pools
+   - Owns or willing to acquire tokens for participation
+   - Wants a simple, secure way to join and potentially win rewards
 
 ## Key User Flows
-### Admin Flow:
-1. Admin accesses the Pool mini-app via Farcaster
-2. Views balance and existing pools on the home screen
-3. Creates new event or giveaway using the appropriate wizard
+### Creator Flow:
+1. Creator connects wallet through the Pool mini-app
+2. Creates new pool by specifying token, amount, duration, and winners
+3. Confirms transaction to deploy the pool on-chain
 4. Shares the generated Frame on their Farcaster feed
-5. Manages participants and distributes rewards through the pool dashboard
+5. Selects winners and distributes rewards once the pool ends
 
-### Regular User Flow:
-1. User encounters Pool through a Frame in their Farcaster feed
-2. New users see an onboarding overlay explaining the app
-3. Non-whitelisted users see community pools and whitelist signup
-4. Users views pools through Frames directly in Farcaster which directs them to pool dashboard
-5. Users join pools by registering up through the pool dashboard using register button
-5. Participants potentially receive rewards from pool creators
+### Participant Flow:
+1. User discovers a pool through a Farcaster Frame
+2. Connects wallet to view pool details
+3. Approves token spending and joins the pool with deposit
+4. Receives notification if selected as a winner
+5. Claims rewards directly to their wallet
 
-## UI/UX Considerations
-- Mobile-first design for Farcaster Frame compatibility
-- Clear visual hierarchy emphasizing key actions
-- Consistent visual style with existing Farcaster mini-apps
-- Intuitive wizard patterns for complex creation flows
-- Minimal cognitive load by breaking tasks into discrete steps
+## UX Considerations for On-Chain Interaction
+- Clear transaction status and confirmation flows
+- Simplified gas estimation and transaction monitoring
+- Intuitive error handling and recovery paths
+- Streamlined token approval and spending processes
+- Educational elements explaining on-chain actions
+</context>
+<PRD>
+# Existing Codebase Considerations
+## Preservation Requirements
+- **Important**: This project has an existing frontend implementation that must be preserved and extended with smart contract integration.
+- The current implementation already includes OnchainKit and MiniKit integration, color schemes, typography, and UI components.
+- All new development must build upon the existing foundation without replacing or refactoring current functionality.
+- The existing data models and UI structure must be maintained while adding blockchain functionality.
+
+## Critical Preserved Components
+- **OnchainKit/MiniKit Integration**: The existing provider setup and frame integration must not be modified.
+- **Component Structure**: The current UI components must be enhanced rather than replaced.
+- **Styling System**: Existing styles and design patterns must be followed.
+- **File Structure**: The project organization pattern should be maintained, using kebab-case for new files.
+
+## Development Approach
+- Use wagmi-cli to auto-generate contract types instead of manually creating ABI files.
+- Extend existing components to interact with the smart contract rather than replacing them.
+- Reuse existing patterns in the codebase for new contract interaction features.
+- Follow the existing naming conventions and code structure.
 
 # Technical Architecture  
 ## System Components
-- **Frontend**: Next.js React application with Tailwind CSS for styling
-- **Wallet Integration**: Utilizing Onchain Kit for wallet connectivity and balance display
-- **State Management**: React context and hooks for local state management
-- **Frame Generation**: Creating Farcaster Frame metadata for sharing
+- **Frontend**: Existing Next.js application with Tailwind CSS
+- **Contract Integration**: Pool smart contract on Base network
+- **Type Generation**: wagmi-cli for generating type-safe contract interactions
+- **Transaction Management**: OnchainKit's Transaction component
+- **Frame Integration**: MiniKit for Farcaster Frame generation and handling
 
-## Data Models
-- **Pool/Event**: Contains image, name, description, buy-in amount, soft cap, rules link
-- **Giveaway**: Contains amount, participant limit, description, approval requirements, timeframe
-- **Participant**: User information, wallet address, participation status
+## Smart Contract Integration
+- **Contract Configuration**: Environment-aware contract addresses
+- **Type Safety**: Auto-generated types for contract functions and events
+- **Hook Layer**: Custom hooks for contract interaction using wagmi
+- **Transaction Handling**: Status management for pending transactions
+- **Error Handling**: User-friendly error messages for contract interactions
 
-## UI Components
-- Wizard components (multi-step forms)
-- Drawer/modal components for overlays
-- Dashboard components with tabs and lists
-- Progress indicators and status displays
-- Form components with validation
+## Data Flow
+- **Local to On-Chain**: Synchronizing UI state with blockchain state
+- **Event Listening**: Reacting to contract events for UI updates
+- **Caching Strategy**: Efficient data fetching and caching from blockchain
+- **Offline Support**: Graceful handling of network disconnections
 
-## Implementation Scope
-- Focus exclusively on UI implementation initially
-- Use mock data for display purposes
-- Defer backend integration for future phases
+## Implementation Considerations
+- **Gas Optimization**: Efficient transaction batching and timing
+- **Contract Call Batching**: Minimizing separate blockchain calls
+- **Error Recovery**: Transaction retry mechanisms and error handling
+- **Multi-wallet Support**: Compatibility with various wallet providers
 
 # Development Roadmap  
-## Phase 1: MVP (UI Focus)
-- Onboarding overlay component
-- Create Giveaway wizard flow
-- Non-whitelisted user welcome screen
-- Basic pool dashboard UI
-- Reuse existing components where possible
+## Phase 1: Contract Integration Foundation
+- Configure wagmi-cli and generate contract types
+- Create basic contract hooks for essential functions
+- Update existing data models to include on-chain data
+- Implement contract address configuration
 
-## Phase 2: Enhanced Features
-- Participant management functionality
-- Payment distribution interface
-- Dashboard analytics and metrics
-- Improved visual design and animations
-- Responsive optimizations
+## Phase 2: User Interface Enhancement
+- Extend PoolCard to display on-chain pool data
+- Modify CreatePoolWizard to interact with contract
+- Implement JoinPoolForm for on-chain deposits
+- Create transaction status components
 
-## Phase 3: Extended Capabilities
-- Additional pool/giveaway templates
-- Advanced customization options
-- Integration with other Farcaster features
-- Enhanced community showcase
+## Phase 3: Frame Integration
+- Create dynamic frame generation with pool data
+- Implement join pool action in frames
+- Build winner announcement frame templates
+- Add frame webhook handlers for pool actions
+
+## Phase 4: Advanced Features
+- Implement winner selection interface
+- Create prize distribution dashboard
+- Add sponsorship functionality
+- Develop pool analytics with on-chain data
 
 # Logical Dependency Chain
-1. **Foundation Components**
-   - Extend existing UI component library
-   - Create shared layout patterns
-   - Establish navigation structure
+1. **Contract SDK Layer**
+   - Configure wagmi-cli and generate types
+   - Create base contract hooks
+   - Implement transaction status management
 
-2. **Core Flows**
-   - Implement onboarding overlay
-   - Build giveaway creation wizard
-   - Develop pool dashboard interface
+2. **Core Pool Interactions**
+   - Extend pool creation to interact with contract
+   - Implement pool joining functionality
+   - Create token approval flow
 
-3. **User Interface Variants**
-   - Create non-whitelisted user view
-   - Implement community pools showcase
-   - Build whitelist registration
+3. **Frame Enhancement**
+   - Upgrade frame generation with on-chain data
+   - Implement frame action handlers
+   - Create dynamic frame content templates
 
-4. **Refinement and Polish**
-   - Add transitions and animations
-   - Implement responsive adjustments
-   - Polish visual details
+4. **Admin Features**
+   - Build winner selection interface
+   - Implement prize distribution
+   - Create pool management dashboard
 
 # Risks and Mitigations  
 ## Technical Challenges
-- **Risk**: Complexity of wizard state management across multiple flows
-  **Mitigation**: Use established patterns from existing event creation flow
+- **Risk**: Contract interactions failing due to gas issues or network congestion
+  **Mitigation**: Implement robust error handling and retry mechanisms
 
-- **Risk**: Consistency in UI/UX between different screens
-  **Mitigation**: Create reusable component library with consistent styling
+- **Risk**: Inconsistency between UI state and blockchain state
+  **Mitigation**: Use event listeners and polling for synchronization
+
+- **Risk**: Complex transaction flows confusing users
+  **Mitigation**: Create simplified transaction UIs with clear status indicators
 
 ## Implementation Constraints
-- **Risk**: Limited to UI-only implementation without backend functionality
-  **Mitigation**: Design with clear component boundaries for future integration
+- **Risk**: Maintaining performance with blockchain data fetching
+  **Mitigation**: Implement efficient caching and background loading
 
-- **Risk**: Maintaining compatibility with Farcaster Frame specifications
-  **Mitigation**: Follow Frame requirements closely in UI implementation
+- **Risk**: Supporting multiple wallet types seamlessly
+  **Mitigation**: Leverage OnchainKit's wallet management capabilities
 
-## Resource Limitations
-- **Risk**: Balancing comprehensive functionality with development speed
-  **Mitigation**: Prioritize core features with highest user impact first
+## Security Considerations
+- **Risk**: Users approving incorrect token amounts
+  **Mitigation**: Clear confirmation screens with amount validation
+
+- **Risk**: Smart contract vulnerabilities
+  **Mitigation**: Security testing and auditing of contract interactions
 
 # Appendix  
-## UI Implementation Notes
-- Use existing color palette and typography
-- Maintain current design language for consistency
-- Leverage Tailwind CSS for styling
-- Follow established component patterns
+## Smart Contract Details
+- **Pool Contract**: Handles pool creation, participant joining, and winner selection
+- **Token Management**: ERC-20 token for deposits and rewards
+- **Security Mechanisms**: Admin role control and emergency functions
 
-## Future Considerations
-- Backend integration for persistent data
-- Authentication and authorization
-- Analytics for pool performance
-- Enhanced Frame interaction capabilities 
+## Integration Notes
+- Use wagmi-generated types for type safety
+- Follow kebab-case naming convention for all new files
+- Leverage existing provider setup from MiniKit
+- Use existing UI components and extend as needed 

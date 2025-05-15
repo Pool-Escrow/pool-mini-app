@@ -1,0 +1,187 @@
+# Overview  
+Pool is a Farcaster mini-app that enables creators to organize event pools and giveaways for their community. The platform solves the problem of community engagement and reward distribution by providing a seamless interface for creating, managing, and participating in pools. It's designed for Farcaster users who want to create engagement-driven events or distribute rewards to their community in a transparent way.
+
+# Existing Codebase Considerations
+## Preservation Requirements
+- **Important**: This project has an existing codebase structure that must be preserved and extended.
+- The current implementation already includes OnchainKit integration, color schemes, typography, and basic UI components.
+- All new development must build upon the existing foundation without replacing or refactoring current functionality.
+- The existing event creation flow must be maintained and used as a pattern for new wizard implementations.
+
+## Critical Preserved Components
+- **OnchainKit Integration**: The wallet connection functionality must not be modified.
+- **Balance Component**: The existing balance display must be maintained.
+- **CreatePoolWizard**: The current event creation wizard serves as a template for new wizards.
+- **UI Components**: Existing UI components, styling patterns, and color schemes must be reused for consistency.
+
+## Development Approach
+- Analyze existing code structure before implementation to understand patterns and conventions.
+- Extend the current component architecture rather than introducing new patterns.
+- Reuse existing styling, layout patterns, and component organization.
+- When in doubt, prefer consistency with existing code over introducing new approaches.
+
+# Core Features  
+## Admin Features
+1. **Event Pool Creation**
+   - What: A multi-step wizard allowing admins to create event pools with custom images, names, descriptions, buy-in amounts, and participant caps
+   - Why: Enables monetization of community engagement and creation of exclusive events
+   - How: Three-step wizard with visual selection, text inputs, and numerical configuration
+
+2. **Giveaway Creation**
+   - What: A two-step wizard for setting up giveaways with specified amounts, participant limits, and distribution rules
+   - Why: Provides a straightforward way to reward community members and boost engagement
+   - How: Form-based interface with toggles for participation requirements and time constraints
+
+3. **Pool Dashboard**
+   - What: Detailed view of each pool/giveaway with participant management and prize distribution
+   - Why: Allows tracking of participation and simplified distribution of rewards
+   - How: Tabbed interface showing pool details and participant list with payment functionality
+
+## Regular User Features
+1. **Onboarding Experience**
+   - What: Two-screen overlay explaining the purpose and functionality of Pool
+   - Why: Introduces new users to the concept and improves user retention
+   - How: Modal overlay with informational content and navigation controls
+
+2. **Non-whitelisted User Interface**
+   - What: Welcome screen showing community pools and whitelist signup
+   - Why: Provides value even to users who aren't yet creators
+   - How: Grid of community OG avatars linking to their pools and email capture form
+
+3. **Pool Participation**
+   - What: Ability to join pools/giveaways directly through Farcaster Frames
+   - Why: Seamless integration with Farcaster for frictionless participation
+   - How: Frame-based interaction model within the Farcaster ecosystem
+
+# User Experience  
+## User Personas
+1. **Admin/Creator**
+   - Whitelisted Farcaster users with established communities
+   - Looking to engage followers through events and rewards
+   - Needs simple tools to manage participant engagement and distribute prizes
+
+2. **Regular Participant**
+   - Farcaster users interested in joining community events
+   - Seeking valuable engagement opportunities and potential rewards
+   - Requires clear instructions on how to participate in pools
+
+## Key User Flows
+### Admin Flow:
+1. Admin accesses the Pool mini-app via Farcaster
+2. Views balance and existing pools on the home screen
+3. Creates new event or giveaway using the appropriate wizard
+4. Shares the generated Frame on their Farcaster feed
+5. Manages participants and distributes rewards through the pool dashboard
+
+### Regular User Flow:
+1. User encounters Pool through a Frame in their Farcaster feed
+2. New users see an onboarding overlay explaining the app
+3. Non-whitelisted users see community pools and whitelist signup
+4. Users views pools through Frames directly in Farcaster which directs them to pool dashboard
+5. Users join pools by registering up through the pool dashboard using register button
+5. Participants potentially receive rewards from pool creators
+
+## UI/UX Considerations
+- Mobile-first design for Farcaster Frame compatibility
+- Clear visual hierarchy emphasizing key actions
+- Consistent visual style with existing Farcaster mini-apps
+- Intuitive wizard patterns for complex creation flows
+- Minimal cognitive load by breaking tasks into discrete steps
+
+# Technical Architecture  
+## System Components
+- **Frontend**: Next.js React application with Tailwind CSS for styling
+- **Wallet Integration**: Utilizing Onchain Kit for wallet connectivity and balance display
+- **State Management**: React context and hooks for local state management
+- **Frame Generation**: Creating Farcaster Frame metadata for sharing
+
+## Data Models
+- **Pool/Event**: Contains image, name, description, buy-in amount, soft cap, rules link
+- **Giveaway**: Contains amount, participant limit, description, approval requirements, timeframe
+- **Participant**: User information, wallet address, participation status
+
+## UI Components
+- Wizard components (multi-step forms)
+- Drawer/modal components for overlays
+- Dashboard components with tabs and lists
+- Progress indicators and status displays
+- Form components with validation
+
+## Implementation Scope
+- Focus exclusively on UI implementation initially
+- Use mock data for display purposes
+- Defer backend integration for future phases
+
+# Development Roadmap  
+## Phase 1: MVP (UI Focus)
+- Onboarding overlay component
+- Create Giveaway wizard flow
+- Non-whitelisted user welcome screen
+- Basic pool dashboard UI
+- Reuse existing components where possible
+
+## Phase 2: Enhanced Features
+- Participant management functionality
+- Payment distribution interface
+- Dashboard analytics and metrics
+- Improved visual design and animations
+- Responsive optimizations
+
+## Phase 3: Extended Capabilities
+- Additional pool/giveaway templates
+- Advanced customization options
+- Integration with other Farcaster features
+- Enhanced community showcase
+
+# Logical Dependency Chain
+1. **Foundation Components**
+   - Extend existing UI component library
+   - Create shared layout patterns
+   - Establish navigation structure
+
+2. **Core Flows**
+   - Implement onboarding overlay
+   - Build giveaway creation wizard
+   - Develop pool dashboard interface
+
+3. **User Interface Variants**
+   - Create non-whitelisted user view
+   - Implement community pools showcase
+   - Build whitelist registration
+
+4. **Refinement and Polish**
+   - Add transitions and animations
+   - Implement responsive adjustments
+   - Polish visual details
+
+# Risks and Mitigations  
+## Technical Challenges
+- **Risk**: Complexity of wizard state management across multiple flows
+  **Mitigation**: Use established patterns from existing event creation flow
+
+- **Risk**: Consistency in UI/UX between different screens
+  **Mitigation**: Create reusable component library with consistent styling
+
+## Implementation Constraints
+- **Risk**: Limited to UI-only implementation without backend functionality
+  **Mitigation**: Design with clear component boundaries for future integration
+
+- **Risk**: Maintaining compatibility with Farcaster Frame specifications
+  **Mitigation**: Follow Frame requirements closely in UI implementation
+
+## Resource Limitations
+- **Risk**: Balancing comprehensive functionality with development speed
+  **Mitigation**: Prioritize core features with highest user impact first
+
+# Appendix  
+## UI Implementation Notes
+- Use existing color palette and typography
+- Maintain current design language for consistency
+- Leverage Tailwind CSS for styling
+- Follow established component patterns
+
+## Future Considerations
+- Backend integration for persistent data
+- Authentication and authorization
+- Analytics for pool performance
+- Enhanced Frame interaction capabilities 
