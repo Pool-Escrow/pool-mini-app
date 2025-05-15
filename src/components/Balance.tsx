@@ -1,14 +1,20 @@
 'use client'
 
 import { useUserRole } from '@/components/providers'
+import { useWallet } from '@/hooks/use-wallet'
 import { clearAllPools } from '@/lib/poolStorage'
 import { clearAllRegistrations } from '@/lib/registrationStorage'
 import { Address, Avatar, EthBalance, Identity, Name } from '@coinbase/onchainkit/identity'
-import { ConnectWallet, Wallet, WalletDropdownDisconnect } from '@coinbase/onchainkit/wallet'
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from './ui/drawer'
+import { ConnectWallet, Wallet } from '@coinbase/onchainkit/wallet'
+import { useState } from 'react'
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from './ui/drawer'
 
 export function Balance() {
     const { userRole, toggleUserRole } = useUserRole()
+    const { isConnected, disconnect: disconnectWallet } = useWallet()
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+
+    const localStorageKey = 'poolMiniUserManuallyDisconnected'
 
     // Function to clear all data and reset the app
     const clearAllData = () => {
@@ -19,6 +25,14 @@ export function Balance() {
         console.log('All pools and registrations have been cleared')
         // Reload the page to reflect changes
         window.location.reload()
+    }
+
+    const handleManualDisconnect = () => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(localStorageKey, 'true')
+        }
+        disconnectWallet()
+        setIsDrawerOpen(false)
     }
 
     return (
@@ -35,17 +49,20 @@ export function Balance() {
                         />
                     </svg>
                 </button>
-                <Drawer>
-                    <Wallet>
-                        <ConnectWallet>
-                            <DrawerTrigger asChild>
+                <Wallet>
+                    <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+                        {!isConnected ? (
+                            <ConnectWallet />
+                        ) : (
+                            <DrawerTrigger onClick={() => setIsDrawerOpen(true)}>
                                 <div className='h-10 w-10 rounded-full bg-gray-300'></div>
                             </DrawerTrigger>
-                        </ConnectWallet>
+                        )}
 
                         <DrawerContent className='flex gap-2 bg-white p-4'>
                             <DrawerHeader>
                                 <DrawerTitle>Wallet</DrawerTitle>
+                                <DrawerDescription />
                             </DrawerHeader>
                             {/* <WalletDropdown> */}
                             <Identity hasCopyAddressOnClick>
@@ -79,14 +96,19 @@ export function Balance() {
                                     </button>
                                 )}
                             </div>
-                            {/* <DisconnectButton className='mx-auto my-4 w-11/12' /> */}
-                            <WalletDropdownDisconnect className='text-lime-500' />
+                            {/* Replace WalletDropdownDisconnect with a custom button */}
+                            <button
+                                onClick={handleManualDisconnect}
+                                className='flex w-full items-center justify-start rounded-md px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50'
+                                type='button'>
+                                Disconnect
+                            </button>
 
                             {/* <Button variant='outline' asChild></Button> */}
                             {/* </WalletDropdown> */}
                         </DrawerContent>
-                    </Wallet>
-                </Drawer>
+                    </Drawer>
+                </Wallet>
             </header>
 
             <div className='mb-8'>
