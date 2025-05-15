@@ -1,43 +1,8 @@
-import React from 'react'
+import { tokenAbi } from '@/types/contracts'
+import { useCallback, useState } from 'react'
 import { formatUnits, parseUnits, type Address } from 'viem'
 import { useReadContract, useWriteContract } from 'wagmi'
-import {
-    parseBlockchainError,
-    type BlockchainError,
-    type BlockchainErrorMessageProps,
-    type ParsedBlockchainError,
-} from '../utils/error-handling'
-
-// Minimal ERC20 ABI for token interactions
-export const erc20Abi = [
-    {
-        name: 'balanceOf',
-        type: 'function',
-        stateMutability: 'view',
-        inputs: [{ name: '_owner', type: 'address' }],
-        outputs: [{ name: 'balance', type: 'uint256' }],
-    },
-    {
-        name: 'allowance',
-        type: 'function',
-        stateMutability: 'view',
-        inputs: [
-            { name: '_owner', type: 'address' },
-            { name: '_spender', type: 'address' },
-        ],
-        outputs: [{ name: 'remaining', type: 'uint256' }],
-    },
-    {
-        name: 'approve',
-        type: 'function',
-        stateMutability: 'nonpayable',
-        inputs: [
-            { name: '_spender', type: 'address' },
-            { name: '_value', type: 'uint256' },
-        ],
-        outputs: [{ name: 'success', type: 'bool' }],
-    },
-] as const
+import { parseBlockchainError, type BlockchainError, type BlockchainErrorMessageProps } from '../utils/error-handling'
 
 export interface FormattedTokenAllowance {
     rawAllowance: bigint | undefined
@@ -51,40 +16,28 @@ export function useTokenAllowance(
     tokenAddress: Address | undefined,
     ownerAddress: Address | undefined,
     spenderAddress: Address | undefined,
-    decimals: number = 18, // Added for formatting
+    tokenDecimals: number | undefined = 18, // Default to 18 if not provided
 ) {
-    const { data, isLoading, isError, error, ...rest } = useReadContract({
+    const { data, error, isLoading, refetch } = useReadContract({
         address: tokenAddress,
-        abi: erc20Abi,
+        abi: tokenAbi,
         functionName: 'allowance',
         args: ownerAddress && spenderAddress ? [ownerAddress, spenderAddress] : undefined,
         query: {
-            enabled:
-                !!tokenAddress &&
-                !!ownerAddress &&
-                !!spenderAddress &&
-                tokenAddress !== '0x0000000000000000000000000000000000000000',
-            select: (allowanceData: bigint | undefined): FormattedTokenAllowance => {
-                if (typeof allowanceData === 'bigint') {
-                    return {
-                        rawAllowance: allowanceData,
-                        formattedAllowance: formatUnits(allowanceData, decimals),
-                    }
-                }
-                return {
-                    rawAllowance: undefined,
-                    formattedAllowance: undefined,
-                }
-            },
+            enabled: !!tokenAddress && !!ownerAddress && !!spenderAddress,
         },
     })
 
+    const tokenDecimalsToUse = tokenDecimals ?? 18
+
     return {
-        allowance: data, // This will be FormattedTokenAllowance | undefined
+        allowance:
+            data !== undefined
+                ? { rawAllowance: data, formattedAllowance: formatUnits(data, tokenDecimalsToUse) }
+                : undefined,
         isLoadingAllowance: isLoading,
-        isErrorAllowance: isError,
-        allowanceError: error,
-        ...rest,
+        allowanceError: error ? parseBlockchainError(error as BlockchainError) : null,
+        refetchAllowance: refetch,
     }
 }
 
@@ -92,54 +45,44 @@ export function useTokenAllowance(
  * Hook for approving an ERC20 token for a spender.
  * Allows for a specific amount or 'unlimited' approval.
  */
-export function useApproveToken(decimals: number = 18) {
-    const { writeContractAsync, isPending, isSuccess, error: rawApproveError, data: hash } = useWriteContract()
-    const [parsedApproveError, setParsedApproveError] = React.useState<BlockchainErrorMessageProps | null>(null)
+export function useApproveToken(tokenDecimals: number | undefined = 18) {
+    const { writeContractAsync, isPending, data: hash } = useWriteContract()
+    const [parsedApproveError, setParsedApproveError] = useState<BlockchainErrorMessageProps | null>(null)
 
-    // Max uint256 value for 'unlimited' approval
-    const MAX_UINT256 = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
+    const approveToken = useCallback(
+        async ({
+            tokenAddress,
+            spenderAddress,
+            amountToApprove, // Amount in human-readable format (e.g., "100")
+        }: {
+            tokenAddress: Address
+            spenderAddress: Address
+            amountToApprove: string
+        }) => {
+            setParsedApproveError(null)
+            try {
+                const tokenDecimalsToUse = tokenDecimals ?? 18
+                const rawAmount = parseUnits(amountToApprove, tokenDecimalsToUse)
 
-    const approveToken = async ({
-        tokenAddress,
-        spenderAddress,
-        amountToApprove, // Optional: if undefined or 'unlimited', approves MAX_UINT256
-    }: {
-        tokenAddress: Address
-        spenderAddress: Address
-        amountToApprove?: string | 'unlimited'
-    }) => {
-        setParsedApproveError(null)
-        let approvalAmount: bigint
-        if (amountToApprove === undefined || amountToApprove === 'unlimited') {
-            approvalAmount = MAX_UINT256
-        } else {
-            approvalAmount = parseUnits(amountToApprove, decimals)
-        }
-
-        try {
-            const result = await writeContractAsync({
-                address: tokenAddress,
-                abi: erc20Abi,
-                functionName: 'approve',
-                args: [spenderAddress, approvalAmount],
-            })
-            return result
-        } catch (err) {
-            const parsed: ParsedBlockchainError = parseBlockchainError(err as BlockchainError)
-            setParsedApproveError({
-                type: parsed.type,
-                message: parsed.message,
-                suggestion: parsed.suggestion,
-            })
-            throw parsed // Re-throw the full ParsedBlockchainError for other potential catchers/logging
-        }
-    }
+                const txHash = await writeContractAsync({
+                    address: tokenAddress,
+                    abi: tokenAbi,
+                    functionName: 'approve',
+                    args: [spenderAddress, rawAmount],
+                })
+                return { hash: txHash }
+            } catch (err) {
+                const parsedError = parseBlockchainError(err as BlockchainError)
+                setParsedApproveError(parsedError)
+                throw new Error(parsedError.message)
+            }
+        },
+        [writeContractAsync, tokenDecimals],
+    )
 
     return {
         approveToken,
         isApprovingToken: isPending,
-        isApproveTokenSuccess: isSuccess,
-        rawApproveTokenError: rawApproveError,
         approveTokenError: parsedApproveError,
         approveTokenHash: hash,
     }

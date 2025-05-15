@@ -1,6 +1,7 @@
-import { DefaultError } from '@tanstack/react-query'
+import type { DefaultError } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import { TransactionReceipt, type Hash } from 'viem'
+import type { TransactionReceipt} from 'viem';
+import { type Hash } from 'viem'
 import { useWaitForTransactionReceipt } from 'wagmi'
 
 export type TransactionStatus = 'idle' | 'pending' | 'success' | 'error'

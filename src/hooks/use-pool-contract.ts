@@ -3,9 +3,8 @@ import { useState } from 'react'
 import { formatUnits, type Address } from 'viem'
 import { useChainId, useReadContract, useWriteContract, type UseWriteContractParameters } from 'wagmi'
 
-import { poolAbi } from '../types/contracts' // Corrected import path and casing
+import { poolAbi, tokenAbi } from '@/types/contracts' // Import poolAbi and tokenAbi
 import { parseBlockchainError, type BlockchainError, type BlockchainErrorMessageProps } from '../utils/error-handling' // Added import
-import { erc20Abi } from './use-token-approval' // Import erc20Abi
 
 // Formatted type for our custom hook
 export interface FormattedPoolInfo {
@@ -125,7 +124,7 @@ export function useCreatePool(config?: UsePoolContractWriteProps) {
             const hash = await createPoolAsync({
                 ...config,
                 address: poolAddress,
-                abi: poolAbi, // Corrected casing
+                abi: poolAbi, // Uses imported poolAbi
                 functionName: 'createPool',
                 args: [
                     Number(args.timeStart),
@@ -143,7 +142,7 @@ export function useCreatePool(config?: UsePoolContractWriteProps) {
             const parsedError = parseBlockchainError(e as BlockchainError)
             setParsedCreatePoolError(parsedError)
             // console.error("Error creating pool:", parsedError);
-            throw parsedError
+            throw new Error(parsedError.message)
         }
     }
 
@@ -157,51 +156,48 @@ export function useCreatePool(config?: UsePoolContractWriteProps) {
 }
 
 /**
- * Hook for depositing (joining) a pool.
+ * Hook for joining an existing pool (depositing funds).
  */
-export function useJoinPool(config?: UsePoolContractWriteProps) {
-    const {
-        data: joinPoolData,
-        error: rawJoinPoolError,
-        isPending: isJoiningPool,
-        writeContractAsync: joinPoolAsync,
-    } = useWriteContract()
+export function useJoinPool() {
+    const { writeContractAsync, isPending, isSuccess, error: rawJoinError, data: hash } = useWriteContract()
+    const [parsedJoinError, setParsedJoinError] = useState<BlockchainErrorMessageProps | null>(null)
 
-    const [parsedJoinPoolError, setParsedJoinPoolError] = useState<BlockchainErrorMessageProps | null>(null)
-
-    const joinPool = async (
-        poolAddress: Address,
-        poolId: bigint,
-        depositAmount: bigint, // This is amount, not value. 'value' is for native token.
-    ) => {
+    const joinPool = async ({
+        poolContractAddress, // Address of the specific Pool contract instance
+        poolId,
+        depositAmount, // The exact amount to deposit, already in smallest units (BigInt)
+    }: {
+        poolContractAddress: Address
+        poolId: string | number // Will be converted to BigInt
+        depositAmount: bigint
+    }) => {
+        setParsedJoinError(null)
         try {
-            // For ERC20 pool deposits, the 'value' field should not be used for the token amount.
-            // The depositAmount is passed as an argument to the contract function.
-            // Ensure depositAmount is correctly formatted (e.g., using parseUnits if needed, but here it's bigint)
-            const hash = await joinPoolAsync({
-                ...config,
-                address: poolAddress,
-                abi: poolAbi, // Corrected casing
-                functionName: 'deposit', // Assuming 'deposit' is the correct function name for joining
-                args: [poolId, depositAmount],
-                // value: depositAmount, // Only use 'value' if sending native currency (ETH)
+            const result = await writeContractAsync({
+                address: poolContractAddress,
+                abi: poolAbi, // Use imported poolAbi instead of manual minimal ABI
+                functionName: 'deposit',
+                args: [BigInt(poolId), depositAmount],
             })
-            setParsedJoinPoolError(null)
-            return hash
-        } catch (e) {
-            const parsedError = parseBlockchainError(e as BlockchainError)
-            setParsedJoinPoolError(parsedError)
-            // console.error("Error joining pool:", parsedError);
-            throw parsedError
+            return result // Returns transaction hash
+        } catch (err) {
+            const parsedError = parseBlockchainError(err as BlockchainError)
+            setParsedJoinError({
+                type: parsedError.type,
+                message: parsedError.message,
+                suggestion: parsedError.suggestion,
+            })
+            throw new Error(parsedError.message) // Re-throw for other catchers/logging
         }
     }
 
     return {
         joinPool,
-        joinPoolData,
-        rawJoinPoolError,
-        parsedJoinPoolError,
-        isJoiningPool,
+        isJoiningPool: isPending,
+        isJoinPoolSuccess: isSuccess,
+        rawJoinPoolError: rawJoinError,
+        joinPoolError: parsedJoinError,
+        joinPoolTxHash: hash,
     }
 }
 
@@ -233,7 +229,7 @@ export function useSponsorPool(config?: UsePoolContractWriteProps) {
             const parsedError = parseBlockchainError(e as BlockchainError)
             setParsedSponsorPoolError(parsedError)
             // console.error("Error sponsoring pool:", parsedError);
-            throw parsedError
+            throw new Error(parsedError.message)
         }
     }
 
@@ -274,7 +270,7 @@ export function useSetWinners(config?: UsePoolContractWriteProps) {
             const parsedError = parseBlockchainError(e as BlockchainError)
             setParsedSetWinnersError(parsedError)
             // console.error("Error setting winners:", parsedError);
-            throw parsedError
+            throw new Error(parsedError.message)
         }
     }
 
@@ -317,7 +313,7 @@ export function useSetWinnersEvenly(config?: UsePoolContractWriteProps) {
             const parsedError = parseBlockchainError(e as BlockchainError)
             setParsedSetWinnersEvenlyError(parsedError)
             // console.error("Error setting winners evenly:", parsedError);
-            throw parsedError
+            throw new Error(parsedError.message)
         }
     }
 
@@ -362,7 +358,7 @@ export function useClaimWinnings(config?: UsePoolContractWriteProps) {
             const parsedError = parseBlockchainError(e as BlockchainError)
             setParsedClaimWinningsError(parsedError)
             // console.error("Error claiming winnings:", parsedError);
-            throw parsedError
+            throw new Error(parsedError.message)
         }
     }
 
@@ -403,7 +399,7 @@ export function useClaimWinning(config?: UsePoolContractWriteProps) {
             const parsedError = parseBlockchainError(e as BlockchainError)
             setParsedClaimWinningError(parsedError)
             // console.error("Error claiming winning:", parsedError);
-            throw parsedError
+            throw new Error(parsedError.message)
         }
     }
 
@@ -446,7 +442,7 @@ export function useCollectRemainingBalance(config?: UsePoolContractWriteProps) {
             const parsedError = parseBlockchainError(e as BlockchainError)
             setParsedCollectRemainingBalanceError(parsedError)
             // console.error("Error collecting remaining balance:", parsedError);
-            throw parsedError
+            throw new Error(parsedError.message)
         }
     }
 
@@ -543,7 +539,7 @@ export function useGetParticipants(poolId: string | undefined) {
         args: poolId ? [BigInt(poolId)] : undefined,
         query: {
             enabled: !!poolId && !!poolAddress && poolAddress !== '0x0000000000000000000000000000000000000000',
-            select: (data: readonly Address[] | undefined) => data || undefined,
+            select: (data: readonly Address[] | undefined) => data ?? undefined,
         },
     })
 }
@@ -560,7 +556,7 @@ export function useGetWinners(poolId: string | undefined) {
         args: poolId ? [BigInt(poolId)] : undefined,
         query: {
             enabled: !!poolId && !!poolAddress && poolAddress !== '0x0000000000000000000000000000000000000000',
-            select: (data: readonly Address[] | undefined) => data || undefined,
+            select: (data: readonly Address[] | undefined) => data ?? undefined,
         },
     })
 }
@@ -592,7 +588,7 @@ export function useGetParticipantDeposit(poolId: string | undefined, participant
 export function useTokenBalance(tokenAddress: Address | undefined, ownerAddress: Address | undefined) {
     return useReadContract({
         address: tokenAddress,
-        abi: erc20Abi,
+        abi: tokenAbi, // Use imported tokenAbi from @/types/contracts
         functionName: 'balanceOf',
         args: ownerAddress ? [ownerAddress] : undefined,
         query: {

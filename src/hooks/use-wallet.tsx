@@ -35,7 +35,7 @@ export function useWallet() {
     const [currentChainId, setCurrentChainId] = useState(0)
 
     // Get the effective address (either from Warpcast or wagmi)
-    const address = warpcastAddress || wagmiAddress
+    const address = warpcastAddress ?? wagmiAddress
 
     // Track all connection states together
     const isConnecting = isConnectingHook || isConnectingState
@@ -58,16 +58,18 @@ export function useWallet() {
                 setIsWarpcast(true)
 
                 try {
-                    // Create a viem wallet client for direct interaction
-                    const walletClient = createWalletClient({
-                        chain: base,
-                        transport: custom(window.ethereum),
-                    })
+                    if (typeof window !== 'undefined' && window.ethereum) {
+                        // Create a viem wallet client for direct interaction
+                        const walletClient = createWalletClient({
+                            chain: base,
+                            transport: custom(window.ethereum),
+                        })
 
-                    // Get address directly from Warpcast
-                    const addresses = await walletClient.getAddresses()
-                    console.log('addresses1', addresses)
-                    setWarpcastAddress(addresses[0])
+                        // Get address directly from Warpcast
+                        const addresses = await walletClient.getAddresses()
+                        console.log('addresses1', addresses)
+                        setWarpcastAddress(addresses[0])
+                    }
                 } catch (error) {
                     console.error('Failed to initialize Warpcast:', error)
                 }
@@ -75,7 +77,7 @@ export function useWallet() {
         }
 
         if (!isConnected && mounted) {
-            initWarpcast()
+            void initWarpcast()
         }
     }, [mounted, isConnected])
 
@@ -101,7 +103,7 @@ export function useWallet() {
         const warpcastConnector = connectors.find(c => c.id === 'xyz.farcaster.MiniAppWallet')
         if (warpcastConnector) {
             console.log('Auto-connecting to Warpcast connector', warpcastConnector)
-            connect({ connector: warpcastConnector })
+            void connect({ connector: warpcastConnector })
         }
     }, [mounted, isWarpcast, isConnected, connectors, connect, isConnecting])
 
@@ -137,7 +139,7 @@ export function useWallet() {
                 const connectorToReconnect = connectors.find(c => c.id === lastConnectorId)
                 if (connectorToReconnect) {
                     console.log('Attempting to auto-reconnect to:', connectorToReconnect.name)
-                    connect({ connector: connectorToReconnect })
+                    void connect({ connector: connectorToReconnect })
                 }
                 // If connector not found, localStorage will be cleared by the other useEffect when isConnected remains false
             }
@@ -163,7 +165,9 @@ export function useWallet() {
             window.ethereum.on('chainChanged', handleChainChanged)
 
             return () => {
-                window.ethereum.removeListener('chainChanged', handleChainChanged)
+                if (typeof window !== 'undefined' && window.ethereum) {
+                    window.ethereum.removeListener('chainChanged', handleChainChanged)
+                }
             }
         }
     }, [mounted, isConnected, activeConnector, connect, connectors, isWarpcast, isConnecting])
@@ -212,7 +216,7 @@ export function useWallet() {
     const networkName = 'Base Mainnet'
 
     // Connect to wallet
-    const connectWallet = async (connectorId?: string) => {
+    const connectWallet = (connectorId?: string) => {
         console.log(
             '[use-wallet.tsx] connectWallet called. Mounted:',
             mounted,
@@ -245,7 +249,7 @@ export function useWallet() {
             if (isWarpcast) {
                 const warpcastConnector = connectors.find(c => c.id === 'xyz.farcaster.MiniAppWallet')
                 if (warpcastConnector) {
-                    connect({ connector: warpcastConnector }) // Successful connect will clear MANUAL_DISCONNECT_KEY via useEffect
+                    void connect({ connector: warpcastConnector }) // Successful connect will clear MANUAL_DISCONNECT_KEY via useEffect
                 } else {
                     console.error('Warpcast connector not found for manual connection.')
                     setIsConnectingState(false)
@@ -256,13 +260,13 @@ export function useWallet() {
             } else {
                 const connectorToUse = connectorId
                     ? connectors.find(c => c.id === connectorId)
-                    : connectors.find(c => c.id === 'io.metamask') ||
-                      connectors.find(c => c.id === 'coinbaseWallet') ||
-                      (connectors.length > 0 ? connectors[0] : undefined)
+                    : (connectors.find(c => c.id === 'io.metamask') ??
+                      connectors.find(c => c.id === 'coinbaseWallet') ??
+                      (connectors.length > 0 ? connectors[0] : undefined))
 
                 if (connectorToUse) {
                     console.log('Attempting to connect with:', connectorToUse.name)
-                    connect({ connector: connectorToUse }) // Successful connect will clear MANUAL_DISCONNECT_KEY via useEffect
+                    void connect({ connector: connectorToUse }) // Successful connect will clear MANUAL_DISCONNECT_KEY via useEffect
                 } else {
                     console.error('No suitable connector found for manual connection.')
                     setIsConnectingState(false)
@@ -300,7 +304,7 @@ export function useWallet() {
             if (connector.disconnect) {
                 // Check if disconnect method exists
                 try {
-                    connector.disconnect()
+                    void connector.disconnect()
                 } catch (e) {
                     console.warn(`Error disconnecting connector ${connector.name}:`, e)
                 }
