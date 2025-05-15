@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/components/DemoComponents'
-import { Giveaway } from '@/components/GiveawayWizard'
+import type { Giveaway } from '@/components/GiveawayWizard'
 import { ParticipantsList } from '@/components/ParticipantsList'
 import { useUserRole } from '@/components/providers'
 import { getGiveawayById } from '@/lib/giveawayStorage'
@@ -53,7 +53,7 @@ export default function GiveawayPage({ params }: { params: Params }) {
 
     // Format time display for registration
     const formatRegistrationTime = () => {
-        if (!giveaway || !giveaway.registrationStart || !giveaway.registrationEnd) {
+        if (!giveaway?.registrationStart || !giveaway.registrationEnd) {
             return 'Registration time not set'
         }
 
@@ -133,7 +133,7 @@ export default function GiveawayPage({ params }: { params: Params }) {
 
     // Calculate progress percentage
     const getProgressPercentage = () => {
-        if (!giveaway || !giveaway.participantLimit) return 0
+        if (!giveaway?.participantLimit) return 0
         // This would normally be based on actual registrations
         // For now we'll show a small amount of progress (10%)
         return 10
@@ -142,7 +142,7 @@ export default function GiveawayPage({ params }: { params: Params }) {
     if (loading) {
         return (
             <div className='flex min-h-screen items-center justify-center bg-white'>
-                <div className='h-12 w-12 animate-spin rounded-full border-t-2 border-b-2 border-purple-500'></div>
+                <div className='h-12 w-12 animate-spin rounded-full border-t-2 border-b-2 border-purple-500' />
             </div>
         )
     }
@@ -162,7 +162,7 @@ export default function GiveawayPage({ params }: { params: Params }) {
     }
 
     // Get color for background gradient
-    const gradientClass = getGiveawayColor(giveaway.id || '0')
+    const gradientClass = getGiveawayColor(giveaway.id ?? '0')
 
     return (
         <div className='flex min-h-screen flex-col bg-white'>
@@ -175,7 +175,7 @@ export default function GiveawayPage({ params }: { params: Params }) {
                         stroke='currentColor'
                         viewBox='0 0 24 24'
                         xmlns='http://www.w3.org/2000/svg'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M15 19l-7-7 7-7'></path>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M15 19l-7-7 7-7' />
                     </svg>
                     Back
                 </Link>
@@ -267,9 +267,7 @@ export default function GiveawayPage({ params }: { params: Params }) {
 
                 {/* Progress Bar */}
                 <div className='mb-4 h-2 w-full rounded-full bg-gray-200'>
-                    <div
-                        className='h-full rounded-full bg-blue-500'
-                        style={{ width: `${getProgressPercentage()}%` }}></div>
+                    <div className='h-full rounded-full bg-blue-500' style={{ width: `${getProgressPercentage()}%` }} />
                 </div>
             </div>
 
@@ -310,7 +308,7 @@ export default function GiveawayPage({ params }: { params: Params }) {
             <div className='flex-1 p-4'>
                 {activeTab === 'participants' ? (
                     <ParticipantsList
-                        poolId={giveaway.id || ''}
+                        poolId={giveaway.id ?? ''}
                         isAdmin={isAdmin}
                         poolAmount={giveaway.amount}
                         key={refreshKey}
@@ -336,7 +334,8 @@ export default function GiveawayPage({ params }: { params: Params }) {
                                                 strokeLinecap='round'
                                                 strokeLinejoin='round'
                                                 strokeWidth='2'
-                                                d='M5 13l4 4L19 7'></path>
+                                                d='M5 13l4 4L19 7'
+                                            />
                                         </svg>
                                         <span>Follow @partywithpool required</span>
                                     </li>
@@ -353,7 +352,8 @@ export default function GiveawayPage({ params }: { params: Params }) {
                                                 strokeLinecap='round'
                                                 strokeLinejoin='round'
                                                 strokeWidth='2'
-                                                d='M5 13l4 4L19 7'></path>
+                                                d='M5 13l4 4L19 7'
+                                            />
                                         </svg>
                                         <span>Requires approval to join</span>
                                     </li>

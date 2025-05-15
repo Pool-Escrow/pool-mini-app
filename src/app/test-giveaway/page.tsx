@@ -1,6 +1,7 @@
 'use client'
 
-import { Giveaway, GiveawayWizard } from '@/components/GiveawayWizard'
+import type { Giveaway} from '@/components/GiveawayWizard';
+import { GiveawayWizard } from '@/components/GiveawayWizard'
 import { useState } from 'react'
 
 export default function TestGiveawayPage() {
@@ -30,7 +31,7 @@ export default function TestGiveawayPage() {
                         <div className='h-2.5 w-full rounded-full bg-gray-200'>
                             <div
                                 className='h-2.5 rounded-full bg-blue-600'
-                                style={{ width: `${(currentStep / 2) * 100}%` }}></div>
+                                style={{ width: `${(currentStep / 2) * 100}%` }} />
                         </div>
                         <p className='mt-2 text-center text-sm text-gray-500'>Step {currentStep} of 2</p>
                     </div>

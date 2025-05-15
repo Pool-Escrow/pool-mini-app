@@ -37,7 +37,7 @@ export default function MainPage() {
                 console.log('[page.tsx] Cleared MANUAL_DISCONNECT_KEY for onboarding connection attempt')
             }
             console.log('[page.tsx] Attempting to call connectWallet()') // Log: Before calling connectWallet
-            connectWallet()
+            void connectWallet()
         } else {
             console.log('[page.tsx] Wallet already connected, not calling connectWallet()') // Log: If already connected
         }

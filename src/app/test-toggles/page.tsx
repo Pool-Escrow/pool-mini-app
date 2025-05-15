@@ -35,7 +35,7 @@ export default function TestTogglesPage() {
                   onChange={() => setRequiresApproval(!requiresApproval)}
                 />
                 <div className={`relative w-12 h-6 rounded-full transition-colors ${requiresApproval ? 'bg-blue-500' : 'bg-gray-300'}`}>
-                  <div className={`absolute left-1 top-1 w-4 h-4 rounded-full bg-white transition-transform ${requiresApproval ? 'transform translate-x-6' : ''}`}></div>
+                  <div className={`absolute left-1 top-1 w-4 h-4 rounded-full bg-white transition-transform ${requiresApproval ? 'transform translate-x-6' : ''}`} />
                 </div>
               </label>
             </div>
@@ -59,7 +59,7 @@ export default function TestTogglesPage() {
                   onChange={() => setPageFollowRequired(!pageFollowRequired)}
                 />
                 <div className={`relative w-12 h-6 rounded-full transition-colors ${pageFollowRequired ? 'bg-blue-500' : 'bg-gray-300'}`}>
-                  <div className={`absolute left-1 top-1 w-4 h-4 rounded-full bg-white transition-transform ${pageFollowRequired ? 'transform translate-x-6' : ''}`}></div>
+                  <div className={`absolute left-1 top-1 w-4 h-4 rounded-full bg-white transition-transform ${pageFollowRequired ? 'transform translate-x-6' : ''}`} />
                 </div>
               </label>
             </div>
@@ -83,7 +83,7 @@ export default function TestTogglesPage() {
                   onChange={() => setRegistrationEnabled(!registrationEnabled)}
                 />
                 <div className={`relative w-12 h-6 rounded-full transition-colors ${registrationEnabled ? 'bg-blue-500' : 'bg-gray-300'}`}>
-                  <div className={`absolute left-1 top-1 w-4 h-4 rounded-full bg-white transition-transform ${registrationEnabled ? 'transform translate-x-6' : ''}`}></div>
+                  <div className={`absolute left-1 top-1 w-4 h-4 rounded-full bg-white transition-transform ${registrationEnabled ? 'transform translate-x-6' : ''}`} />
                 </div>
               </label>
             </div>

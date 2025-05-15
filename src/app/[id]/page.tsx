@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from 'react'
 import { PoolDashboard } from '@/components/PoolDashboard'
 import { getPoolById, initializePoolsStorage } from '@/lib/poolStorage'
-import { Pool } from '@/types/pool'
+import type { Pool } from '@/types/pool'
 import { useRouter } from 'next/navigation'
 
 export default function PoolPage({ params }: { params: Promise<{ id: string }> }) {
@@ -40,7 +40,7 @@ export default function PoolPage({ params }: { params: Promise<{ id: string }> }
     if (loading) {
         return (
             <div className='flex min-h-screen items-center justify-center bg-white'>
-                <div className='h-12 w-12 animate-spin rounded-full border-t-2 border-b-2 border-blue-500'></div>
+                <div className='h-12 w-12 animate-spin rounded-full border-t-2 border-b-2 border-blue-500' />
             </div>
         )
     }
