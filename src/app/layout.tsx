@@ -1,15 +1,16 @@
-import Providers from '@/components/providers'
-import '@coinbase/onchainkit/styles.css'
-import { Metadata, Viewport } from 'next'
-
 import '@/styles/globals.css'
+
+import Providers from '@/components/providers'
+import type { Metadata, Viewport } from 'next'
+
+import '@coinbase/onchainkit/styles.css'
 
 export const viewport: Viewport = {
     width: 'device-width',
     initialScale: 1,
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+export function generateMetadata(): Metadata {
     const URL = process.env.NEXT_PUBLIC_URL
     return {
         title: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
