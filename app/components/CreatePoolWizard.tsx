@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Pool } from "@/app/types/pool";
 import { ChooseImageStep } from "@/app/components/steps/ChooseImageStep";
 import { NameDescriptionStep } from "@/app/components/steps/NameDescriptionStep";
@@ -32,6 +33,8 @@ export function CreatePoolWizard({
     if (currentStep < TOTAL_STEPS_WIZARD) {
       onStepChange(currentStep + 1, stepSpecificData);
     } else {
+      // Update parent with final step data, then complete
+      onStepChange(currentStep, stepSpecificData);
       onComplete(updatedDataForParent as Omit<Pool, "id" | "createdAt">);
     }
   };

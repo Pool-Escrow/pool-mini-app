@@ -7,20 +7,20 @@ import { Pool } from "@/app/types/pool";
 
 interface RegistrationModalProps {
   isOpen: boolean;
-  onCloseAction: () => void;
+  onClose: () => void;
   pool: Pool;
-  onRegisterAction: () => void;
+  onRegister: () => void;
 }
 
 export function RegistrationModal({
   isOpen,
-  onCloseAction,
+  onClose,
   pool,
-  onRegisterAction,
+  onRegister,
 }: RegistrationModalProps) {
   const handleConfirmRegistration = () => {
-    onRegisterAction();
-    onCloseAction();
+    onRegister();
+    onClose();
   };
 
   const renderBuyInConfirmation = () => {
@@ -44,7 +44,7 @@ export function RegistrationModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onCloseAction}>
+    <Modal isOpen={isOpen} onClose={onClose}>
       <div className="bg-white rounded-lg overflow-hidden w-full max-w-md mx-auto">
         <div className="p-4 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">
@@ -67,7 +67,7 @@ export function RegistrationModal({
           <div className="flex space-x-3">
             <Button
               className="flex-1 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg"
-              onClick={onCloseAction}
+              onClick={onClose}
             >
               Cancel
             </Button>

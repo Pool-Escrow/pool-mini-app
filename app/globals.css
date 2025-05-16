@@ -23,3 +23,10 @@ body {
   font-style: normal;
   font-size: 80%;
 }
+
+/* Custom radial gradient utility for water ripple effects */
+@layer utilities {
+  .bg-gradient-radial {
+    background-image: radial-gradient(var(--tw-gradient-stops));
+  }
+}

@@ -41,6 +41,8 @@ export function GiveawayWizard({
     if (currentStep < TOTAL_STEPS_WIZARD) {
       onStepChange(currentStep + 1, stepSpecificData);
     } else {
+      // Update parent with final step data, then complete
+      onStepChange(currentStep, stepSpecificData);
       onComplete(updatedDataForParent as Omit<Giveaway, "id" | "createdAt">);
     }
   };

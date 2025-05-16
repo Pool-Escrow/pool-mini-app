@@ -10,20 +10,20 @@ interface GiveawayRequirementsStepProps {
     registrationStart?: string;
     registrationEnd?: string;
   };
-  onNextAction: (data: { 
+  onNext: (data: { 
     requiresApproval: boolean; 
     pageFollowRequired: boolean;
     registrationEnabled: boolean;
     registrationStart: string;
     registrationEnd: string;
   }) => void;
-  onBackAction: () => void;
+  onBack: () => void;
 }
 
 export function GiveawayRequirementsStep({
   initialData,
-  onNextAction,
-  onBackAction,
+  onNext,
+  onBack,
 }: GiveawayRequirementsStepProps) {
   const [requiresApproval, setRequiresApproval] = useState(
     initialData?.requiresApproval || false
@@ -84,7 +84,7 @@ export function GiveawayRequirementsStep({
     endDateTime.setHours(endHours);
     endDateTime.setMinutes(endMinutes);
     
-    onNextAction({
+    onNext({
       requiresApproval,
       pageFollowRequired,
       registrationEnabled,
@@ -302,7 +302,7 @@ export function GiveawayRequirementsStep({
 
       <div className="flex flex-col sm:flex-row gap-4 w-full mt-8">
         <button
-          onClick={onBackAction}
+          onClick={onBack}
           className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors"
         >
           Back

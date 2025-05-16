@@ -30,6 +30,7 @@ import {
 import { ProgressBar } from "@/app/components/ProgressBar";
 import { createPool as savePool } from "@/app/lib/poolStorage";
 import { createGiveaway as saveGiveaway } from "@/app/lib/giveawayStorage";
+import { ConfettiCelebration } from "@/app/components/ConfettiCelebration";
 
 export function HomePage() {
   // Get user role
@@ -48,6 +49,9 @@ export function HomePage() {
   const [isGiveawayDrawerOpen, setIsGiveawayDrawerOpen] = useState(false);
   const [currentGiveawayWizardStep, setCurrentGiveawayWizardStep] = useState(1);
   const [wizardGiveawayData, setWizardGiveawayData] = useState<Partial<Giveaway>>({});
+
+  // Confetti animation state
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // Load pools on component mount
   useEffect(() => {
@@ -79,6 +83,11 @@ export function HomePage() {
     setIsPoolDrawerOpen(false);
     // Refresh pools list
     setPools(getPools());
+    
+    // Show confetti animation after closing drawer
+    setTimeout(() => {
+      setShowConfetti(true);
+    }, 300);
   };
 
   const openPoolDrawerAndResetState = () => {
@@ -104,6 +113,11 @@ export function HomePage() {
     
     // Refresh giveaways list
     setGiveaways(getGiveaways());
+    
+    // Show confetti animation after closing drawer
+    setTimeout(() => {
+      setShowConfetti(true);
+    }, 300);
   };
 
   const openGiveawayDrawerAndResetState = () => {
@@ -112,8 +126,18 @@ export function HomePage() {
     setIsGiveawayDrawerOpen(true);
   };
 
+  const handleConfettiComplete = () => {
+    setShowConfetti(false);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+      {/* Confetti Animation */}
+      <ConfettiCelebration 
+        isVisible={showConfetti} 
+        onComplete={handleConfettiComplete} 
+      />
+
       {/* Balance Section - Blue Background */}
       <div className="bg-[#4C6FFF]">
         <Balance />

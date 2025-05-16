@@ -119,7 +119,7 @@ export function OnboardingOverlay({
               onClick={handleNext}
               className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg flex items-center"
             >
-              {isLastScreen ? "Get Started" : "Next"}
+              {isLastScreen ? "Dive in" : "Next"}
               {!isLastScreen && (
                 <svg 
                   className="w-4 h-4 ml-1" 
