@@ -29,34 +29,6 @@ const KEY_REGISTRY_ABI = [
     },
 ] as const
 
-// Define NotificationDetails based on what setUserNotificationDetails and sendFrameNotification expect
-interface NotificationDetails {
-    url: string
-    token: string
-    // any other properties if used by those functions
-}
-
-// For the overall request JSON structure
-interface WebhookRequestJson {
-    header: string // encodedHeader
-    payload: string // encodedPayload
-    // Add other potential top-level properties if they exist
-}
-
-// For the decoded header
-interface DecodedHeader {
-    fid: number
-    key: `0x${string}`
-    // Add other potential properties from decoded header
-}
-
-// For the decoded payload (event)
-interface BaseEventPayload {
-    event: 'frame_added' | 'frame_removed' | 'notifications_enabled' | 'notifications_disabled'
-    notificationDetails?: NotificationDetails | null // Optional and can be null
-    // Add other common event properties
-}
-
 async function verifyFidOwnership(fid: number, appKey: `0x${string}`) {
     const client = createPublicClient({
         chain: optimism,
@@ -71,8 +43,6 @@ async function verifyFidOwnership(fid: number, appKey: `0x${string}`) {
             args: [BigInt(fid), appKey],
         })
 
-        // Assuming result is of the type defined by KEY_REGISTRY_ABI outputs
-        // The ABI implies result is { state: number, keyType: number }
         return result.state === 1 && result.keyType === 1
     } catch (error) {
         console.error('Key Registry verification failed:', error)
@@ -80,24 +50,27 @@ async function verifyFidOwnership(fid: number, appKey: `0x${string}`) {
     }
 }
 
-function decode<T>(encoded: string): T {
-    return JSON.parse(Buffer.from(encoded, 'base64url').toString('utf-8')) as T
+function decode(encoded: string) {
+    return JSON.parse(Buffer.from(encoded, 'base64url').toString('utf-8')) as {
+        fid: number
+        key: `0x${string}`
+        event: string
+        notificationDetails: { url: string; token: string }
+    }
 }
 
 export async function POST(request: Request) {
-    const requestJson = (await request.json()) as WebhookRequestJson
+    const requestJson = (await request.json()) as {
+        header: string
+        payload: string
+    }
 
     const { header: encodedHeader, payload: encodedPayload } = requestJson
 
-    const headerData = decode<DecodedHeader>(encodedHeader)
-    const eventData = decode<BaseEventPayload>(encodedPayload) // Changed variable name for clarity
+    const headerData = decode(encodedHeader)
+    const event = decode(encodedPayload)
 
     const { fid, key } = headerData
-
-    if (!fid || !key) {
-        // Basic validation
-        return Response.json({ success: false, error: 'Missing fid or key in header' }, { status: 400 })
-    }
 
     const valid = await verifyFidOwnership(fid, key)
 
@@ -105,23 +78,17 @@ export async function POST(request: Request) {
         return Response.json({ success: false, error: 'Invalid FID ownership' }, { status: 401 })
     }
 
-    switch (eventData.event) {
+    switch (event.event) {
         case 'frame_added':
-            console.log('frame_added', 'eventData.notificationDetails', eventData.notificationDetails)
-            if (eventData.notificationDetails) {
-                await setUserNotificationDetails(fid, eventData.notificationDetails)
+            console.log('frame_added', 'event.notificationDetails', event.notificationDetails)
+            if (event.notificationDetails) {
+                await setUserNotificationDetails(fid, event.notificationDetails)
                 await sendFrameNotification({
                     fid,
-                    title: `Welcome to ${appName ?? 'our app'}`,
-                    body: `Thank you for adding ${appName ?? 'our app'}`,
-                    // notificationDetails from eventData should match what sendFrameNotification expects
-                    // if sendFrameNotification needs specific details, ensure eventData.notificationDetails provides them
-                    // or transform eventData.notificationDetails here.
-                    // For now, assuming it's compatible or optional.
-                    notificationDetails: eventData.notificationDetails ?? undefined,
+                    title: `Welcome to ${appName}`,
+                    body: `Thank you for adding ${appName}`,
                 })
             } else {
-                // Ensure deleteUserNotificationDetails doesn't expect a second arg if not provided.
                 await deleteUserNotificationDetails(fid)
             }
 
@@ -132,22 +99,13 @@ export async function POST(request: Request) {
             break
         }
         case 'notifications_enabled': {
-            console.log('notifications_enabled', eventData.notificationDetails)
-            if (eventData.notificationDetails) {
-                // Ensure notificationDetails exists
-                await setUserNotificationDetails(fid, eventData.notificationDetails)
-                await sendFrameNotification({
-                    fid,
-                    title: `Welcome to ${appName ?? 'our app'}`,
-                    body: `Thank you for enabling notifications for ${appName ?? 'our app'}`,
-                    notificationDetails: eventData.notificationDetails ?? undefined,
-                })
-            } else {
-                // Handle case where notifications_enabled is missing details if that's possible/problematic
-                console.warn('notifications_enabled event missing notificationDetails for FID:', fid)
-                // Optionally, delete details or send a generic notification
-                await deleteUserNotificationDetails(fid) // Or a different action
-            }
+            console.log('notifications_enabled', event.notificationDetails)
+            await setUserNotificationDetails(fid, event.notificationDetails)
+            await sendFrameNotification({
+                fid,
+                title: `Welcome to ${appName}`,
+                body: `Thank you for enabling notifications for ${appName}`,
+            })
 
             break
         }
@@ -157,10 +115,6 @@ export async function POST(request: Request) {
 
             break
         }
-        default:
-            // Handle unknown event types if necessary
-            console.warn('Received unknown event type:', eventData.event)
-            return Response.json({ success: false, error: 'Unknown event type' }, { status: 400 })
     }
 
     return Response.json({ success: true })

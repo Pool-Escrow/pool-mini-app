@@ -61,31 +61,18 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     //     }
     // }, [])
 
-    // Use useMemo to prevent unnecessary rerenders of MiniKitProvider
-    // const miniKitConfig = useMemo(
-    //     () => ({
-    //         appearance: {
-    //             mode: 'auto' as const,
-    //             theme: 'pool-theme',
-    //         },
-    //         connection: {
-    //             autoConnect: false,
-    //         },
-    //     }),
-    //     [],
-    // )
-    const miniKitConfig = {
-        appearance: {
-            mode: 'auto' as const,
-            theme: 'pool-theme',
-        },
-        connection: {
-            autoConnect: false,
-        },
-    }
-
     return (
-        <MiniKitProvider chain={base} config={miniKitConfig}>
+        <MiniKitProvider
+            apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
+            chain={base}
+            config={{
+                appearance: {
+                    mode: 'auto' as const,
+                    theme: 'pool-theme',
+                    name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
+                    logo: process.env.NEXT_PUBLIC_ICON_URL,
+                },
+            }}>
             <FrameProvider>
                 <UserRoleProvider>
                     {children}
