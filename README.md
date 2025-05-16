@@ -7,6 +7,13 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-oncha
 - [Tailwind CSS](https://tailwindcss.com)
 - [Next.js](https://nextjs.org/docs)
 
+## Deployments
+
+For information about deployed contracts and deployment history, see our [Deployment Documentation](./docs/deployment.md).
+
+- **Latest Base Mainnet Deployment**: [`0xA2cD9Ccd89C3c8760A701DaDD11174393443E495`](https://basescan.org/address/0xa2cd9ccd89c3c8760a701dadd11174393443e495)
+- **Latest Base Sepolia Testnet Deployment**: [`0xD571c6e319D13637A1DfF6F6e9fdb8d2803af3aE`](https://sepolia.basescan.org/address/0xd571c6e319d13637a1dff6f6e9fdb8d2803af3ae)
+
 ## Getting Started
 
 1. Install dependencies:
