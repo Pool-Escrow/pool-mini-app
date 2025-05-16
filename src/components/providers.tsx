@@ -73,6 +73,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                     name: env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
                     logo: env.NEXT_PUBLIC_ICON_URL,
                 },
+                wallet: {
+                    // display: 'modal',
+                },
             }}>
             <FrameProvider>
                 <UserRoleProvider>
