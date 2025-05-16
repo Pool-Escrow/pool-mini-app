@@ -1,4 +1,6 @@
 import PoolPageClient from '@/components/PoolPageClient' // Import the new client component
+import { getPoolWithContractFallback } from '@/lib/poolDataService' // Import real data fetching
+import type { Pool } from '@/types/pool' // Import real Pool type
 import { type Metadata } from 'next'
 
 // Mock Pool type and data fetching for metadata - replace with actual imports and logic from Task 40
@@ -33,14 +35,21 @@ async function getPoolDataForMeta(poolId: string): Promise<MockPoolForMeta | nul
     return Promise.resolve(result)
 }
 
-interface ServerPageProps {
-    params: { id: string }
-    // searchParams: { [key: string]: string | string[] | undefined } // if needed
-}
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const { id: poolId } = await params // Correctly await params
 
-export async function generateMetadata({ params }: ServerPageProps): Promise<Metadata> {
-    const poolId = params.id
-    const pool = await getPoolDataForMeta(poolId)
+    if (poolId === 'favicon.ico') {
+        console.error(
+            "[DIAGNOSTIC] generateMetadata in /pool/[id]/page.tsx was called with poolId 'favicon.ico'. This indicates a routing issue.",
+        )
+        // Return minimal metadata to prevent further errors down the line for this specific case
+        return {
+            title: 'Favicon Error',
+            description: 'Error processing favicon through dynamic route.',
+        }
+    }
+
+    const pool: Pool | null = await getPoolWithContractFallback(poolId)
 
     if (!pool) {
         return {
@@ -58,20 +67,19 @@ export async function generateMetadata({ params }: ServerPageProps): Promise<Met
         'fc:frame:image:aspect_ratio': '1.91:1',
         'fc:frame:button:1': 'View Pool Details',
         'fc:frame:button:1:action': 'link',
-        'fc:frame:button:1:target': `${appBaseUrl}/${pool.id}`,
+        'fc:frame:button:1:target': `${appBaseUrl}/pool/${pool.id}`, // Updated target
     }
 
-    if (pool.status === 'open') {
+    if (pool.status === 'active') {
         fcMetadata['fc:frame:button:2'] = 'Join Pool'
         fcMetadata['fc:frame:button:2:action'] = 'link'
-        fcMetadata['fc:frame:button:2:target'] = `${appBaseUrl}/${pool.id}?utm_source=farcaster_frame&action=join`
-    } else if (pool.status === 'ended') {
-        // If not open and ended, button 2 becomes "View Results"
+        fcMetadata['fc:frame:button:2:target'] = `${appBaseUrl}/pool/${pool.id}?utm_source=farcaster_frame&action=join` // Updated target
+    } else if (pool.status === 'completed' || pool.status === 'cancelled') {
         fcMetadata['fc:frame:button:2'] = 'View Results'
         fcMetadata['fc:frame:button:2:action'] = 'link'
-        fcMetadata['fc:frame:button:2:target'] = `${appBaseUrl}/${pool.id}?action=results`
+        fcMetadata['fc:frame:button:2:target'] = `${appBaseUrl}/pool/${pool.id}?action=results` // Updated target
     }
-    // Can add more buttons (up to 4) for other statuses if needed
+    // 'draft' pools might not show a second button or show a "Coming Soon" type message.
 
     return {
         title: `${pool.name} - Pool Mini App`,
@@ -80,15 +88,14 @@ export async function generateMetadata({ params }: ServerPageProps): Promise<Met
             title: `${pool.name} - Pool Mini App`,
             description: `Details for ${pool.name}. Join or view results.`,
             images: [{ url: dynamicImageUrl }],
-            url: `${appBaseUrl}/${pool.id}`,
+            url: `${appBaseUrl}/pool/${pool.id}`, // Updated URL
         },
         other: fcMetadata,
     }
 }
 
-// This is now a Server Component
-export default function Page({ params }: ServerPageProps) {
-    // Data fetching for the actual page content can also happen here if needed by PoolPageClient
-    // For now, PoolPageClient fetches its own data, we just pass the id.
-    return <PoolPageClient id={params.id} />
+// Make the Page component async and correctly await params
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params // Correctly await params
+    return <PoolPageClient id={id} />
 }
