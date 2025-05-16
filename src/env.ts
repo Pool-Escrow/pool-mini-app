@@ -10,8 +10,8 @@ export const env = createEnv({
         FARCASTER_HEADER: z.string().min(1),
         FARCASTER_PAYLOAD: z.string().min(1),
         FARCASTER_SIGNATURE: z.string().min(1),
-        REDIS_URL: z.string().url().optional(),
-        REDIS_TOKEN: z.string().optional(),
+        REDIS_URL: z.string().url(),
+        REDIS_TOKEN: z.string(),
         NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     },
 
@@ -24,36 +24,60 @@ export const env = createEnv({
         NEXT_PUBLIC_URL: z.string().url(),
         NEXT_PUBLIC_VERSION: z.string().min(1).default('next'),
         NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME: z.string().min(1),
-        NEXT_PUBLIC_APP_SUBTITLE: z.string().optional(),
-        NEXT_PUBLIC_APP_DESCRIPTION: z.string().optional(),
-        NEXT_PUBLIC_ICON_URL: z.string().url().optional(),
-        NEXT_PUBLIC_APP_ICON: z.string().url().optional(),
-        NEXT_PUBLIC_APP_SPLASH_IMAGE: z.string().url().optional(),
+        NEXT_PUBLIC_APP_SUBTITLE: z
+            .string()
+            .regex(/^[a-zA-Z0-9\s.,!?'"&()-]*$/, 'Emojis and restricted symbols are not allowed'),
+        NEXT_PUBLIC_APP_DESCRIPTION: z.string(),
+        NEXT_PUBLIC_ICON_URL: z.string().url(),
+        NEXT_PUBLIC_APP_ICON: z.string().url(),
+        NEXT_PUBLIC_APP_SPLASH_IMAGE: z.string().url(),
         NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR: z
             .string()
-            .regex(/^#[0-9A-F]{6}$/i, 'Must be a valid hex color code, e.g., #RRGGBB or #RGB (e.g. #000 for black)')
-            .optional(),
-        NEXT_PUBLIC_APP_PRIMARY_CATEGORY: z.string().optional(),
-        NEXT_PUBLIC_APP_HERO_IMAGE: z.string().url().optional(),
-        NEXT_PUBLIC_APP_TAGLINE: z.string().optional(),
-        NEXT_PUBLIC_APP_OG_TITLE: z.string().optional(),
-        NEXT_PUBLIC_APP_OG_DESCRIPTION: z.string().optional(),
-        NEXT_PUBLIC_APP_OG_IMAGE: z.string().url().optional(),
-        NEXT_PUBLIC_ONCHAINKIT_API_KEY: z.string().optional(),
-        NEXT_PUBLIC_CHAIN_ID: z.string().optional(),
-        NEXT_PUBLIC_L2_EXPLORER_URL: z.string().url().optional(),
-        NEXT_PUBLIC_POOL_CONTRACT_BASE: z
-            .custom<`0x${string}`>(val => /^0x[0-9a-fA-F]{40}$/.test(val as string), 'Must be a valid Ethereum address')
-            .optional(),
-        NEXT_PUBLIC_POOL_CONTRACT_BASE_SEPOLIA: z
-            .custom<`0x${string}`>(val => /^0x[0-9a-fA-F]{40}$/.test(val as string), 'Must be a valid Ethereum address')
-            .optional(),
-        NEXT_PUBLIC_TOKEN_CONTRACT_BASE: z
-            .custom<`0x${string}`>(val => /^0x[0-9a-fA-F]{40}$/.test(val as string), 'Must be a valid Ethereum address')
-            .optional(),
-        NEXT_PUBLIC_TOKEN_CONTRACT_BASE_SEPOLIA: z
-            .custom<`0x${string}`>(val => /^0x[0-9a-fA-F]{40}$/.test(val as string), 'Must be a valid Ethereum address')
-            .optional(),
+            .regex(/^#[0-9A-F]{6}$/i, 'Must be a valid hex color code, e.g., #RRGGBB or #RGB (e.g. #000 for black)'),
+        NEXT_PUBLIC_APP_PRIMARY_CATEGORY: z.enum([
+            'games',
+            'social',
+            'finance',
+            'utility',
+            'productivity',
+            'health-fitness',
+            'news-media',
+            'music',
+            'shopping',
+            'education',
+            'developer-tools',
+            'entertainment',
+            'art-creativity',
+        ]),
+        NEXT_PUBLIC_APP_HERO_IMAGE: z.string().url(),
+        NEXT_PUBLIC_APP_TAGLINE: z.string().max(30, 'Tagline must be 30 characters or less'),
+        NEXT_PUBLIC_APP_OG_TITLE: z.string(),
+        NEXT_PUBLIC_APP_OG_DESCRIPTION: z
+            .string()
+            .regex(/^[a-zA-Z0-9\s.,!?'"&()-]*$/, 'Emojis and restricted symbols are not allowed'),
+        NEXT_PUBLIC_APP_OG_IMAGE: z.string().url(),
+        NEXT_PUBLIC_ONCHAINKIT_API_KEY: z.string(),
+
+        NEXT_PUBLIC_POOL_CONTRACT_BASE: z.custom<`0x${string}`>(
+            val => /^0x[0-9a-fA-F]{40}$/.test(val as string),
+            'Must be a valid Ethereum address',
+        ),
+        NEXT_PUBLIC_POOL_CONTRACT_BASE_SEPOLIA: z.custom<`0x${string}`>(
+            val => /^0x[0-9a-fA-F]{40}$/.test(val as string),
+            'Must be a valid Ethereum address',
+        ),
+        NEXT_PUBLIC_TOKEN_CONTRACT_BASE: z.custom<`0x${string}`>(
+            val => /^0x[0-9a-fA-F]{40}$/.test(val as string),
+            'Must be a valid Ethereum address',
+        ),
+        NEXT_PUBLIC_TOKEN_CONTRACT_BASE_SEPOLIA: z.custom<`0x${string}`>(
+            val => /^0x[0-9a-fA-F]{40}$/.test(val as string),
+            'Must be a valid Ethereum address',
+        ),
+        NEXT_PUBLIC_BASE_MAINNET_RPC_URL: z.string().url().min(1),
+        NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL: z.string().url().min(1),
+        NEXT_PUBLIC_BASE_MAINNET_EXPLORER_URL: z.string().url().min(1),
+        NEXT_PUBLIC_BASE_SEPOLIA_EXPLORER_URL: z.string().url().min(1),
     },
 
     /**
@@ -84,12 +108,14 @@ export const env = createEnv({
         NEXT_PUBLIC_APP_OG_DESCRIPTION: process.env.NEXT_PUBLIC_APP_OG_DESCRIPTION,
         NEXT_PUBLIC_APP_OG_IMAGE: process.env.NEXT_PUBLIC_APP_OG_IMAGE,
         NEXT_PUBLIC_ONCHAINKIT_API_KEY: process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY,
-        NEXT_PUBLIC_CHAIN_ID: process.env.NEXT_PUBLIC_CHAIN_ID,
-        NEXT_PUBLIC_L2_EXPLORER_URL: process.env.NEXT_PUBLIC_L2_EXPLORER_URL,
         NEXT_PUBLIC_POOL_CONTRACT_BASE: process.env.NEXT_PUBLIC_POOL_CONTRACT_BASE,
         NEXT_PUBLIC_POOL_CONTRACT_BASE_SEPOLIA: process.env.NEXT_PUBLIC_POOL_CONTRACT_BASE_SEPOLIA,
         NEXT_PUBLIC_TOKEN_CONTRACT_BASE: process.env.NEXT_PUBLIC_TOKEN_CONTRACT_BASE,
         NEXT_PUBLIC_TOKEN_CONTRACT_BASE_SEPOLIA: process.env.NEXT_PUBLIC_TOKEN_CONTRACT_BASE_SEPOLIA,
+        NEXT_PUBLIC_BASE_MAINNET_RPC_URL: process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL,
+        NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL: process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL,
+        NEXT_PUBLIC_BASE_MAINNET_EXPLORER_URL: process.env.NEXT_PUBLIC_BASE_MAINNET_EXPLORER_URL,
+        NEXT_PUBLIC_BASE_SEPOLIA_EXPLORER_URL: process.env.NEXT_PUBLIC_BASE_SEPOLIA_EXPLORER_URL,
     },
     /**
      * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
