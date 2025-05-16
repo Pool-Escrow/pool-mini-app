@@ -185,7 +185,11 @@ export function JoinPoolForm({ pool, onSuccess, onClose }: JoinPoolFormProps) {
                         Your current allowance: {allowance.formattedAllowance} {pool.tokenSymbol}
                     </p>
                 )}
-                {formValidationError && <p className='mt-1 text-sm text-red-600'>{formValidationError}</p>}
+                {formValidationError && (
+                    <div className='mt-2 rounded-md bg-red-50 p-3'>
+                        <p className='text-sm font-medium text-red-700'>{formValidationError}</p>
+                    </div>
+                )}
             </div>
 
             {/* Transaction Status Displays */}
