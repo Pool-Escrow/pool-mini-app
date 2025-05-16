@@ -1,359 +1,254 @@
-'use client'
-
+import { Button } from '@/components/ui/button'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PREDEFINED_TOKENS } from '@/config/tokens'
-import { useEffect, useState } from 'react'
+import { PoolConfigStepSchema, type PoolConfigStepValues } from '@/lib/validators/poolCreationSchemas'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect } from 'react'
+import { useForm } from 'react-hook-form'
 
 interface PoolConfigStepProps {
-    initialData?: {
-        depositAmount?: number
-        maxEntries?: number
-        rulesLink?: string
-        // Fields to store the final token details, regardless of selection method
-        tokenAddress?: string
-        tokenSymbol?: string
-        tokenDecimals?: number
-        // Field to store which predefined token was selected, or 'custom'
-        selectedTokenKey?: string
-        winnerCount?: number
-        amountPerWinner?: number
-    }
-    onNext: (data: {
-        depositAmount: number
-        maxEntries: number
-        rulesLink: string
-        tokenAddress: string
-        winnerCount: number
-        amountPerWinner: number
-        selectedTokenKey: string
-        customTokenAddress?: string
-    }) => void
+    initialData?: Partial<PoolConfigStepValues>
+    onNext: (data: PoolConfigStepValues) => void
     onBack?: () => void
 }
 
 const CUSTOM_TOKEN_KEY = 'custom'
 
 export function PoolConfigStep({ initialData, onNext, onBack }: PoolConfigStepProps) {
-    const [depositAmount, setDepositAmount] = useState<string>(initialData?.depositAmount?.toString() ?? '')
-    const [maxEntries, setMaxEntries] = useState<string>(initialData?.maxEntries?.toString() ?? '')
-    const [rulesLink, setRulesLink] = useState(initialData?.rulesLink ?? '')
-    const [winnerCount, setWinnerCount] = useState<string>(initialData?.winnerCount?.toString() ?? '')
-    const [amountPerWinner, setAmountPerWinner] = useState<string>(initialData?.amountPerWinner?.toString() ?? '')
+    const form = useForm<PoolConfigStepValues>({
+        resolver: zodResolver(PoolConfigStepSchema),
+        defaultValues: {
+            depositAmount: initialData?.depositAmount ?? undefined,
+            limit: initialData?.limit ?? undefined,
+            rulesLink: initialData?.rulesLink ?? '',
+            selectedTokenKey: initialData?.selectedTokenKey ?? Object.keys(PREDEFINED_TOKENS)[0] ?? CUSTOM_TOKEN_KEY,
+            customTokenAddress: initialData?.customTokenAddress ?? '',
+            customTokenSymbol: initialData?.customTokenSymbol ?? '',
+            customTokenDecimals: initialData?.customTokenDecimals ?? undefined,
+            winnerCount: initialData?.winnerCount ?? 1,
+            amountPerWinner: initialData?.amountPerWinner ?? undefined,
+        },
+    })
 
-    // Token selection state
-    const [selectedTokenKey, setSelectedTokenKey] = useState<string>(
-        initialData?.selectedTokenKey ?? Object.keys(PREDEFINED_TOKENS)[0] ?? CUSTOM_TOKEN_KEY,
-    )
+    const selectedTokenKey = form.watch('selectedTokenKey')
 
-    // State for custom token inputs - only used if selectedTokenKey is 'custom'
-    const [customTokenAddress, setCustomTokenAddress] = useState(
-        initialData?.selectedTokenKey === CUSTOM_TOKEN_KEY ? (initialData?.tokenAddress ?? '') : '',
-    )
-    const [customTokenSymbol, setCustomTokenSymbol] = useState(
-        initialData?.selectedTokenKey === CUSTOM_TOKEN_KEY ? (initialData?.tokenSymbol ?? '') : '',
-    )
-    const [customTokenDecimals, setCustomTokenDecimals] = useState<string>(
-        initialData?.selectedTokenKey === CUSTOM_TOKEN_KEY ? (initialData?.tokenDecimals?.toString() ?? '') : '',
-    )
-
-    // Effect to update custom fields if initialData changes and custom is selected
     useEffect(() => {
-        if (initialData?.selectedTokenKey === CUSTOM_TOKEN_KEY) {
-            setCustomTokenAddress(initialData.tokenAddress ?? '')
-            setCustomTokenSymbol(initialData.tokenSymbol ?? '')
-            setCustomTokenDecimals(initialData.tokenDecimals?.toString() ?? '')
-        } else if (initialData?.selectedTokenKey && PREDEFINED_TOKENS[initialData.selectedTokenKey]) {
-            // If a predefined token was initially set, ensure custom fields are cleared
-            setCustomTokenAddress('')
-            setCustomTokenSymbol('')
-            setCustomTokenDecimals('')
+        if (selectedTokenKey !== CUSTOM_TOKEN_KEY) {
+            form.setValue('customTokenAddress', '')
+            form.setValue('customTokenSymbol', '')
+            form.setValue('customTokenDecimals', undefined)
         }
-    }, [initialData])
+    }, [selectedTokenKey, form])
 
-    const handleTokenSelectionChange = (key: string) => {
-        setSelectedTokenKey(key)
-        if (key !== CUSTOM_TOKEN_KEY) {
-            // Clear custom fields when a predefined token is selected
-            setCustomTokenAddress('')
-            setCustomTokenSymbol('')
-            setCustomTokenDecimals('')
+    const handleFormSubmit = (data: PoolConfigStepValues): void => {
+        const finalData = { ...data }
+        if (data.selectedTokenKey !== CUSTOM_TOKEN_KEY && PREDEFINED_TOKENS[data.selectedTokenKey]) {
+            const predefined = PREDEFINED_TOKENS[data.selectedTokenKey]
+            finalData.customTokenAddress = predefined.address
+            finalData.customTokenSymbol = predefined.symbol
+            finalData.customTokenDecimals = predefined.decimals
         }
-    }
-
-    const handleSubmit = () => {
-        const depositAmountNum = parseFloat(depositAmount)
-        const maxEntriesNum = parseFloat(maxEntries)
-        const winnerCountNum = parseInt(winnerCount, 10)
-        const amountPerWinnerNum = parseFloat(amountPerWinner)
-
-        let finalTokenAddress = ''
-        let finalTokenSymbol = ''
-        let finalTokenDecimalsNum = NaN
-        let customAddressForStepData: string | undefined = undefined
-
-        if (selectedTokenKey === CUSTOM_TOKEN_KEY) {
-            finalTokenAddress = customTokenAddress.trim()
-            finalTokenSymbol = customTokenSymbol.trim()
-            finalTokenDecimalsNum = parseInt(customTokenDecimals, 10)
-            customAddressForStepData = finalTokenAddress
-        } else if (PREDEFINED_TOKENS[selectedTokenKey]) {
-            const predefined = PREDEFINED_TOKENS[selectedTokenKey]
-            finalTokenAddress = predefined.address
-            finalTokenSymbol = predefined.symbol
-            finalTokenDecimalsNum = predefined.decimals
-        }
-
-        if (
-            !isNaN(depositAmountNum) &&
-            depositAmountNum > 0 &&
-            !isNaN(maxEntriesNum) &&
-            maxEntriesNum > 0 &&
-            rulesLink.trim() &&
-            finalTokenAddress && // Basic check for address
-            finalTokenSymbol && // Basic check for symbol
-            !isNaN(finalTokenDecimalsNum) &&
-            finalTokenDecimalsNum >= 0 &&
-            !isNaN(winnerCountNum) &&
-            winnerCountNum > 0 &&
-            !isNaN(amountPerWinnerNum) &&
-            amountPerWinnerNum > 0
-        ) {
-            onNext({
-                depositAmount: depositAmountNum,
-                maxEntries: maxEntriesNum,
-                rulesLink,
-                tokenAddress: finalTokenAddress,
-                winnerCount: winnerCountNum,
-                amountPerWinner: amountPerWinnerNum,
-                selectedTokenKey: selectedTokenKey,
-                customTokenAddress: customAddressForStepData,
-            })
-        }
-    }
-
-    const isFormValid = () => {
-        const depositAmountNum = parseFloat(depositAmount)
-        const maxEntriesNum = parseFloat(maxEntries)
-        const winnerCountNum = parseInt(winnerCount, 10)
-        const amountPerWinnerNum = parseFloat(amountPerWinner)
-
-        let currentTokenAddress = ''
-        let currentTokenSymbol = ''
-        let currentTokenDecimalsNum = NaN
-
-        if (selectedTokenKey === CUSTOM_TOKEN_KEY) {
-            currentTokenAddress = customTokenAddress.trim()
-            currentTokenSymbol = customTokenSymbol.trim()
-            currentTokenDecimalsNum = parseInt(customTokenDecimals, 10)
-        } else if (PREDEFINED_TOKENS[selectedTokenKey]) {
-            const predefined = PREDEFINED_TOKENS[selectedTokenKey]
-            currentTokenAddress = predefined.address
-            currentTokenSymbol = predefined.symbol
-            currentTokenDecimalsNum = predefined.decimals
-        }
-
-        return (
-            !isNaN(depositAmountNum) &&
-            depositAmountNum > 0 &&
-            !isNaN(maxEntriesNum) &&
-            maxEntriesNum > 0 &&
-            rulesLink.trim() !== '' &&
-            currentTokenAddress.trim() !== '' && // Validate resolved address
-            (selectedTokenKey !== CUSTOM_TOKEN_KEY || /^0x[a-fA-F0-9]{40}$/.test(currentTokenAddress)) && // Basic address format for custom
-            currentTokenSymbol.trim() !== '' && // Validate resolved symbol
-            !isNaN(currentTokenDecimalsNum) &&
-            currentTokenDecimalsNum >= 0 &&
-            currentTokenDecimalsNum <= 18 &&
-            !isNaN(winnerCountNum) &&
-            winnerCountNum > 0 &&
-            !isNaN(amountPerWinnerNum) &&
-            amountPerWinnerNum > 0
-        )
+        onNext(finalData)
     }
 
     return (
-        <div className='mx-auto flex w-full max-w-md flex-col items-center p-4 sm:p-8'>
-            <div className='mb-6 w-full'>
-                <label htmlFor='depositAmount' className='mb-1 block text-center text-xl font-semibold text-gray-900'>
-                    Deposit Amount (per entry)*
-                </label>
-                <p className='mb-3 text-center text-sm text-gray-500'>
-                    Set the required token amount for one entry (e.g., 10 for 10 Tokens).
+        <Form {...form}>
+            <form
+                onSubmit={e => {
+                    void form.handleSubmit(handleFormSubmit)(e)
+                }}
+                className='mx-auto flex w-full max-w-md flex-col items-center space-y-6 p-4 sm:p-8'>
+                <h2 className='mb-2 text-center text-2xl font-semibold'>Pool Configuration</h2>
+                <p className='text-muted-foreground mb-6 text-center text-sm'>
+                    Define deposit amounts, limits, token, and prize details.
                 </p>
-                <input
-                    id='depositAmount'
-                    type='number'
-                    value={depositAmount}
-                    onChange={e => setDepositAmount(e.target.value)}
-                    placeholder='e.g., 10'
-                    className='w-full rounded-lg border border-gray-300 p-3 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500'
+
+                <FormField
+                    control={form.control}
+                    name='depositAmount'
+                    render={({ field }) => (
+                        <FormItem className='w-full'>
+                            <FormLabel>Deposit Amount (per entry)</FormLabel>
+                            <FormControl>
+                                <Input
+                                    type='number'
+                                    placeholder='e.g., 10'
+                                    {...field}
+                                    onChange={event => field.onChange(+event.target.value)}
+                                />
+                            </FormControl>
+                            <FormDescription>Required token amount for one entry.</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
                 />
-            </div>
 
-            <div className='mb-6 w-full'>
-                <label htmlFor='tokenSelection' className='mb-1 block text-center text-xl font-semibold text-gray-900'>
-                    Choose Token*
-                </label>
-                <select
-                    id='tokenSelection'
-                    value={selectedTokenKey}
-                    onChange={e => handleTokenSelectionChange(e.target.value)}
-                    className='w-full rounded-lg border border-gray-300 p-3 text-gray-900 focus:border-blue-500 focus:ring-blue-500'>
-                    {Object.entries(PREDEFINED_TOKENS).map(([key, token]) => (
-                        <option key={key} value={key}>
-                            {token.symbol}
-                        </option>
-                    ))}
-                    <option value={CUSTOM_TOKEN_KEY}>Custom Token</option>
-                </select>
-            </div>
+                <FormField
+                    control={form.control}
+                    name='selectedTokenKey'
+                    render={({ field }) => (
+                        <FormItem className='w-full'>
+                            <FormLabel>Choose Token</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder='Select a token' />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {Object.entries(PREDEFINED_TOKENS).map(([key, token]) => (
+                                        <SelectItem key={key} value={key}>
+                                            {token.symbol}
+                                        </SelectItem>
+                                    ))}
+                                    <SelectItem value={CUSTOM_TOKEN_KEY}>Custom Token</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
 
-            {selectedTokenKey === CUSTOM_TOKEN_KEY && (
-                <>
-                    <div className='mb-6 w-full'>
-                        <label
-                            htmlFor='customTokenAddress'
-                            className='mb-1 block text-center text-xl font-semibold text-gray-900'>
-                            Custom Token Contract Address*
-                        </label>
-                        <input
-                            id='customTokenAddress'
-                            type='text'
-                            value={customTokenAddress}
-                            onChange={e => setCustomTokenAddress(e.target.value)}
-                            placeholder='0x...'
-                            className='w-full rounded-lg border border-gray-300 p-3 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500'
+                {selectedTokenKey === CUSTOM_TOKEN_KEY && (
+                    <>
+                        <FormField
+                            control={form.control}
+                            name='customTokenAddress'
+                            render={({ field }) => (
+                                <FormItem className='w-full'>
+                                    <FormLabel>Custom Token Contract Address</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder='0x...' {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
                         />
-                    </div>
-                    <div className='mb-6 w-full'>
-                        <label
-                            htmlFor='customTokenSymbol'
-                            className='mb-1 block text-center text-xl font-semibold text-gray-900'>
-                            Custom Token Symbol*
-                        </label>
-                        <input
-                            id='customTokenSymbol'
-                            type='text'
-                            value={customTokenSymbol}
-                            onChange={e => setCustomTokenSymbol(e.target.value)}
-                            placeholder='e.g., MYT'
-                            className='w-full rounded-lg border border-gray-300 p-3 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500'
+                        <FormField
+                            control={form.control}
+                            name='customTokenSymbol'
+                            render={({ field }) => (
+                                <FormItem className='w-full'>
+                                    <FormLabel>Custom Token Symbol</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder='e.g., MYT' {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
                         />
-                    </div>
-                    <div className='mb-6 w-full'>
-                        <label
-                            htmlFor='customTokenDecimals'
-                            className='mb-1 block text-center text-xl font-semibold text-gray-900'>
-                            Custom Token Decimals*
-                        </label>
-                        <input
-                            id='customTokenDecimals'
-                            type='number'
-                            value={customTokenDecimals}
-                            onChange={e => setCustomTokenDecimals(e.target.value)}
-                            placeholder='e.g., 18'
-                            className='w-full rounded-lg border border-gray-300 p-3 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500'
+                        <FormField
+                            control={form.control}
+                            name='customTokenDecimals'
+                            render={({ field }) => (
+                                <FormItem className='w-full'>
+                                    <FormLabel>Custom Token Decimals</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type='number'
+                                            placeholder='e.g., 18'
+                                            {...field}
+                                            onChange={event => field.onChange(+event.target.value)}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
                         />
-                    </div>
-                </>
-            )}
-
-            {selectedTokenKey !== CUSTOM_TOKEN_KEY && PREDEFINED_TOKENS[selectedTokenKey] && (
-                <div className='mb-6 w-full rounded-md border border-gray-200 bg-gray-50 p-3'>
-                    <p className='text-sm text-gray-600'>
-                        Selected Token: {PREDEFINED_TOKENS[selectedTokenKey].symbol}
-                    </p>
-                    <p className='truncate text-xs text-gray-500'>
-                        Address: {PREDEFINED_TOKENS[selectedTokenKey].address}
-                    </p>
-                    <p className='text-xs text-gray-500'>Decimals: {PREDEFINED_TOKENS[selectedTokenKey].decimals}</p>
-                </div>
-            )}
-
-            <div className='mb-6 w-full'>
-                <label htmlFor='winnerCount' className='mb-1 block text-center text-xl font-semibold text-gray-900'>
-                    Number of Winners*
-                </label>
-                <p className='mb-3 text-center text-sm text-gray-500'>How many winners will the pool have?</p>
-                <input
-                    id='winnerCount'
-                    type='number'
-                    value={winnerCount}
-                    onChange={e => setWinnerCount(e.target.value)}
-                    placeholder='e.g., 1'
-                    className='w-full rounded-lg border border-gray-300 p-3 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500'
-                />
-            </div>
-
-            <div className='mb-6 w-full'>
-                <label htmlFor='amountPerWinner' className='mb-1 block text-center text-xl font-semibold text-gray-900'>
-                    Amount Per Winner*
-                </label>
-                <p className='mb-3 text-center text-sm text-gray-500'>
-                    Set the token amount each winner will receive (e.g., 50 for 50 Tokens).
-                </p>
-                <input
-                    id='amountPerWinner'
-                    type='number'
-                    value={amountPerWinner}
-                    onChange={e => setAmountPerWinner(e.target.value)}
-                    placeholder='e.g., 50'
-                    className='w-full rounded-lg border border-gray-300 p-3 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500'
-                />
-            </div>
-
-            <div className='mb-6 w-full'>
-                <label htmlFor='maxEntries' className='mb-1 block text-center text-xl font-semibold text-gray-900'>
-                    Max Entries (Soft Cap)*
-                </label>
-                <p className='mb-3 text-center text-sm text-gray-500'>Max number of paid entries allowed.</p>
-                <input
-                    id='maxEntries'
-                    type='number'
-                    value={maxEntries}
-                    onChange={e => setMaxEntries(e.target.value)}
-                    placeholder='e.g., 100'
-                    className='w-full rounded-lg border border-gray-300 p-3 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500'
-                />
-            </div>
-
-            <div className='mb-8 w-full'>
-                <label htmlFor='rulesLink' className='mb-1 block text-center text-xl font-semibold text-gray-900'>
-                    Link To Rules, Terms, and Conditions*
-                </label>
-                <p className='mb-3 text-center text-sm text-gray-500'>Paste a link to your rules.</p>
-                <input
-                    id='rulesLink'
-                    type='url'
-                    value={rulesLink}
-                    onChange={e => setRulesLink(e.target.value)}
-                    placeholder='https://example.com/rules'
-                    className='w-full rounded-lg border border-gray-300 p-3 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500'
-                />
-            </div>
-
-            <div className='mb-6 w-full border-t border-gray-200 pt-6'>
-                <h3 className='mb-2 text-center text-lg font-semibold text-gray-900'>Fees</h3>
-                <p className='text-center text-sm text-gray-600'>
-                    A small platform fee may apply to pool creation. Details will be shown at confirmation. Network fees
-                    (gas) will also apply.
-                </p>
-            </div>
-
-            <div className='flex w-full flex-col space-y-4 sm:flex-row sm:justify-between sm:space-y-0'>
-                {onBack && (
-                    <button
-                        onClick={onBack}
-                        className='w-full rounded-lg bg-gray-200 px-4 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-300'>
-                        Back
-                    </button>
+                    </>
                 )}
-                <button
-                    onClick={handleSubmit}
-                    disabled={!isFormValid()}
-                    className='w-full rounded-lg bg-blue-500 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300'>
-                    Next: Review Pool
-                </button>
-            </div>
-        </div>
+
+                <FormField
+                    control={form.control}
+                    name='limit' // maxEntries in old form
+                    render={({ field }) => (
+                        <FormItem className='w-full'>
+                            <FormLabel>Max Entries (Optional)</FormLabel>
+                            <FormControl>
+                                <Input
+                                    type='number'
+                                    placeholder='e.g., 100 (leave blank for unlimited)'
+                                    {...field}
+                                    onChange={event =>
+                                        field.onChange(event.target.value === '' ? undefined : +event.target.value)
+                                    }
+                                />
+                            </FormControl>
+                            <FormDescription>
+                                Maximum number of entries allowed. Leave blank for no limit.
+                            </FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <FormField
+                    control={form.control}
+                    name='winnerCount'
+                    render={({ field }) => (
+                        <FormItem className='w-full'>
+                            <FormLabel>Number of Winners</FormLabel>
+                            <FormControl>
+                                <Input
+                                    type='number'
+                                    placeholder='e.g., 1'
+                                    {...field}
+                                    onChange={event => field.onChange(+event.target.value)}
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <FormField
+                    control={form.control}
+                    name='amountPerWinner'
+                    render={({ field }) => (
+                        <FormItem className='w-full'>
+                            <FormLabel>Amount Per Winner</FormLabel>
+                            <FormControl>
+                                <Input
+                                    type='number'
+                                    placeholder='e.g., 1000'
+                                    {...field}
+                                    onChange={event => field.onChange(+event.target.value)}
+                                />
+                            </FormControl>
+                            <FormDescription>The amount each winner will receive.</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <FormField
+                    control={form.control}
+                    name='rulesLink'
+                    render={({ field }) => (
+                        <FormItem className='w-full'>
+                            <FormLabel>Rules Link (Optional)</FormLabel>
+                            <FormControl>
+                                <Input placeholder='https://example.com/pool-rules' {...field} />
+                            </FormControl>
+                            <FormDescription>Link to a page detailing the pool rules.</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <div className='mt-8 flex w-full flex-col gap-4 sm:flex-row'>
+                    {onBack && (
+                        <Button type='button' onClick={onBack} variant='outline' className='w-full'>
+                            Back
+                        </Button>
+                    )}
+                    <Button type='submit' className='w-full'>
+                        Continue
+                    </Button>
+                </div>
+            </form>
+        </Form>
     )
 }

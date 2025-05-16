@@ -1,76 +1,92 @@
-import type { ChangeEvent } from 'react'
-import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea' // Assuming Shadcn UI textarea
+import { NameDescriptionStepSchema, type NameDescriptionStepValues } from '@/lib/validators/poolCreationSchemas'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 
 interface NameDescriptionStepProps {
-    initialData?: {
-        name?: string
-        description?: string
-    }
-    onNext: (data: { name: string; description: string }) => void
-    onBack?: () => void // Optional: if you want a back button on this step
+    initialData?: Partial<NameDescriptionStepValues>
+    onNext: (data: NameDescriptionStepValues) => void
+    onBack?: () => void
 }
 
-const MAX_DESC_LENGTH = 200
+// Max length for description from schema or can be defined here if needed for UI counter
+const MAX_DESC_LENGTH_SCHEMA =
+    NameDescriptionStepSchema.shape.description._def.checks.find(check => check.kind === 'max')?.value ?? 500
 
 export function NameDescriptionStep({ initialData, onNext, onBack }: NameDescriptionStepProps) {
-    const [name, setName] = useState(initialData?.name ?? '')
-    const [description, setDescription] = useState(initialData?.description ?? '')
+    const form = useForm<NameDescriptionStepValues>({
+        resolver: zodResolver(NameDescriptionStepSchema),
+        defaultValues: {
+            name: initialData?.name ?? '',
+            description: initialData?.description ?? '',
+        },
+    })
 
-    const handleDescriptionChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-        if (e.target.value.length <= MAX_DESC_LENGTH) {
-            setDescription(e.target.value)
-        }
+    const onSubmit = (data: NameDescriptionStepValues) => {
+        onNext(data)
     }
 
-    const handleSubmit = () => {
-        // Basic validation, can be expanded
-        if (name.trim() && description.trim()) {
-            onNext({ name, description })
-        }
-    }
+    // Watch description field for character count
+    const descriptionValue = form.watch('description')
 
     return (
-        <div className='mx-auto flex w-full max-w-md flex-col items-center p-4 sm:p-8'>
-            <h2 className='mb-1 text-center text-2xl font-semibold text-gray-900'>Name of Pool*</h2>
-            <p className='mb-6 text-center text-sm text-gray-500'>Enter a name for your Pool</p>
-            <input
-                type='text'
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder='Pool Name'
-                className='mb-8 w-full rounded-lg border border-gray-300 p-3 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500'
-            />
+        <Form {...form}>
+            <form
+                onSubmit={e => {
+                    void form.handleSubmit(onSubmit)(e)
+                }}
+                className='mx-auto flex w-full max-w-md flex-col items-center p-4 sm:p-8'>
+                <h2 className='mb-1 text-center text-2xl font-semibold text-gray-900'>Name of Pool*</h2>
+                <p className='mb-6 text-center text-sm text-gray-500'>Enter a name for your Pool</p>
 
-            <h2 className='mb-1 text-center text-2xl font-semibold text-gray-900'>Description*</h2>
-            <p className='mb-4 text-center text-sm text-gray-500'>Enter a description for your Pool</p>
-            <div className='relative w-full'>
-                <textarea
-                    value={description}
-                    onChange={handleDescriptionChange}
-                    placeholder='Pool Description'
-                    rows={5}
-                    className='w-full resize-none rounded-lg border border-gray-300 p-3 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500'
+                <FormField
+                    control={form.control}
+                    name='name'
+                    render={({ field }) => (
+                        <FormItem className='mb-8 w-full'>
+                            <FormLabel className='sr-only'>Pool Name</FormLabel>
+                            <FormControl>
+                                <Input placeholder='Pool Name' {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
                 />
-                <p className='absolute right-2 bottom-2 text-xs text-gray-400'>
-                    {description.length}/{MAX_DESC_LENGTH}
-                </p>
-            </div>
 
-            <div className='mt-8 flex w-full flex-col gap-4 sm:flex-row'>
-                {onBack && (
-                    <button
-                        onClick={onBack}
-                        className='w-full rounded-lg bg-gray-200 px-4 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-300'>
-                        Back
-                    </button>
-                )}
-                <button
-                    onClick={handleSubmit}
-                    disabled={!name.trim() || !description.trim()}
-                    className='w-full rounded-lg bg-blue-500 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300'>
-                    Continue
-                </button>
-            </div>
-        </div>
+                <h2 className='mb-1 text-center text-2xl font-semibold text-gray-900'>Description*</h2>
+                <p className='mb-4 text-center text-sm text-gray-500'>Enter a description for your Pool</p>
+
+                <FormField
+                    control={form.control}
+                    name='description'
+                    render={({ field }) => (
+                        <FormItem className='w-full'>
+                            <FormLabel className='sr-only'>Pool Description</FormLabel>
+                            <FormControl>
+                                <Textarea placeholder='Pool Description' rows={5} {...field} />
+                            </FormControl>
+                            <FormDescription className='mt-1 flex justify-end text-xs'>
+                                {descriptionValue?.length ?? 0}/{MAX_DESC_LENGTH_SCHEMA}
+                            </FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <div className='mt-8 flex w-full flex-col gap-4 sm:flex-row'>
+                    {onBack && (
+                        <Button type='button' variant='outline' onClick={onBack} className='w-full'>
+                            Back
+                        </Button>
+                    )}
+                    <Button type='submit' className='w-full' disabled={form.formState.isSubmitting}>
+                        Continue
+                    </Button>
+                </div>
+            </form>
+        </Form>
     )
 }
