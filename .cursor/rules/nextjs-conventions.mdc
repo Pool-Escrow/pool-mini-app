@@ -1,0 +1,50 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+- **API Route File Extensions**
+  - For Next.js API routes (both App Router and Pages Router):
+    - **Prefer `.tsx` extension if the route handler might generate or return HTML/JSX directly.** This is common for Farcaster frames or other scenarios where server-side rendering of component-like structures is needed within an API endpoint. Using `.tsx` allows for JSX syntax without linter issues.
+    - Use `.ts` extension if the API route is strictly returning JSON, text, or other non-JSX data.
+    - **When in doubt, or for consistency, using `.tsx` for all API routes is acceptable** to avoid potential issues if JSX is introduced later.
+
+  ```typescript
+  // ✅ DO: Use .tsx for API routes returning JSX (e.g., Farcaster frames)
+  // File: src/app/api/frame/image/route.tsx
+  import { ImageResponse } from 'next/og';
+  
+  export async function GET(request: Request) {
+    return new ImageResponse(
+      (
+        <div style={{ display: 'flex' }}>
+          Hello World
+        </div>
+      ),
+      {
+        width: 1200,
+        height: 630,
+      },
+    );
+  }
+  ```
+
+  ```typescript
+  // ✅ DO: Use .ts for API routes strictly returning JSON
+  // File: src/app/api/user/route.ts
+  import { NextResponse } from 'next/server';
+  
+  export async function GET(request: Request) {
+    return NextResponse.json({ id: 1, name: 'John Doe' });
+  }
+  ```
+  
+  ```typescript
+  // ✅ ALSO ACCEPTABLE: Using .tsx for a JSON route for consistency or future-proofing
+  // File: src/app/api/product/route.tsx
+  import { NextResponse } from 'next/server';
+  
+  export async function GET(request: Request) {
+    return NextResponse.json({ id: 101, name: 'Gadget' });
+  }
+  ```

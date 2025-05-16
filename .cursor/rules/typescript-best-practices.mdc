@@ -1,0 +1,38 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+- **Avoid `any` Type**
+  - Do not use `any` as a type. It undermines the benefits of TypeScript's static typing.
+  - **Prefer `unknown`**: If the type is truly unknown, use `unknown` and perform type checking or casting before use.
+  - **Use Specific Types**: Whenever possible, define or infer a more specific type.
+  - **Use Generics**: For functions or classes that can operate on a variety of types, use generics.
+  - **Define Interfaces/Types**: For complex objects, define an `interface` or `type`.
+
+  ```typescript
+  // ❌ DON'T: Use any
+  function processData(data: any) {
+    // data can be anything, no type safety
+    console.log(data.propertyThatMayNotExist);
+  }
+
+  // ✅ DO: Use unknown and type checking
+  function processUnknownData(data: unknown) {
+    if (typeof data === 'object' && data !== null && 'property' in data) {
+      // Perform operations now that 'property' is known to exist
+      console.log((data as { property: string }).property);
+    } else if (typeof data === 'string') {
+      console.log(data.toUpperCase());
+    }
+  }
+
+  // ✅ DO: Use specific types
+  interface MyData {
+    id: number;
+    value: string;
+  }
+  function processSpecificData(data: MyData) {
+    console.log(data.id, data.value);
+  }
+  ```
