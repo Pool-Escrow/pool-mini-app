@@ -6,13 +6,17 @@ import { clearAllPools } from '@/lib/poolStorage'
 import { clearAllRegistrations } from '@/lib/registrationStorage'
 import { Address, Avatar, EthBalance, Identity, Name } from '@coinbase/onchainkit/identity'
 import { ConnectWallet, Wallet } from '@coinbase/onchainkit/wallet'
+import { PinIcon } from 'lucide-react'
 import { useState } from 'react'
+import { AddToWarpcastModal } from './modals/AddToWarpcastModal'
+import { Button } from './ui/button'
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from './ui/drawer'
 
 export function Balance() {
     const { userRole, toggleUserRole } = useUserRole()
     const { isConnected, disconnect: disconnectWallet } = useWallet()
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+    const [isAddToWarpcastModalOpen, setIsAddToWarpcastModalOpen] = useState(false)
 
     const localStorageKey = 'poolMiniUserManuallyDisconnected'
 
@@ -72,6 +76,17 @@ export function Balance() {
                                 <EthBalance />
                             </Identity>
 
+                            {/* Add to Warpcast Button */}
+                            <div className='border-t border-gray-200 px-4 py-2'>
+                                <Button
+                                    variant='outline'
+                                    className='w-full justify-start text-sm text-gray-900 hover:bg-gray-100'
+                                    onClick={() => setIsAddToWarpcastModalOpen(true)}>
+                                    <PinIcon className='mr-2 h-4 w-4' />
+                                    Add to Warpcast
+                                </Button>
+                            </div>
+
                             {/* Developer toggle for admin/regular user role */}
                             <div className='border-t border-gray-200 px-4 py-2'>
                                 <button
@@ -110,6 +125,9 @@ export function Balance() {
                     </Drawer>
                 </Wallet>
             </header>
+
+            {/* Modal for Add to Warpcast */}
+            <AddToWarpcastModal isOpen={isAddToWarpcastModalOpen} onClose={() => setIsAddToWarpcastModalOpen(false)} />
 
             <div className='mb-8'>
                 <p className='mb-1 text-sm opacity-80'>Total balance</p>

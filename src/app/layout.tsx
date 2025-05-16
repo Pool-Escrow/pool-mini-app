@@ -20,6 +20,7 @@ export function generateMetadata(): Metadata {
             'fc:frame': JSON.stringify({
                 version: env.NEXT_PUBLIC_VERSION,
                 imageUrl: env.NEXT_PUBLIC_APP_HERO_IMAGE,
+                aspectRatioSchema: '4:3',
                 button: {
                     title: `Launch ${env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME}`,
                     action: {
