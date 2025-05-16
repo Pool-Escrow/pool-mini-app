@@ -8,10 +8,10 @@
 
 #### Deployed Contracts
 
-| Contract | Address                                      | Transaction                                                                                                    | Verification                                                                                |
-| -------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Pool     | `0xA2cD9Ccd89C3c8760A701DaDD11174393443E495` | [0x459c5e...8ab3c](https://basescan.org/tx/0x459c5edad5565daff505f23d3de8c362d7009566fbfa81ecae9eb011a938ab3c) | [View on Basescan](https://basescan.org/address/0xa2cd9ccd89c3c8760a701dadd11174393443e495) |
-| Droplet  | `0xbCEa52D097ae1189A22bdFbf67303082E7b8b07E` | [0xc5ab08...478c](https://basescan.org/tx/0xc5ab0857c5f2e6ebcdbaa3fe5ad46095299d1d41b43e2c1d94963bce669b478c)  | [View on Basescan](https://basescan.org/address/0xbcea52d097ae1189a22bdfbf67303082e7b8b07e) |
+| Contract | Address                                      | Transaction                                                                                                    | Verification                                                                                | Commit                                     |
+| -------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Pool     | `0xA2cD9Ccd89C3c8760A701DaDD11174393443E495` | [0x459c5e...8ab3c](https://basescan.org/tx/0x459c5edad5565daff505f23d3de8c362d7009566fbfa81ecae9eb011a938ab3c) | [View on Basescan](https://basescan.org/address/0xa2cd9ccd89c3c8760a701dadd11174393443e495) | `422b7af9b50609e25ce498d85a73b919b43f447f` |
+| Droplet  | `0xbCEa52D097ae1189A22bdFbf67303082E7b8b07E` | [0xc5ab08...478c](https://basescan.org/tx/0xc5ab0857c5f2e6ebcdbaa3fe5ad46095299d1d41b43e2c1d94963bce669b478c)  | [View on Basescan](https://basescan.org/address/0xbcea52d097ae1189a22bdfbf67303082e7b8b07e) | `422b7af9b50609e25ce498d85a73b919b43f447f` |
 
 #### Deployment Details
 
@@ -48,10 +48,10 @@
 
 #### Deployed Contracts
 
-| Contract            | Address                                      | Transaction                                                                                                             | Verification                                                                                        |
-| ------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Pool                | `0xD571c6e319D13637A1DfF6F6e9fdb8d2803af3aE` | [0x80bc0b...590da3](https://sepolia.basescan.org/tx/0x80bc0b1b14bbf4b40c29c37c8e232dccd507d150ad8515e9cd74d53f13590da3) | [View on Basescan](https://sepolia.basescan.org/address/0xd571c6e319d13637a1dff6f6e9fdb8d2803af3ae) |
-| Mock USDC (Droplet) | `0x1bdffEBF62E16660d01e805F3529eBA1B982a864` | [0xa9f34f...1f5ba](https://sepolia.basescan.org/tx/0xa9f34fa9fbc3c513e9e280e66d2aa451fa9e75e8723d22619bb4df766bc1f5ba)  | [View on Basescan](https://sepolia.basescan.org/address/0x1bdffebf62e16660d01e805f3529eba1b982a864) |
+| Contract            | Address                                      | Transaction                                                                                                             | Verification                                                                                        | Commit                                     |
+| ------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Pool                | `0xD571c6e319D13637A1DfF6F6e9fdb8d2803af3aE` | [0x80bc0b...590da3](https://sepolia.basescan.org/tx/0x80bc0b1b14bbf4b40c29c37c8e232dccd507d150ad8515e9cd74d53f13590da3) | [View on Basescan](https://sepolia.basescan.org/address/0xd571c6e319d13637a1dff6f6e9fdb8d2803af3ae) | `422b7af9b50609e25ce498d85a73b919b43f447f` |
+| Mock USDC (Droplet) | `0x1bdffEBF62E16660d01e805F3529eBA1B982a864` | [0xa9f34f...1f5ba](https://sepolia.basescan.org/tx/0xa9f34fa9fbc3c513e9e280e66d2aa451fa9e75e8723d22619bb4df766bc1f5ba)  | [View on Basescan](https://sepolia.basescan.org/address/0x1bdffebf62e16660d01e805f3529eba1b982a864) | `422b7af9b50609e25ce498d85a73b919b43f447f` |
 
 #### Deployment Details
 
