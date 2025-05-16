@@ -1,26 +1,33 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useJoinPool } from '@/hooks/use-pool-contract'
 import { useApproveToken, useTokenAllowance } from '@/hooks/use-token-approval'
 import type { Pool } from '@/types/pool'
 import { BlockchainErrorType, type BlockchainErrorMessageProps } from '@/utils/error-handling' // For error state and BlockchainErrorType
-import { useEffect, useState } from 'react'
-import { formatUnits, parseUnits, type Address } from 'viem'
+import React, { useEffect, useState } from 'react'
+import { parseUnits, type Address } from 'viem'
 import { useAccount, useBalance } from 'wagmi'
 import { BlockchainErrorMessage } from './BlockchainErrorMessage' // For error display (subtask 8.7)
+import { JoinPoolSuccessReceipt } from './JoinPoolSuccessReceipt' // Added import
 import { TransactionStatusDisplay } from './TransactionStatusDisplay' // Added
 
 interface JoinPoolFormProps {
-    pool: Pool // Assuming a full Pool object is passed
-    onSuccess?: (txHash: string) => void
-    onClose?: () => void // Example callback
+    pool: Pool // The pool object the user is trying to join
+    onJoinSuccess?: (txHash: string) => void // Optional callback on successful join
+    onClose?: () => void // Optional callback to close a modal or navigate away
 }
 
-export function JoinPoolForm({ pool, onSuccess, onClose }: JoinPoolFormProps) {
+export const JoinPoolForm: React.FC<JoinPoolFormProps> = ({ pool, onJoinSuccess, onClose }) => {
     const { address: accountAddress, isConnected, chainId: connectedChainId } = useAccount()
     const [isLoading, setIsLoading] = useState(false) // General submit button loading
     const [blockchainError, setBlockchainError] = useState<BlockchainErrorMessageProps | null>(null)
     const [formValidationError, setFormValidationError] = useState<string | null>(null)
+    const [showSuccessReceipt, setShowSuccessReceipt] = useState<boolean>(false) // Added state for success view
+    const [finalTxHash, setFinalTxHash] = useState<string | null>(null) // Added state to store final tx hash for receipt
 
     const spenderAddress = pool.contractAddress as Address | undefined
 
@@ -105,15 +112,33 @@ export function JoinPoolForm({ pool, onSuccess, onClose }: JoinPoolFormProps) {
                 })
             }
 
-            if (!needsApproval || (needsApproval && approveTokenHash)) {
-                console.log('Proceeding to join pool...')
+            if (!needsApproval) {
+                // If no approval was ever needed, join directly
+                console.log('Proceeding to join pool (no approval needed)...')
                 const submittedJoinTxHash = await joinPool({
                     poolContractAddress: pool.contractAddress as Address,
                     poolId: pool.id,
                     depositAmount: requiredDepositBigInt,
                 })
-                if (onSuccess && submittedJoinTxHash) {
-                    onSuccess(submittedJoinTxHash)
+                if (submittedJoinTxHash) {
+                    setFinalTxHash(submittedJoinTxHash)
+                    setShowSuccessReceipt(true)
+                    onJoinSuccess?.(submittedJoinTxHash)
+                }
+            } else if (approveTokenHash && !isApprovingToken && !approveTokenError) {
+                // If approval was needed, is no longer approving, and no error, AND we have an approve hash (meaning it was attempted)
+                // This assumes successful approval if no error by this point.
+                // A more robust way might involve confirming the approval transaction succeeded via useWaitForTransaction.
+                console.log('Approval successful or hash available, proceeding to join pool...')
+                const submittedJoinTxHash = await joinPool({
+                    poolContractAddress: pool.contractAddress as Address,
+                    poolId: pool.id,
+                    depositAmount: requiredDepositBigInt,
+                })
+                if (submittedJoinTxHash) {
+                    setFinalTxHash(submittedJoinTxHash)
+                    setShowSuccessReceipt(true)
+                    onJoinSuccess?.(submittedJoinTxHash)
                 }
             }
         } catch (e) {
@@ -130,8 +155,79 @@ export function JoinPoolForm({ pool, onSuccess, onClose }: JoinPoolFormProps) {
         setIsLoading(false)
     }
 
+    // Effect to automatically join after successful approval
+    // This handles the case where approval was needed, initiated, and the approveTxHash is set.
+    // We wait for isApprovingToken to be false and no error before attempting to join.
+    useEffect(() => {
+        if (
+            approveTokenHash &&
+            !isApprovingToken &&
+            !approveTokenError &&
+            needsApproval &&
+            !joinPoolTxHash &&
+            !isJoiningPool &&
+            !isLoading
+        ) {
+            // Check `needsApproval` again in case allowance updated elsewhere, though primary check is if approval was the last action.
+            // `!isLoading` ensures we don't try to auto-join if a manual submit is already in progress for some reason.
+            const autoJoinAfterApproval = async () => {
+                console.log('Auto-joining pool after successful approval hash...')
+                setIsLoading(true) // Set main loading for this auto-triggered action
+                setBlockchainError(null)
+                try {
+                    const submittedJoinTxHash = await joinPool({
+                        poolContractAddress: pool.contractAddress as Address,
+                        poolId: pool.id,
+                        depositAmount: requiredDepositBigInt,
+                    })
+                    if (submittedJoinTxHash) {
+                        setFinalTxHash(submittedJoinTxHash)
+                        setShowSuccessReceipt(true)
+                        onJoinSuccess?.(submittedJoinTxHash)
+                    }
+                } catch (e) {
+                    console.error('Error during auto-join after approval:', e)
+                    const genericError = e as Error
+                    setBlockchainError({
+                        type: BlockchainErrorType.UNKNOWN,
+                        message: genericError.message || 'An unexpected error occurred during the auto-join process.',
+                        suggestion: 'Please check your wallet and try again, or attempt to join manually.',
+                    })
+                }
+                setIsLoading(false)
+            }
+            void autoJoinAfterApproval()
+        }
+    }, [
+        approveTokenHash,
+        isApprovingToken,
+        approveTokenError,
+        needsApproval,
+        pool,
+        requiredDepositBigInt,
+        joinPool,
+        onJoinSuccess,
+        joinPoolTxHash,
+        isJoiningPool,
+        isLoading,
+    ])
+
     if (!isConnected || !accountAddress) {
         return <p className='text-center text-red-500'>Please connect your wallet to join the pool.</p>
+    }
+
+    if (showSuccessReceipt && finalTxHash) {
+        return (
+            <JoinPoolSuccessReceipt
+                pool={pool}
+                txHash={finalTxHash}
+                onClose={() => {
+                    setShowSuccessReceipt(false)
+                    setFinalTxHash(null)
+                    onClose?.() // Call original onClose if provided
+                }}
+            />
+        )
     }
 
     const uiLocked = isLoading || isApprovingToken || isJoiningPool || isLoadingBalance || isLoadingAllowance
@@ -152,73 +248,73 @@ export function JoinPoolForm({ pool, onSuccess, onClose }: JoinPoolFormProps) {
               : 'Join Pool'
 
     return (
-        <form onSubmit={event => void handleSubmit(event)} className='space-y-4'>
-            <h3 className='text-lg font-semibold'>Join Pool: {pool.name}</h3>
-
-            <div>
-                <label htmlFor='depositAmount' className='block text-sm font-medium text-gray-700'>
-                    Deposit Amount ({pool.tokenSymbol})
-                </label>
-                <div className='mt-1'>
-                    <input
-                        type='text'
-                        name='depositAmount'
-                        id='depositAmount'
-                        value={pool.depositAmount.toString()}
-                        readOnly
-                        className='block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
-                        placeholder={`${pool.depositAmount} ${pool.tokenSymbol}`}
-                    />
-                </div>
-                <p className='mt-1 text-xs text-gray-500'>
-                    Required deposit: {pool.depositAmount} {pool.tokenSymbol}
-                </p>
-                {isLoadingBalance && <p className='mt-1 text-xs text-gray-500'>Loading your balance...</p>}
-                {balanceData && !isLoadingBalance && (
-                    <p className='mt-1 text-xs text-gray-500'>
-                        Your balance: {formatUnits(balanceData.value, balanceData.decimals)} {balanceData.symbol}
-                    </p>
-                )}
-                {isLoadingAllowance && <p className='mt-1 text-xs text-gray-500'>Loading token allowance...</p>}
-                {allowance?.formattedAllowance !== undefined && !isLoadingAllowance && (
-                    <p className='mt-1 text-xs text-gray-500'>
-                        Your current allowance: {allowance.formattedAllowance} {pool.tokenSymbol}
-                    </p>
-                )}
-                {formValidationError && (
-                    <div className='mt-2 rounded-md bg-red-50 p-3'>
-                        <p className='text-sm font-medium text-red-700'>{formValidationError}</p>
+        <Card className='w-full max-w-md'>
+            <CardHeader>
+                <CardTitle>Join {pool.name}</CardTitle>
+                <CardDescription>
+                    Deposit {pool.depositAmount} {pool.tokenSymbol} to participate.
+                </CardDescription>
+            </CardHeader>
+            <form
+                onSubmit={e => {
+                    void handleSubmit(e)
+                }}>
+                <CardContent className='space-y-4'>
+                    {/* Placeholder for Token Selection (Subtask 8.2) */}
+                    <div className='space-y-2'>
+                        <Label htmlFor='token-selection'>Token (Pool Default)</Label>
+                        <Input
+                            id='token-selection'
+                            value={`${pool.tokenSymbol} (${pool.tokenAddress})`}
+                            readOnly
+                            disabled
+                        />
+                        {/* In a real scenario, this might be a dropdown if multiple tokens were allowed per pool */}
                     </div>
-                )}
-            </div>
+
+                    {/* Placeholder for Amount Input (already part of this subtask's basic structure) */}
+                    <div className='space-y-2'>
+                        <Label htmlFor='deposit-amount'>Deposit Amount</Label>
+                        <Input
+                            id='deposit-amount'
+                            type='number' // Or text and parse, depending on desired precision handling
+                            value={pool.depositAmount} // Assuming fixed deposit amount for now as per CardDescription
+                            readOnly // If amount is fixed by the pool
+                            // onChange={(e) => setDepositAmount(e.target.value)} // Enable if amount is variable
+                            // placeholder={`Enter ${pool.tokenSymbol} amount`}
+                            // disabled={isLoading}
+                        />
+                        {/* Display user balance here if relevant */}
+                        {/* <p className="text-sm text-muted-foreground">Your balance: {userBalance} {pool.tokenSymbol}</p> */}
+                    </div>
+
+                    {formValidationError && (
+                        <div className='mt-2 rounded-md bg-red-50 p-3'>
+                            <p className='text-sm font-medium text-red-700'>{formValidationError}</p>
+                        </div>
+                    )}
+                </CardContent>
+                <CardFooter className='flex flex-col space-y-2'>
+                    <Button type='submit' className='w-full' disabled={isSubmitDisabled}>
+                        {buttonText}
+                    </Button>
+                    {onClose && (
+                        <Button variant='outline' className='w-full' onClick={onClose} disabled={isLoading}>
+                            Cancel
+                        </Button>
+                    )}
+                </CardFooter>
+            </form>
 
             {/* Transaction Status Displays */}
-            {approveTokenHash && (
+            {approveTokenHash && !showSuccessReceipt && (
                 <TransactionStatusDisplay hash={approveTokenHash} chainId={pool.chainId} title='Approval Status' />
             )}
-            {joinPoolTxHash && (
+            {joinPoolTxHash && !showSuccessReceipt && (
                 <TransactionStatusDisplay hash={joinPoolTxHash} chainId={pool.chainId} title='Join Pool Status' />
             )}
 
-            {blockchainError && <BlockchainErrorMessage error={blockchainError} />}
-
-            <div className='flex items-center justify-between'>
-                {onClose && (
-                    <button
-                        type='button'
-                        onClick={onClose}
-                        disabled={uiLocked} // Simpler disable logic for cancel
-                        className='rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50'>
-                        Cancel
-                    </button>
-                )}
-                <button
-                    type='submit'
-                    disabled={isSubmitDisabled}
-                    className='ml-auto rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50'>
-                    {buttonText}
-                </button>
-            </div>
-        </form>
+            {blockchainError && !showSuccessReceipt && <BlockchainErrorMessage error={blockchainError} />}
+        </Card>
     )
 }
