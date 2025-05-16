@@ -105,6 +105,7 @@ To get started building your own frame, follow these steps:
 - [OnchainKit Documentation](https://docs.base.org/builderkits/onchainkit/getting-started)
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [Secure Smart Contract Deployments with Foundry](./docs/secure-deployments.md)
 
 ## Minikit CLI:
 
