@@ -10,19 +10,14 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-oncha
 ## Getting Started
 
 1. Install dependencies:
+
 ```bash
-npm install
-# or
-yarn install
-# or
-pnpm install
-# or
 bun install
 ```
 
-2. Verify environment variables, these will be set up by the `npx create-onchain --mini` command:
+2. Verify environment variables, these will be set up by the `bunx create-onchain --mini` command:
 
-You can regenerate the FARCASTER Account Association environment variables by running `npx create-onchain --manifest` in your project directory.
+You can regenerate the FARCASTER Account Association environment variables by running `bunx create-onchain --manifest` in your project directory.
 
 The environment variables enable the following features:
 
@@ -51,28 +46,34 @@ REDIS_TOKEN=
 ```
 
 3. Start the development server:
+
 ```bash
-npm run dev
+bun dev
 ```
 
 ## Template Features
 
 ### Frame Configuration
+
 - `.well-known/farcaster.json` endpoint configured for Frame metadata and account association
 - Frame metadata automatically added to page headers in `layout.tsx`
 
 ### Background Notifications
+
 - Redis-backed notification system using Upstash
 - Ready-to-use notification endpoints in `api/notify` and `api/webhook`
 - Notification client utilities in `lib/notification-client.ts`
 
 ### Theming
+
 - Custom theme defined in `theme.css` with OnchainKit variables
 - Pixel font integration with Pixelify Sans
 - Dark/light mode support through OnchainKit
 
 ### MiniKit Provider
+
 The app is wrapped with `MiniKitProvider` in `providers.tsx`, configured with:
+
 - OnchainKit integration
 - Access to Frames context
 - Sets up Wagmi Connectors
@@ -84,17 +85,19 @@ The app is wrapped with `MiniKitProvider` in `providers.tsx`, configured with:
 To get started building your own frame, follow these steps:
 
 1. Remove the DemoComponents:
-   - Delete `components/DemoComponents.tsx`
-   - Remove demo-related imports from `page.tsx`
+
+    - Delete `components/DemoComponents.tsx`
+    - Remove demo-related imports from `page.tsx`
 
 2. Start building your Frame:
-   - Modify `page.tsx` to create your Frame UI
-   - Update theme variables in `theme.css`
-   - Adjust MiniKit configuration in `providers.tsx`
+
+    - Modify `page.tsx` to create your Frame UI
+    - Update theme variables in `theme.css`
+    - Adjust MiniKit configuration in `providers.tsx`
 
 3. Add your frame to your account:
-   - Cast your frame to see it in action
-   - Share your frame with others to start building your community
+    - Cast your frame to see it in action
+    - Share your frame with others to start building your community
 
 ## Learn More
 
@@ -102,3 +105,27 @@ To get started building your own frame, follow these steps:
 - [OnchainKit Documentation](https://docs.base.org/builderkits/onchainkit/getting-started)
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+
+## Minikit CLI:
+
+Integrations:
+✓ MiniKit
+✓ OnchainKit
+✓ Base
+
+Frameworks:
+
+- Wagmi
+- React
+- Next.js
+- Tailwind CSS
+- ESLint
+- Upstash Redis
+
+Before launching your app:
+
+- Set up account manifest
+    - Required for app discovery, notifications, and client integration
+    - Run `bunx create-onchain --manifest` from project root
+- Support webhooks and background notifications (optional)
+    - Set REDIS_URL and REDIS_TOKEN environment variables

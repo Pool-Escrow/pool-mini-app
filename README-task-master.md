@@ -37,10 +37,10 @@ The script can be configured through environment variables in a `.env` file at t
 
 ```bash
 # Install globally
-npm install -g task-master-ai
+bun add -g task-master-ai
 
 # OR install locally within your project
-npm install task-master-ai
+bun add task-master-ai
 ```
 
 ### Initialize a new project
@@ -50,7 +50,7 @@ npm install task-master-ai
 task-master init
 
 # If installed locally
-npx task-master-init
+bunx task-master-init
 ```
 
 This will prompt you for project details and set up a new project with the necessary files and structure.
@@ -59,14 +59,14 @@ This will prompt you for project details and set up a new project with the neces
 
 1. **ES Modules Configuration:**
 
-   - This project uses ES Modules (ESM) instead of CommonJS.
-   - This is set via `"type": "module"` in your package.json.
-   - Use `import/export` syntax instead of `require()`.
-   - Files should use `.js` or `.mjs` extensions.
-   - To use a CommonJS module, either:
-     - Rename it with `.cjs` extension
-     - Use `await import()` for dynamic imports
-   - If you need CommonJS throughout your project, remove `"type": "module"` from package.json, but Task Master scripts expect ESM.
+    - This project uses ES Modules (ESM) instead of CommonJS.
+    - This is set via `"type": "module"` in your package.json.
+    - Use `import/export` syntax instead of `require()`.
+    - Files should use `.js` or `.mjs` extensions.
+    - To use a CommonJS module, either:
+        - Rename it with `.cjs` extension
+        - Use `await import()` for dynamic imports
+    - If you need CommonJS throughout your project, remove `"type": "module"` from package.json, but Task Master scripts expect ESM.
 
 2. The Anthropic SDK version should be 0.39.0 or higher.
 
@@ -118,8 +118,8 @@ Tasks in tasks.json have the following structure:
 - `description`: Concise description of what the task involves (Example: `"Create a new repository, set up initial structure."`)
 - `status`: Current state of the task (Example: `"pending"`, `"done"`, `"deferred"`)
 - `dependencies`: IDs of tasks that must be completed before this task (Example: `[1, 2]`)
-  - Dependencies are displayed with status indicators (✅ for completed, ⏱️ for pending)
-  - This helps quickly identify which prerequisite tasks are blocking work
+    - Dependencies are displayed with status indicators (✅ for completed, ⏱️ for pending)
+    - This helps quickly identify which prerequisite tasks are blocking work
 - `priority`: Importance level of the task (Example: `"high"`, `"medium"`, `"low"`)
 - `details`: In-depth implementation instructions (Example: `"Use GitHub client ID/secret, handle callback, set session token."`)
 - `testStrategy`: Verification approach (Example: `"Deploy and call endpoint to confirm 'Hello World' response."`)
@@ -144,9 +144,9 @@ To enable enhanced task management capabilities directly within Cursor using the
 2. Navigate to the MCP section
 3. Click on "Add New MCP Server"
 4. Configure with the following details:
-   - Name: "Task Master"
-   - Type: "Command"
-   - Command: "npx -y task-master-ai"
+    - Name: "Task Master"
+    - Type: "Command"
+    - Command: "bunx task-master-ai"
 5. Save the settings
 
 Once configured, you can interact with Task Master's task management commands directly through Cursor's interface, providing a more integrated experience.
@@ -553,13 +553,13 @@ The `next` command:
 - Identifies tasks that are pending/in-progress and have all dependencies satisfied
 - Prioritizes tasks by priority level, dependency count, and task ID
 - Displays comprehensive information about the selected task:
-  - Basic task details (ID, title, priority, dependencies)
-  - Implementation details
-  - Subtasks (if they exist)
+    - Basic task details (ID, title, priority, dependencies)
+    - Implementation details
+    - Subtasks (if they exist)
 - Provides contextual suggested actions:
-  - Command to mark the task as in-progress
-  - Command to mark the task as done
-  - Commands for working with subtasks
+    - Command to mark the task as in-progress
+    - Command to mark the task as done
+    - Commands for working with subtasks
 
 ### Viewing Specific Task Details
 
