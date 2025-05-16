@@ -1,3 +1,5 @@
+import { getPoolWithContractFallback } from '@/lib/poolDataService'
+import type { Pool } from '@/types/pool'
 import { ImageResponse } from 'next/og'
 import { type NextRequest } from 'next/server'
 
@@ -41,76 +43,66 @@ async function getPoolDataForImage(poolId: string): Promise<MockPoolForImage | n
 
 export const runtime = 'edge' // Vercel OG recommends Edge runtime
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
     const poolId = params.id
+
     if (!poolId) {
         return new Response('Missing pool ID', { status: 400 })
     }
 
-    const pool = await getPoolDataForImage(poolId)
-
-    if (!pool) {
-        return new Response('Pool not found', { status: 404 })
-    }
-
     try {
-        return new ImageResponse(
-            (
-                <div
-                    style={{
-                        height: '100%',
-                        width: '100%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: 'white', // Example background
-                        padding: '40px',
-                        fontFamily: 'sans-serif', // Added for consistency
-                    }}>
-                    <div
-                        style={{
-                            fontSize: 60,
-                            fontWeight: 'bold',
-                            color: 'black',
-                            textAlign: 'center',
-                            marginBottom: '30px', // Added spacing
-                        }}>
-                        {pool.name}
-                    </div>
-                    <div
-                        style={{
-                            fontSize: 30,
-                            color: '#333', // Darker grey for better readability
-                            textAlign: 'center',
-                            marginBottom: '15px', // Added spacing
-                        }}>
-                        Status: {pool.status.toUpperCase()}
-                    </div>
-                    {pool.creatorName && (
-                        <div
-                            style={{
-                                fontSize: 24,
-                                color: '#555', // Medium grey
-                                fontStyle: 'italic',
-                                textAlign: 'center',
-                            }}>
-                            Created by: {pool.creatorName}
-                        </div>
-                    )}
-                    {/* TODO: Add more data like participant count, total amount once available */}
-                </div>
-            ),
-            {
-                width: 1200,
-                height: 630,
-            },
+        const pool: Pool | null = await getPoolWithContractFallback(poolId)
+
+        if (!pool) {
+            return new Response(`Pool not found: ${poolId}`, { status: 404 })
+        }
+
+        // Simple image displaying pool name and status
+        // Tailwind classes won't work here directly, need inline styles or Satori-compatible CSS.
+        const imageJsx = (
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: '#f0f0f0',
+                    color: '#333',
+                    fontFamily: 'sans-serif',
+                    padding: '20px',
+                    border: '10px solid #6366f1', // Indigo-500 like color
+                    boxSizing: 'border-box',
+                }}>
+                <h1 style={{ fontSize: '48px', margin: '0 0 20px 0', textAlign: 'center' }}>{pool.name}</h1>
+                <p style={{ fontSize: '32px', margin: '0' }}>
+                    Status: <span style={{ fontWeight: 'bold' }}>{pool.status?.toUpperCase() ?? 'N/A'}</span>
+                </p>
+                <p style={{ fontSize: '24px', margin: '20px 0 0 0', color: '#4b5563' }}>Pool ID: {pool.id}</p>
+                <p style={{ fontSize: '18px', position: 'absolute', bottom: '10px', right: '20px', color: '#6b7280' }}>
+                    Powered by Pool Mini
+                </p>
+            </div>
         )
-    } catch (e: unknown) {
-        const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred'
-        console.error(`Failed to generate image for pool ${poolId}: ${errorMessage}`, e)
-        return new Response(`Failed to generate the image for pool ${poolId}: ${errorMessage}`, {
-            status: 500,
+
+        return new ImageResponse(imageJsx, {
+            width: 1200,
+            height: 630,
+            // You can load custom fonts here if needed
+            // fonts: [
+            //   {
+            //     name: 'Typewriter',
+            //     data: await fetch(
+            //       new URL('./Inter-Regular.woff2', import.meta.url)
+            //     ).then((res) => res.arrayBuffer()),
+            //     style: 'normal',
+            //     weight: 400,
+            //   },
+            // ],
         })
+    } catch (error) {
+        console.error(`Error generating image for pool ${poolId}:`, error)
+        return new Response('Failed to generate image', { status: 500 })
     }
 }
