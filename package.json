@@ -8,7 +8,11 @@
         "check-types": "tsc --noEmit",
         "start": "next start",
         "lint": "next lint --fix",
-        "gen:contracts": "wagmi generate -c wagmi-cli.config.ts"
+        "gen:contracts": "wagmi generate -c wagmi-cli.config.ts",
+        "deploy:mainnet": "./scripts/deploy_pool.sh mainnet",
+        "deploy:sepolia": "./scripts/deploy_pool.sh sepolia",
+        "deploy:local": "./scripts/deploy_pool.sh local",
+        "deploy:droplet-mainnet": "./scripts/deploy_droplet.sh"
     },
     "dependencies": {
         "@coinbase/onchainkit": "0.38.13",
