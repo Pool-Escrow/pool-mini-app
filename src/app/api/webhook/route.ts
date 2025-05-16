@@ -1,9 +1,10 @@
+import { env } from '@/env'
 import { deleteUserNotificationDetails, setUserNotificationDetails } from '@/lib/notification'
 import { sendFrameNotification } from '@/lib/notification-client'
 import { createPublicClient, http } from 'viem'
 import { optimism } from 'viem/chains'
 
-const appName = process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME
+const appName = env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME
 
 const KEY_REGISTRY_ADDRESS = '0x00000000Fc1237824fb747aBDE0FF18990E59b7e'
 

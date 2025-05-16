@@ -1,5 +1,6 @@
 'use client'
 
+import { env } from '@/env'
 import { MiniKitProvider } from '@coinbase/onchainkit/minikit'
 import type { ReactNode } from 'react'
 import { createContext, useContext, useEffect, useState } from 'react'
@@ -52,7 +53,7 @@ function UserRoleProvider({ children }: { children: ReactNode }) {
 export default function Providers({ children }: { children: React.ReactNode }) {
     // Disable auto-connection by setting this flag in localStorage during development
     // useEffect(() => {
-    //     if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    //     if (typeof window !== 'undefined' && env.NODE_ENV === 'development') {
     //         // Only in development, to ensure proper wallet dialog behavior with React's strict mode
     //         if (!localStorage.getItem('_devConnectionAttempted')) {
     //             localStorage.setItem('poolMiniUserManuallyDisconnected', 'true')
@@ -63,14 +64,14 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
     return (
         <MiniKitProvider
-            apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
+            apiKey={env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
             chain={base}
             config={{
                 appearance: {
                     mode: 'auto' as const,
                     theme: 'pool-theme',
-                    name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
-                    logo: process.env.NEXT_PUBLIC_ICON_URL,
+                    name: env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
+                    logo: env.NEXT_PUBLIC_ICON_URL,
                 },
             }}>
             <FrameProvider>

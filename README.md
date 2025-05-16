@@ -129,3 +129,14 @@ Before launching your app:
     - Run `bunx create-onchain --manifest` from project root
 - Support webhooks and background notifications (optional)
     - Set REDIS_URL and REDIS_TOKEN environment variables
+
+## Environment Variables Management with t3-env
+
+This project uses `t3-env` (`@t3-oss/env-nextjs`) to manage and validate environment variables for enhanced type safety and reliability.
+
+- A comprehensive schema for all required and optional environment variables is defined in `src/env.ts`. This schema uses Zod for validation.
+- To set up your local environment, copy the `.env.example` file to `.env.local` (or other relevant files like `.env.development.local`, `.env.production.local`). Then, fill in the necessary values according to the schema.
+- The application is configured to validate these environment variables at build time and runtime. If any required variables are missing or do not conform to the defined schema (e.g., incorrect type, malformed URL), an error will be thrown, preventing unexpected behavior.
+- If you need to skip environment variable validation for specific scenarios (e.g., during Docker builds or in certain CI environments), you can do so by setting the `SKIP_ENV_VALIDATION=true` environment variable.
+
+This approach ensures that the application runs with a predictable and validated set of environment variables, reducing runtime errors and improving the development workflow.

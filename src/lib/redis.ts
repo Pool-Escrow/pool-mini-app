@@ -1,15 +1,29 @@
-import { Redis } from "@upstash/redis";
+import { env } from '@/env'
+import { Redis } from '@upstash/redis'
 
-if (!process.env.REDIS_URL || !process.env.REDIS_TOKEN) {
-  console.warn(
-    "REDIS_URL or REDIS_TOKEN environment variable is not defined, please add to enable background notifications and webhooks.",
-  );
+if (!env.REDIS_URL || !env.REDIS_TOKEN) {
+    console.log('Missing Redis URL or Token, REDIS_URL or REDIS_TOKEN not set. Redis will not be configured.')
 }
 
 export const redis =
-  process.env.REDIS_URL && process.env.REDIS_TOKEN
-    ? new Redis({
-        url: process.env.REDIS_URL,
-        token: process.env.REDIS_TOKEN,
-      })
-    : null;
+    env.REDIS_URL && env.REDIS_TOKEN
+        ? new Redis({
+              url: env.REDIS_URL,
+              token: env.REDIS_TOKEN,
+          })
+        : ({} as Redis)
+
+export async function set(key: string, value: string) {
+    if (!redis.set) return
+    return redis.set(key, value)
+}
+
+export async function get(key: string) {
+    if (!redis.get) return null
+    return redis.get(key)
+}
+
+export async function incr(key: string) {
+    if (!redis.incr) return null
+    return redis.incr(key)
+}

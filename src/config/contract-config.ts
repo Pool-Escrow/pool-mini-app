@@ -1,27 +1,22 @@
+import { env } from '@/env'
 import { base, baseSepolia } from 'wagmi/chains'
 
 // Types
-type ContractAddresses = Record<number, `0x${string}`>;
+type ContractAddresses = Record<number, `0x${string}`>
 
 // Environment variables should be set in .env.local or similar
 // Example: NEXT_PUBLIC_POOL_CONTRACT_BASE=0xYourBaseAddress
 // Example: NEXT_PUBLIC_POOL_CONTRACT_BASE_SEPOLIA=0xYourBaseSepoliaAddress
 
 const POOL_CONTRACT_ADDRESSES: ContractAddresses = {
-    [base.id]:
-        (process.env.NEXT_PUBLIC_POOL_CONTRACT_BASE as `0x${string}`) || '0x5CA11740144513897Be27e3E82D75Aa75067F712',
-    [baseSepolia.id]:
-        (process.env.NEXT_PUBLIC_POOL_CONTRACT_BASE_SEPOLIA as `0x${string}`) ||
-        '0x5C22662210E48D0f5614cACA6f7a6a938716Ea26',
+    [base.id]: env.NEXT_PUBLIC_POOL_CONTRACT_BASE! || '0x5CA11740144513897Be27e3E82D75Aa75067F712',
+    [baseSepolia.id]: env.NEXT_PUBLIC_POOL_CONTRACT_BASE_SEPOLIA! || '0x5C22662210E48D0f5614cACA6f7a6a938716Ea26',
     // Add other chains here if needed
 }
 
 const TOKEN_CONTRACT_ADDRESSES: ContractAddresses = {
-    [base.id]:
-        (process.env.NEXT_PUBLIC_TOKEN_CONTRACT_BASE as `0x${string}`) || '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
-    [baseSepolia.id]:
-        (process.env.NEXT_PUBLIC_TOKEN_CONTRACT_BASE_SEPOLIA as `0x${string}`) ||
-        '0xfD2Ec58cE4c87b253567Ff98ce2778de6AF0101b',
+    [base.id]: env.NEXT_PUBLIC_TOKEN_CONTRACT_BASE! || '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
+    [baseSepolia.id]: env.NEXT_PUBLIC_TOKEN_CONTRACT_BASE_SEPOLIA! || '0xfD2Ec58cE4c87b253567Ff98ce2778de6AF0101b',
 }
 
 /**

@@ -1,8 +1,9 @@
+import { env } from '@/env'
 import { getUserNotificationDetails } from '@/lib/notification'
 import type { FrameNotificationDetails } from '@farcaster/frame-sdk'
 import { type SendNotificationRequest, sendNotificationResponseSchema } from '@farcaster/frame-sdk'
 
-const appUrl = process.env.NEXT_PUBLIC_URL ?? ''
+const appUrl = env.NEXT_PUBLIC_URL ?? ''
 
 type SendFrameNotificationResult =
     | {

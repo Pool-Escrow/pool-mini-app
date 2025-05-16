@@ -1,3 +1,5 @@
+import { env } from '@/env'
+
 function withValidProperties(properties: Record<string, undefined | string | string[]>) {
     return Object.fromEntries(
         Object.entries(properties).filter(([, value]) => {
@@ -10,32 +12,32 @@ function withValidProperties(properties: Record<string, undefined | string | str
 }
 
 export function GET() {
-    const URL = process.env.NEXT_PUBLIC_URL
+    const URL = env.NEXT_PUBLIC_URL
 
     return Response.json({
         accountAssociation: {
-            header: process.env.FARCASTER_HEADER,
-            payload: process.env.FARCASTER_PAYLOAD,
-            signature: process.env.FARCASTER_SIGNATURE,
+            header: env.FARCASTER_HEADER,
+            payload: env.FARCASTER_PAYLOAD,
+            signature: env.FARCASTER_SIGNATURE,
         },
         frame: withValidProperties({
             version: '1',
-            name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
-            subtitle: process.env.NEXT_PUBLIC_APP_SUBTITLE,
-            description: process.env.NEXT_PUBLIC_APP_DESCRIPTION,
+            name: env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
+            subtitle: env.NEXT_PUBLIC_APP_SUBTITLE,
+            description: env.NEXT_PUBLIC_APP_DESCRIPTION,
             screenshotUrls: [],
-            iconUrl: process.env.NEXT_PUBLIC_APP_ICON,
-            splashImageUrl: process.env.NEXT_PUBLIC_APP_SPLASH_IMAGE,
-            splashBackgroundColor: process.env.NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR,
+            iconUrl: env.NEXT_PUBLIC_APP_ICON,
+            splashImageUrl: env.NEXT_PUBLIC_APP_SPLASH_IMAGE,
+            splashBackgroundColor: env.NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR,
             homeUrl: URL,
             webhookUrl: `${URL}/api/webhook`,
-            primaryCategory: process.env.NEXT_PUBLIC_APP_PRIMARY_CATEGORY,
+            primaryCategory: env.NEXT_PUBLIC_APP_PRIMARY_CATEGORY,
             tags: [],
-            heroImageUrl: process.env.NEXT_PUBLIC_APP_HERO_IMAGE,
-            tagline: process.env.NEXT_PUBLIC_APP_TAGLINE,
-            ogTitle: process.env.NEXT_PUBLIC_APP_OG_TITLE,
-            ogDescription: process.env.NEXT_PUBLIC_APP_OG_DESCRIPTION,
-            ogImageUrl: process.env.NEXT_PUBLIC_APP_OG_IMAGE,
+            heroImageUrl: env.NEXT_PUBLIC_APP_HERO_IMAGE,
+            tagline: env.NEXT_PUBLIC_APP_TAGLINE,
+            ogTitle: env.NEXT_PUBLIC_APP_OG_TITLE,
+            ogDescription: env.NEXT_PUBLIC_APP_OG_DESCRIPTION,
+            ogImageUrl: env.NEXT_PUBLIC_APP_OG_IMAGE,
         }),
     })
 }

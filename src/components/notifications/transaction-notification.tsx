@@ -1,3 +1,4 @@
+import { env } from '@/env'
 import { useTransactionStatus } from '@/hooks/use-transaction-status'
 import { CheckCircleIcon, ExternalLinkIcon, LoaderCircleIcon, XCircleIcon } from 'lucide-react'
 import React, { useEffect, useRef } from 'react'
@@ -12,7 +13,7 @@ interface TransactionNotificationProps {
 }
 
 const getBlockExplorerUrl = (hash: Hash): string => {
-    const chainId = process.env.NEXT_PUBLIC_CHAIN_ID
+    const chainId = env.NEXT_PUBLIC_CHAIN_ID
     if (chainId === '8453') {
         return `https://basescan.org/tx/${hash}`
     }

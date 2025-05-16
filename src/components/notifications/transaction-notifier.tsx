@@ -1,3 +1,4 @@
+import { env } from '@/env'
 import { useTransactionStatus } from '@/hooks/use-transaction-status'
 import { ExternalLinkIcon, Loader2 } from 'lucide-react'
 import React, { useCallback, useEffect, useRef } from 'react'
@@ -7,7 +8,7 @@ import { BaseError, type Hash } from 'viem'
 // Placeholder for utility function - should be created in @/lib/utils.ts or similar
 // IMPORTANT: This needs to be chain-aware in a real app.
 const getBlockExplorerUrl = (hash: Hash): string => {
-    const L2_EXPLORER_URL = process.env.NEXT_PUBLIC_L2_EXPLORER_URL ?? 'https://sepolia.basescan.org'
+    const L2_EXPLORER_URL = env.NEXT_PUBLIC_L2_EXPLORER_URL ?? 'https://sepolia.basescan.org'
     return `${L2_EXPLORER_URL}/tx/${hash}`
 }
 
