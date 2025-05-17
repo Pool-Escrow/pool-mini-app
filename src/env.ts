@@ -24,6 +24,7 @@ export const env = createEnv({
         NEXT_PUBLIC_URL: z.string().url(),
         NEXT_PUBLIC_VERSION: z.string().min(1).default('next'),
         NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME: z.string().min(1),
+        NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: z.string().min(1),
         NEXT_PUBLIC_APP_SUBTITLE: z
             .string()
             .regex(/^[a-zA-Z0-9\s.,!?'"&()-]*$/, 'Emojis and restricted symbols are not allowed'),
@@ -95,6 +96,7 @@ export const env = createEnv({
         NEXT_PUBLIC_URL: process.env.NEXT_PUBLIC_URL,
         NEXT_PUBLIC_VERSION: process.env.NEXT_PUBLIC_VERSION,
         NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
+        NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
         NEXT_PUBLIC_APP_SUBTITLE: process.env.NEXT_PUBLIC_APP_SUBTITLE,
         NEXT_PUBLIC_APP_DESCRIPTION: process.env.NEXT_PUBLIC_APP_DESCRIPTION,
         NEXT_PUBLIC_ICON_URL: process.env.NEXT_PUBLIC_ICON_URL,
