@@ -7,6 +7,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-oncha
 - [Tailwind CSS](https://tailwindcss.com)
 - [Next.js](https://nextjs.org/docs)
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Pool-Escrow/pool-mini-app)
+
 ## Deployments
 
 For information about deployed contracts and deployment history, see our [Deployment Documentation](./docs/deployment.md).
