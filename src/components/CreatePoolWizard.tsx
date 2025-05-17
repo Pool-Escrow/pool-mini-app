@@ -1,30 +1,21 @@
-'use client'
-
 import { ChooseImageStep } from '@/components/steps/ChooseImageStep'
 import { NameDescriptionStep } from '@/components/steps/NameDescriptionStep'
 import { PoolConfigStep } from '@/components/steps/PoolConfigStep'
 import { RegistrationTimeStep } from '@/components/steps/RegistrationTimeStep'
 import { ReviewAndCreateStep } from '@/components/steps/ReviewAndCreateStep'
+import {
+    type ChooseImageStepValues,
+    type NameDescriptionStepValues,
+    type PoolConfigStepValues,
+    type RegistrationTimeStepValues,
+} from '@/lib/validators/poolCreationSchemas'
 import type { Pool } from '@/types/pool'
 
 export type StepData =
-    | { selectedImage: string }
-    | { name: string; description: string }
-    | {
-          registrationStart: string
-          registrationEnd: string
-          registrationEnabled: boolean
-      }
-    | {
-          depositAmount: number
-          maxEntries: number
-          rulesLink: string
-          tokenAddress: string
-          selectedTokenKey: string
-          customTokenAddress?: string
-          winnerCount: number
-          amountPerWinner: number
-      }
+    | ChooseImageStepValues
+    | NameDescriptionStepValues
+    | RegistrationTimeStepValues
+    | PoolConfigStepValues
 
 export const TOTAL_STEPS_WIZARD = 5
 
@@ -64,9 +55,7 @@ export function CreatePoolWizard({ currentStep, poolData, onStepChange, onComple
             {currentStep === 3 && (
                 <RegistrationTimeStep
                     initialData={{
-                        registrationStart: poolData.registrationStart,
-                        registrationEnd: poolData.registrationEnd,
-                        registrationEnabled: poolData.registrationEnabled,
+                        registrationEnd: poolData.endTime ? new Date(poolData.endTime) : undefined,
                     }}
                     onNext={data => handleNext(data)}
                     onBack={handleBack}
@@ -75,12 +64,14 @@ export function CreatePoolWizard({ currentStep, poolData, onStepChange, onComple
             {currentStep === 4 && (
                 <PoolConfigStep
                     initialData={{
-                        depositAmount: poolData.depositAmount,
-                        maxEntries: poolData.maxEntries,
+                        depositAmount: poolData.depositAmountPerPerson,
+                        limit: poolData.softCap,
                         rulesLink: poolData.rulesLink,
-                        tokenAddress: poolData.tokenAddress,
                         selectedTokenKey: poolData.selectedTokenKey,
-                        winnerCount: poolData.winnerCount,
+                        customTokenAddress: poolData.customTokenAddress,
+                        customTokenSymbol: poolData.customTokenSymbol,
+                        customTokenDecimals: poolData.customTokenDecimals,
+                        winnerCount: poolData.totalWinners,
                         amountPerWinner: poolData.amountPerWinner,
                     }}
                     onNext={data => handleNext(data)}
