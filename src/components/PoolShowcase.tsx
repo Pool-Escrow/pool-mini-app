@@ -11,32 +11,7 @@ interface PoolShowcaseProps {
 
 export function PoolShowcase({ title = 'Community Pools', pools, showCreator = true }: PoolShowcaseProps) {
     // Mock creator data - in a real app, this would come from a database
-    const creators = {
-        '1': {
-            name: 'Jack Butcher',
-            avatar: 'https://pbs.twimg.com/profile_images/1617848085099253761/PrXpCD-d_400x400.jpg',
-        },
-        '2': {
-            name: 'Vitalik',
-            avatar: 'https://pbs.twimg.com/profile_images/977496875887558661/L86xyLF4_400x400.jpg',
-        },
-        '3': {
-            name: 'Balaji',
-            avatar: 'https://pbs.twimg.com/profile_images/1654064289519706114/mL65-Y5D_400x400.jpg',
-        },
-        '4': {
-            name: 'Vignesh',
-            avatar: 'https://pbs.twimg.com/profile_images/1481810183229284352/OcIyCzKK_400x400.jpg',
-        },
-        '5': {
-            name: 'Cozomo',
-            avatar: 'https://pbs.twimg.com/profile_images/1431361047967838212/Bp2FqZ6e_400x400.jpg',
-        },
-        '6': {
-            name: 'Chris Dixon',
-            avatar: 'https://pbs.twimg.com/profile_images/1643131046609215489/zpLW8ib5_400x400.jpg',
-        },
-    }
+    // const creators = { ... }
 
     // If no pools, show empty state
     if (pools.length === 0) {
@@ -57,15 +32,26 @@ export function PoolShowcase({ title = 'Community Pools', pools, showCreator = t
             <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'>
                 {pools.map(pool => {
                     // Randomly assign a creator for demonstration
-                    const creatorId = String(Math.floor(Math.random() * 6) + 1)
-                    const creator = creators[creatorId as keyof typeof creators]
+                    // const creatorId = String(Math.floor(Math.random() * 6) + 1)
+                    // const creator = creators[creatorId as keyof typeof creators]
+
+                    // Determine creator details based on actual pool data if available
+                    // For now, we'll pass undefined, or use pool.onChainPoolAdmin if desired.
+                    // This part might need a more robust solution for fetching creator profiles.
+                    const creatorName: string | undefined = undefined
+                    const creatorAvatar: string | undefined = undefined
+
+                    // Example: if (showCreator && pool.onChainPoolAdmin) {
+                    //    creatorName = pool.onChainPoolAdmin; // Or fetch a profile
+                    //    // creatorAvatar = ... // fetch avatar based on admin/creatorId
+                    // }
 
                     return (
                         <PoolCard
                             key={pool.id}
                             pool={pool}
-                            creatorName={showCreator ? creator.name : undefined}
-                            creatorAvatar={showCreator ? creator.avatar : undefined}
+                            creatorName={showCreator ? creatorName : undefined}
+                            creatorAvatar={showCreator ? creatorAvatar : undefined}
                             showCreator={showCreator}
                         />
                     )
