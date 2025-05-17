@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useJoinPool } from '@/hooks/use-pool-contract'
 import { useApproveToken, useTokenAllowance } from '@/hooks/use-token-approval'
+import { poolAddress } from '@/types/contracts'
 import type { Pool } from '@/types/pool'
 import { BlockchainErrorType, type BlockchainErrorMessageProps } from '@/utils/error-handling' // For error state and BlockchainErrorType
 import React, { useEffect, useState } from 'react'
@@ -29,22 +30,24 @@ export const JoinPoolForm: React.FC<JoinPoolFormProps> = ({ pool, onJoinSuccess,
     const [showSuccessReceipt, setShowSuccessReceipt] = useState<boolean>(false) // Added state for success view
     const [finalTxHash, setFinalTxHash] = useState<string | null>(null) // Added state to store final tx hash for receipt
 
-    const spenderAddress = pool.contractAddress as Address | undefined
+    const spenderAddress = poolAddress[connectedChainId as keyof typeof poolAddress]
 
     const { data: balanceData, isLoading: isLoadingBalance } = useBalance({
         address: accountAddress,
-        token: pool.tokenAddress as Address | undefined,
+        token: pool.tokenContractAddress as Address | undefined,
         chainId: pool.chainId, // Assuming chainId is part of Pool type
     })
 
     const { allowance, isLoadingAllowance, allowanceError } = useTokenAllowance(
-        pool.tokenAddress as Address | undefined,
+        pool.tokenContractAddress as Address | undefined,
         accountAddress,
         spenderAddress,
-        pool.tokenDecimals,
+        pool.onChainTokenDecimals,
     )
 
-    const { approveToken, isApprovingToken, approveTokenError, approveTokenHash } = useApproveToken(pool.tokenDecimals)
+    const { approveToken, isApprovingToken, approveTokenError, approveTokenHash } = useApproveToken(
+        pool.onChainTokenDecimals,
+    )
 
     const { joinPool, isJoiningPool, joinPoolError, joinPoolTxHash } = useJoinPool()
 
@@ -64,24 +67,39 @@ export const JoinPoolForm: React.FC<JoinPoolFormProps> = ({ pool, onJoinSuccess,
         } else if (allowanceError) {
             const viemError = allowanceError as unknown as Error & { shortMessage?: string }
             setFormValidationError(`Error fetching allowance: ${viemError.shortMessage ?? viemError.message}`)
-        } else if (balanceData && pool.depositAmount !== undefined && pool.tokenDecimals !== undefined) {
-            const requiredAmountBigInt = parseUnits(pool.depositAmount.toString(), pool.tokenDecimals)
+        } else if (
+            balanceData &&
+            pool.depositAmountPerPerson !== undefined &&
+            pool.onChainTokenDecimals !== undefined
+        ) {
+            const requiredAmountBigInt = parseUnits(pool.depositAmountPerPerson.toString(), pool.onChainTokenDecimals)
             if (balanceData.value < requiredAmountBigInt) {
-                setFormValidationError(`Insufficient ${balanceData.symbol ?? pool.tokenSymbol ?? 'token'} balance.`)
+                setFormValidationError(
+                    `Insufficient ${balanceData.symbol ?? pool.onChainTokenSymbol ?? 'token'} balance.`,
+                )
             }
         }
         // No specific message for balance loading, handled by button disable
-    }, [balanceData, pool.depositAmount, pool.tokenDecimals, pool.tokenSymbol, isLoadingAllowance, allowanceError])
+    }, [
+        balanceData,
+        pool.depositAmountPerPerson,
+        pool.onChainTokenDecimals,
+        pool.onChainTokenSymbol,
+        isLoadingAllowance,
+        allowanceError,
+    ])
 
     const requiredDepositBigInt =
-        pool.tokenDecimals !== undefined ? parseUnits(pool.depositAmount.toString(), pool.tokenDecimals) : BigInt(0)
+        pool.onChainTokenDecimals !== undefined
+            ? parseUnits(pool.depositAmountPerPerson.toString(), pool.onChainTokenDecimals)
+            : BigInt(0)
     // needsApproval should only be considered valid if allowance is not loading
     const needsApproval =
         !isLoadingAllowance && allowance?.rawAllowance !== undefined && allowance.rawAllowance < requiredDepositBigInt
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
-        if (!pool.contractAddress || !pool.tokenAddress || pool.tokenDecimals === undefined) {
+        if (!pool.tokenContractAddress || !pool.tokenContractAddress || pool.onChainTokenDecimals === undefined) {
             setBlockchainError({
                 type: BlockchainErrorType.UNKNOWN,
                 message: 'Pool configuration is incomplete (missing contract, token address, or decimals).',
@@ -106,9 +124,9 @@ export const JoinPoolForm: React.FC<JoinPoolFormProps> = ({ pool, onJoinSuccess,
             if (needsApproval) {
                 console.log('Approving token...')
                 await approveToken({
-                    tokenAddress: pool.tokenAddress as Address,
-                    spenderAddress: pool.contractAddress as Address,
-                    amountToApprove: pool.depositAmount.toString(),
+                    tokenAddress: pool.tokenContractAddress as Address,
+                    spenderAddress: pool.tokenContractAddress as Address,
+                    amountToApprove: pool.depositAmountPerPerson.toString(),
                 })
             }
 
@@ -116,7 +134,7 @@ export const JoinPoolForm: React.FC<JoinPoolFormProps> = ({ pool, onJoinSuccess,
                 // If no approval was ever needed, join directly
                 console.log('Proceeding to join pool (no approval needed)...')
                 const submittedJoinTxHash = await joinPool({
-                    poolContractAddress: pool.contractAddress as Address,
+                    poolContractAddress: pool.tokenContractAddress as Address,
                     poolId: pool.id,
                     depositAmount: requiredDepositBigInt,
                 })
@@ -131,7 +149,7 @@ export const JoinPoolForm: React.FC<JoinPoolFormProps> = ({ pool, onJoinSuccess,
                 // A more robust way might involve confirming the approval transaction succeeded via useWaitForTransaction.
                 console.log('Approval successful or hash available, proceeding to join pool...')
                 const submittedJoinTxHash = await joinPool({
-                    poolContractAddress: pool.contractAddress as Address,
+                    poolContractAddress: pool.tokenContractAddress as Address,
                     poolId: pool.id,
                     depositAmount: requiredDepositBigInt,
                 })
@@ -176,7 +194,7 @@ export const JoinPoolForm: React.FC<JoinPoolFormProps> = ({ pool, onJoinSuccess,
                 setBlockchainError(null)
                 try {
                     const submittedJoinTxHash = await joinPool({
-                        poolContractAddress: pool.contractAddress as Address,
+                        poolContractAddress: pool.tokenContractAddress as Address,
                         poolId: pool.id,
                         depositAmount: requiredDepositBigInt,
                     })
@@ -252,7 +270,7 @@ export const JoinPoolForm: React.FC<JoinPoolFormProps> = ({ pool, onJoinSuccess,
             <CardHeader>
                 <CardTitle>Join {pool.name}</CardTitle>
                 <CardDescription>
-                    Deposit {pool.depositAmount} {pool.tokenSymbol} to participate.
+                    Deposit {pool.depositAmountPerPerson} {pool.onChainTokenSymbol} to participate.
                 </CardDescription>
             </CardHeader>
             <form
@@ -265,7 +283,7 @@ export const JoinPoolForm: React.FC<JoinPoolFormProps> = ({ pool, onJoinSuccess,
                         <Label htmlFor='token-selection'>Token (Pool Default)</Label>
                         <Input
                             id='token-selection'
-                            value={`${pool.tokenSymbol} (${pool.tokenAddress})`}
+                            value={`${pool.onChainTokenSymbol} (${pool.tokenContractAddress})`}
                             readOnly
                             disabled
                         />
@@ -278,7 +296,7 @@ export const JoinPoolForm: React.FC<JoinPoolFormProps> = ({ pool, onJoinSuccess,
                         <Input
                             id='deposit-amount'
                             type='number' // Or text and parse, depending on desired precision handling
-                            value={pool.depositAmount} // Assuming fixed deposit amount for now as per CardDescription
+                            value={pool.depositAmountPerPerson} // Assuming fixed deposit amount for now as per CardDescription
                             readOnly // If amount is fixed by the pool
                             // onChange={(e) => setDepositAmount(e.target.value)} // Enable if amount is variable
                             // placeholder={`Enter ${pool.tokenSymbol} amount`}

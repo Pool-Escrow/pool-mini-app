@@ -36,7 +36,7 @@ export const JoinPoolSuccessReceipt: React.FC<JoinPoolSuccessReceiptProps> = ({ 
                             <strong>Pool:</strong> {pool.name}
                         </p>
                         <p>
-                            <strong>Amount Deposited:</strong> {pool.depositAmount} {pool.tokenSymbol}
+                            <strong>Amount Deposited:</strong> {pool.depositAmountPerPerson} {pool.onChainTokenSymbol}
                         </p>
                         <p>
                             <strong>Transaction Hash:</strong>
