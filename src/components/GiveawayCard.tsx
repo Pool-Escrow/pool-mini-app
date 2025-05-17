@@ -23,9 +23,8 @@ const getGiveawayColor = (giveawayId: string): string => {
         'from-red-100 to-red-300',
         'from-orange-100 to-orange-300',
     ]
-
     // Use giveaway ID to select a color deterministically
-    const charSum = [...giveawayId].reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    const charSum = Array.from(giveawayId).reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0)
     const colorIndex = charSum % giveawayColors.length
 
     return giveawayColors[colorIndex]
