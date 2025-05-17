@@ -1,33 +1,135 @@
 'use client'
 
-import { useUserRole } from '@/components/providers'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { useChain } from '@/contexts/ChainContext'
+import { useUserRole } from '@/contexts/UserRoleContext'
+import { env } from '@/env'
 import { useWallet } from '@/hooks/use-wallet'
 import { clearAllPools } from '@/lib/poolStorage'
 import { clearAllRegistrations } from '@/lib/registrationStorage'
+import { tokenAbi } from '@/types/contracts'
 import { Address, Avatar, EthBalance, Identity, Name } from '@coinbase/onchainkit/identity'
 import { ConnectWallet, Wallet } from '@coinbase/onchainkit/wallet'
-import { PinIcon } from 'lucide-react'
-import { useState } from 'react'
-import { AddToWarpcastModal } from './modals/AddToWarpcastModal'
+import { sdk } from '@farcaster/frame-sdk'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { Loader2, PinIcon, User } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { formatUnits } from 'viem'
+import { useAccount, useReadContract } from 'wagmi'
+import { base, baseSepolia } from 'wagmi/chains'
 import { Button } from './ui/button'
+import { ChainSelector } from './ui/ChainSelector'
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from './ui/drawer'
+
+// Define FarcasterSDKError interface
+interface FarcasterSDKError {
+    id?: 'RejectedByUser' | 'InvalidDomainManifestJson'
+    message?: string
+}
+
+// TODO: Replace with your actual contract addresses
+const TOKEN_ADDRESSES: Record<string, Record<number, `0x${string}`>> = {
+    USDC: {
+        [base.id]: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+        [baseSepolia.id]: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+    },
+    DROP: {
+        [base.id]: env.NEXT_PUBLIC_TOKEN_CONTRACT_BASE,
+        [baseSepolia.id]: env.NEXT_PUBLIC_TOKEN_CONTRACT_BASE_SEPOLIA,
+    },
+}
+
+const YourAppName = env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || 'this app'
+const appUrl = env.NEXT_PUBLIC_URL || ''
+const launchInWarpcastUrl = appUrl ? `https://warpcast.com/?launchFrameUrl=${encodeURIComponent(appUrl)}` : ''
 
 export function Balance() {
     const { userRole, toggleUserRole } = useUserRole()
-    const { isConnected, disconnect: disconnectWallet } = useWallet()
+    const { isConnected, disconnect: disconnectWallet, isWarpcast } = useWallet()
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-    const [isAddToWarpcastModalOpen, setIsAddToWarpcastModalOpen] = useState(false)
+    const [isAddingToWarpcastInBalance, setIsAddingToWarpcastInBalance] = useState(false)
+    const [showWarpcastRedirectAlertInBalance, setShowWarpcastRedirectAlertInBalance] = useState(false)
+    const { isLoadingChainSwitch, selectedChainId } = useChain()
+    const { address: accountAddress, chain: connectedChain } = useAccount()
+    const [avatarError, setAvatarError] = useState(false)
+
+    useEffect(() => {
+        if (isDrawerOpen) {
+            setIsAddingToWarpcastInBalance(false)
+            setShowWarpcastRedirectAlertInBalance(false)
+        }
+    }, [isDrawerOpen])
+
+    const handleAvatarError = useCallback(() => {
+        setAvatarError(true)
+    }, [])
+
+    useEffect(() => {
+        if (accountAddress) {
+            setAvatarError(false)
+        }
+    }, [accountAddress])
+
+    const currentChainId = connectedChain?.id ?? selectedChainId
+    const usdcContractAddress = TOKEN_ADDRESSES.USDC[currentChainId]
+    const dropContractAddress = TOKEN_ADDRESSES.DROP[currentChainId]
+
+    const { data: usdcBalanceData, isLoading: isLoadingUsdcBalance } = useReadContract({
+        abi: tokenAbi,
+        address: usdcContractAddress,
+        functionName: 'balanceOf',
+        args: accountAddress ? [accountAddress] : undefined,
+        query: { enabled: !!accountAddress && !!usdcContractAddress },
+    })
+
+    const { data: usdcDecimalsData, isLoading: isLoadingUsdcDecimals } = useReadContract({
+        abi: tokenAbi,
+        address: usdcContractAddress,
+        functionName: 'decimals',
+        query: { enabled: !!usdcContractAddress },
+    })
+
+    const { data: dropBalanceData, isLoading: isLoadingDropBalance } = useReadContract({
+        abi: tokenAbi,
+        address: dropContractAddress,
+        functionName: 'balanceOf',
+        args: accountAddress ? [accountAddress] : undefined,
+        query: { enabled: !!accountAddress && !!dropContractAddress },
+    })
+
+    const { data: dropDecimalsData, isLoading: isLoadingDropDecimals } = useReadContract({
+        abi: tokenAbi,
+        address: dropContractAddress,
+        functionName: 'decimals',
+        query: { enabled: !!dropContractAddress },
+    })
+
+    const formattedUsdcBalance =
+        typeof usdcBalanceData === 'bigint' && typeof usdcDecimalsData === 'number'
+            ? parseFloat(formatUnits(usdcBalanceData, usdcDecimalsData)).toFixed(2)
+            : '0.00'
+
+    const formattedDropBalance =
+        typeof dropBalanceData === 'bigint' && typeof dropDecimalsData === 'number'
+            ? parseFloat(formatUnits(dropBalanceData, dropDecimalsData)).toFixed(dropDecimalsData === 0 ? 0 : 2)
+            : '0'
 
     const localStorageKey = 'poolMiniUserManuallyDisconnected'
 
-    // Function to clear all data and reset the app
     const clearAllData = () => {
-        // Clear all pools and registrations
         clearAllPools()
         clearAllRegistrations()
-
         console.log('All pools and registrations have been cleared')
-        // Reload the page to reflect changes
         window.location.reload()
     }
 
@@ -37,6 +139,61 @@ export function Balance() {
         }
         disconnectWallet()
         setIsDrawerOpen(false)
+    }
+
+    const handleAddToWarpcastInBalance = () => {
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur()
+        }
+        requestAnimationFrame(() => {
+            void (async () => {
+                setIsAddingToWarpcastInBalance(true)
+                try {
+                    await sdk.actions.addFrame()
+                    toast.success(`${YourAppName} has been added to your Farcaster apps!`)
+                    setIsDrawerOpen(false)
+                } catch (err) {
+                    const error = err as FarcasterSDKError
+                    console.warn('Failed to add frame via sdk.actions.addFrame():', error)
+                    if (error.id === 'RejectedByUser') {
+                        toast.info('Request to add app was cancelled.')
+                    } else {
+                        if (launchInWarpcastUrl) {
+                            setShowWarpcastRedirectAlertInBalance(true)
+                        } else {
+                            toast.error('Could not add app automatically and App URL is not configured for Warpcast.')
+                        }
+                    }
+                }
+                setIsAddingToWarpcastInBalance(false)
+            })()
+        })
+    }
+
+    const renderConnectButton = () => {
+        if (isWarpcast) {
+            return <ConnectWallet />
+        } else {
+            return <ConnectButton />
+        }
+    }
+
+    const renderAvatar = () => {
+        if (!accountAddress) {
+            return (
+                <div className='flex h-10 w-10 items-center justify-center rounded-full bg-gray-300 text-gray-600'>
+                    <User className='h-6 w-6' />
+                </div>
+            )
+        }
+        if (avatarError) {
+            return (
+                <div className='flex h-10 w-10 items-center justify-center rounded-full bg-gray-300 text-gray-600'>
+                    <User className='h-6 w-6' />
+                </div>
+            )
+        }
+        return <Avatar address={accountAddress} className='h-10 w-10' onError={handleAvatarError} />
     }
 
     return (
@@ -56,38 +213,50 @@ export function Balance() {
                 <Wallet>
                     <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
                         {!isConnected ? (
-                            <ConnectWallet />
+                            renderConnectButton()
                         ) : (
-                            <DrawerTrigger onClick={() => setIsDrawerOpen(true)}>
-                                <div className='h-10 w-10 rounded-full bg-gray-300' />
+                            <DrawerTrigger onClick={() => setIsDrawerOpen(true)} className='rounded-full'>
+                                {renderAvatar()}
                             </DrawerTrigger>
                         )}
 
-                        <DrawerContent className='flex gap-2 bg-white p-4'>
+                        <DrawerContent className='flex flex-col gap-2 bg-white p-4 text-black'>
                             <DrawerHeader>
                                 <DrawerTitle>Wallet</DrawerTitle>
                                 <DrawerDescription />
                             </DrawerHeader>
-                            {/* <WalletDropdown> */}
-                            <Identity hasCopyAddressOnClick>
-                                <Avatar />
-                                <Name />
-                                <Address />
-                                <EthBalance />
-                            </Identity>
+                            {isConnected && accountAddress && (
+                                <Identity address={accountAddress} hasCopyAddressOnClick>
+                                    {renderAvatar()}
+                                    <Name />
+                                    <Address />
+                                    <EthBalance />
+                                </Identity>
+                            )}
 
-                            {/* Add to Warpcast Button */}
+                            <div className='border-t border-gray-200 px-4 py-2'>
+                                <p className='mb-1 text-xs font-medium text-gray-500'>Network</p>
+                                <ChainSelector />
+                                {isLoadingChainSwitch && (
+                                    <p className='mt-1 text-xs text-gray-500'>Switching network...</p>
+                                )}
+                            </div>
+
                             <div className='border-t border-gray-200 px-4 py-2'>
                                 <Button
                                     variant='outline'
                                     className='w-full justify-start text-sm text-gray-900 hover:bg-gray-100'
-                                    onClick={() => setIsAddToWarpcastModalOpen(true)}>
-                                    <PinIcon className='mr-2 h-4 w-4' />
-                                    Add to Warpcast
+                                    onClick={() => void handleAddToWarpcastInBalance()}
+                                    disabled={isAddingToWarpcastInBalance}>
+                                    {isAddingToWarpcastInBalance ? (
+                                        <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                                    ) : (
+                                        <PinIcon className='mr-2 h-4 w-4' />
+                                    )}
+                                    {isAddingToWarpcastInBalance ? 'Adding...' : 'Add to Warpcast'}
                                 </Button>
                             </div>
 
-                            {/* Developer toggle for admin/regular user role */}
                             <div className='border-t border-gray-200 px-4 py-2'>
                                 <button
                                     onClick={toggleUserRole}
@@ -99,7 +268,6 @@ export function Balance() {
                                     <span className='rounded-full bg-gray-100 px-2 py-1 text-xs'>Switch</span>
                                 </button>
 
-                                {/* Clear All Pools & Registrations button (admin only) */}
                                 {userRole === 'admin' && (
                                     <button
                                         onClick={clearAllData}
@@ -111,28 +279,25 @@ export function Balance() {
                                     </button>
                                 )}
                             </div>
-                            {/* Replace WalletDropdownDisconnect with a custom button */}
-                            <button
-                                onClick={handleManualDisconnect}
-                                className='flex w-full items-center justify-start rounded-md px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50'
-                                type='button'>
-                                Disconnect
-                            </button>
-
-                            {/* <Button variant='outline' asChild></Button> */}
-                            {/* </WalletDropdown> */}
+                            {isConnected && (
+                                <button
+                                    onClick={handleManualDisconnect}
+                                    className='flex w-full items-center justify-start rounded-md px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50'
+                                    type='button'>
+                                    Disconnect
+                                </button>
+                            )}
                         </DrawerContent>
                     </Drawer>
                 </Wallet>
             </header>
 
-            {/* Modal for Add to Warpcast */}
-            <AddToWarpcastModal isOpen={isAddToWarpcastModalOpen} onClose={() => setIsAddToWarpcastModalOpen(false)} />
-
             <div className='mb-8'>
                 <p className='mb-1 text-sm opacity-80'>Total balance</p>
                 <div className='flex items-baseline'>
-                    <span className='text-6xl font-bold'>$0.0</span>
+                    <span className='text-6xl font-bold'>
+                        {isLoadingUsdcBalance || isLoadingUsdcDecimals ? 'Loading...' : `$${formattedUsdcBalance}`}
+                    </span>
                     <span className='ml-1 text-xl'>USDC</span>
                 </div>
             </div>
@@ -156,8 +321,39 @@ export function Balance() {
                     <path d='M9 9H9.01' stroke='white' strokeWidth='3' strokeLinecap='round' strokeLinejoin='round' />
                     <path d='M15 9H15.01' stroke='white' strokeWidth='3' strokeLinecap='round' strokeLinejoin='round' />
                 </svg>
-                <span>Drop Tokens: 1000</span>
+                <span>
+                    Drop Tokens: {isLoadingDropBalance || isLoadingDropDecimals ? 'Loading...' : formattedDropBalance}
+                </span>
             </div>
+
+            <AlertDialog open={showWarpcastRedirectAlertInBalance} onOpenChange={setShowWarpcastRedirectAlertInBalance}>
+                <AlertDialogContent className='text-black'>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Open in Warpcast?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            To add {YourAppName}, we need to open Warpcast in your browser. Would you like to continue?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel
+                            onClick={() => setShowWarpcastRedirectAlertInBalance(false)}
+                            disabled={isAddingToWarpcastInBalance}>
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            disabled={isAddingToWarpcastInBalance}
+                            onClick={() => {
+                                if (launchInWarpcastUrl) {
+                                    window.open(launchInWarpcastUrl, '_blank')
+                                }
+                                setShowWarpcastRedirectAlertInBalance(false)
+                                setIsDrawerOpen(false)
+                            }}>
+                            Continue to Warpcast
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }
