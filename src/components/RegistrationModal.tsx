@@ -18,7 +18,7 @@ export function RegistrationModal({ isOpen, onCloseAction, pool, onRegisterActio
     }
 
     const renderBuyInConfirmation = () => {
-        if (pool.depositAmount === 0) {
+        if (pool.depositAmountPerPerson === 0) {
             return (
                 <div className='mb-4 text-center'>
                     <p className='text-gray-700'>This event is free to join!</p>
@@ -29,7 +29,7 @@ export function RegistrationModal({ isOpen, onCloseAction, pool, onRegisterActio
         return (
             <div className='mb-4 text-center'>
                 <p className='mb-2 text-gray-700'>This event has a buy-in amount of:</p>
-                <p className='text-2xl font-bold text-gray-900'>${pool.depositAmount} USDC</p>
+                <p className='text-2xl font-bold text-gray-900'>${pool.depositAmountPerPerson} USDC</p>
                 <p className='mt-1 text-sm text-gray-500'>
                     By registering, you agree to pay this amount to participate.
                 </p>
