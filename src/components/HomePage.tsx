@@ -10,8 +10,6 @@ import {
 } from '@/components/GiveawayWizard'
 import { PoolList } from '@/components/PoolList'
 import { ProgressBar } from '@/components/ProgressBar'
-import { WelcomeScreen } from '@/components/WelcomeScreen'
-import { useUserRole } from '@/components/providers'
 import {
     Drawer,
     DrawerContent,
@@ -20,10 +18,25 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from '@/components/ui/drawer'
+import { WelcomeScreen } from '@/components/WelcomeScreen'
+import { useUserRole } from '@/contexts/UserRoleContext'
 import { getGiveaways, createGiveaway as saveGiveaway } from '@/lib/giveawayStorage'
-import { getPools, createPool as savePool } from '@/lib/poolStorage'
+import { getPools, createPool as savePool, updatePool } from '@/lib/poolStorage'
 import type { Pool } from '@/types/pool'
-import { useEffect, useState } from 'react'
+import { formatISO, isDate, isValid } from 'date-fns'
+import { useCallback, useEffect, useState } from 'react'
+
+// Define types for API responses
+interface ApiSuccessResponse {
+    message: string
+    txHash?: string // Optional, as it might not always be returned or needed by client
+    tempPoolId?: string // Response from notify-creation endpoint
+}
+
+interface ApiErrorResponse {
+    message: string
+    error?: string
+}
 
 export function HomePage() {
     // Get user role
@@ -32,6 +45,8 @@ export function HomePage() {
     // State for pools and giveaways
     const [pools, setPools] = useState<Pool[]>([])
     const [giveaways, setGiveaways] = useState<Giveaway[]>([])
+    const [isSubmittingPool, setIsSubmittingPool] = useState(false)
+    const [processedTxHashes, setProcessedTxHashes] = useState<Set<string>>(new Set())
 
     // Pool Wizard States
     const [isPoolDrawerOpen, setIsPoolDrawerOpen] = useState(false)
@@ -50,6 +65,15 @@ export function HomePage() {
             initializePoolsStorage()
             const storedPools = getPools()
             setPools(storedPools)
+
+            // Initialize processed transaction hashes from existing pools
+            const txHashes = new Set<string>()
+            storedPools.forEach(pool => {
+                if (pool.txHash) {
+                    txHashes.add(pool.txHash)
+                }
+            })
+            setProcessedTxHashes(txHashes)
         })
 
         // Load giveaways
@@ -61,22 +85,132 @@ export function HomePage() {
     const handlePoolWizardStepChange = (step: number, data?: StepData) => {
         setCurrentPoolWizardStep(step)
         if (data) {
-            setWizardPoolData(prevData => ({ ...prevData, ...data }))
+            setWizardPoolData(prevData => {
+                const stepSpecificUpdate = { ...data } as Partial<Pool>
+
+                // Convert Date objects to ISO strings for specific fields using date-fns
+                if (
+                    stepSpecificUpdate.startTime &&
+                    isDate(stepSpecificUpdate.startTime) &&
+                    isValid(stepSpecificUpdate.startTime)
+                ) {
+                    stepSpecificUpdate.startTime = Number(
+                        new Date(formatISO(stepSpecificUpdate.startTime as Date)).getTime(),
+                    )
+                }
+                if (
+                    stepSpecificUpdate.endTime &&
+                    isDate(stepSpecificUpdate.endTime) &&
+                    isValid(stepSpecificUpdate.endTime)
+                ) {
+                    stepSpecificUpdate.endTime = Number(
+                        new Date(formatISO(stepSpecificUpdate.endTime as Date)).getTime(),
+                    )
+                }
+
+                // Other fields from StepData (like name, description, depositAmount, tokenAddress, tokenDecimals etc.)
+                // are assumed to be in the correct format (string, number) by this point or are handled by their respective steps.
+                // The PoolConfigStep was updated to provide tokenAddress and tokenDecimals directly.
+
+                return { ...prevData, ...stepSpecificUpdate }
+            })
         }
     }
 
-    const handlePoolWizardComplete = (completedPoolData: Omit<Pool, 'id' | 'createdAt'>) => {
-        const newPool = savePool(completedPoolData)
-        console.log('New pool created:', newPool)
-        setIsPoolDrawerOpen(false)
-        // Refresh pools list
-        setPools(getPools())
-    }
+    const handlePoolWizardComplete = useCallback(
+        async (completedPoolData: Omit<Pool, 'id' | 'createdAt'> & { txHash: string }) => {
+            if (isSubmittingPool) {
+                console.warn('[HomePage] Pool submission already in progress. Ignoring duplicate call.')
+                return
+            }
+
+            // Check if we've already processed this transaction
+            if (processedTxHashes.has(completedPoolData.txHash)) {
+                console.warn('[HomePage] Pool with this transaction hash already exists. Ignoring duplicate.')
+                setIsPoolDrawerOpen(false)
+                return
+            }
+
+            setIsSubmittingPool(true)
+
+            console.log('[HomePage] Pool creation on-chain successful, txHash:', completedPoolData.txHash)
+            console.log('[HomePage] Full completed pool data from wizard:', completedPoolData)
+
+            try {
+                const response = await fetch('/api/pools/notify-creation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        txHash: completedPoolData.txHash,
+                        poolData: completedPoolData,
+                    }),
+                })
+
+                if (!response.ok) {
+                    const errorResult = (await response.json()) as ApiErrorResponse
+                    console.error(
+                        '[HomePage] API Error notifying pool creation:',
+                        errorResult.message,
+                        errorResult.error,
+                    )
+                } else {
+                    const successResult = (await response.json()) as ApiSuccessResponse
+                    console.log('[HomePage] API Success notifying pool creation:', successResult.message)
+
+                    // Store the tempPoolId if it exists
+                    if (successResult.tempPoolId) {
+                        completedPoolData.tempPoolId = successResult.tempPoolId
+                    }
+                }
+            } catch (error) {
+                console.error('[HomePage] Network or other error notifying pool creation:', error)
+            }
+
+            // Update processed transaction hashes
+            setProcessedTxHashes(prev => {
+                const newSet = new Set(prev)
+                newSet.add(completedPoolData.txHash)
+                return newSet
+            })
+
+            // Create or update the pool in local storage
+            let newPool: Pool
+            const existingPool = pools.find(p => p.txHash === completedPoolData.txHash)
+
+            if (existingPool) {
+                // If pool exists, update it
+                console.log('[HomePage] Updating existing pool with txHash:', completedPoolData.txHash)
+                newPool =
+                    updatePool(existingPool.id, completedPoolData as Partial<Omit<Pool, 'id' | 'createdAt'>>) ??
+                    existingPool
+            } else {
+                // Create new pool
+                console.log('[HomePage] Creating new pool with txHash:', completedPoolData.txHash)
+                newPool = savePool({
+                    ...completedPoolData,
+                    txHash: completedPoolData.txHash, // Ensure txHash is saved
+                } as Omit<Pool, 'id' | 'createdAt'>)
+            }
+
+            console.log('[HomePage] New/updated pool saved locally:', newPool)
+
+            setPools(prevPools => {
+                // Remove any existing pool with the same txHash (should not happen now with our checks)
+                const filteredPools = prevPools.filter(p => p.txHash !== completedPoolData.txHash)
+                return [...filteredPools, newPool]
+            })
+
+            setIsPoolDrawerOpen(false)
+            setIsSubmittingPool(false)
+        },
+        [isSubmittingPool, setIsPoolDrawerOpen, pools, processedTxHashes],
+    )
 
     const openPoolDrawerAndResetState = () => {
         setCurrentPoolWizardStep(1)
         setWizardPoolData({})
-        // Explicitly blur the active element before opening the drawer
         if (document.activeElement instanceof HTMLElement) {
             document.activeElement.blur()
         }
@@ -93,19 +227,21 @@ export function HomePage() {
         }
     }
 
-    const handleGiveawayWizardComplete = (completedGiveawayData: Omit<Giveaway, 'id' | 'createdAt'>) => {
-        const newGiveaway = saveGiveaway(completedGiveawayData)
-        console.log('New giveaway created:', newGiveaway)
-        setIsGiveawayDrawerOpen(false)
+    const handleGiveawayWizardComplete = useCallback(
+        (completedGiveawayData: Omit<Giveaway, 'id' | 'createdAt'>) => {
+            const newGiveaway = saveGiveaway(completedGiveawayData)
+            console.log('New giveaway created:', newGiveaway)
+            setIsGiveawayDrawerOpen(false)
 
-        // Refresh giveaways list
-        setGiveaways(getGiveaways())
-    }
+            // Refresh giveaways list
+            setGiveaways(getGiveaways())
+        },
+        [setIsGiveawayDrawerOpen, setGiveaways],
+    )
 
     const openGiveawayDrawerAndResetState = () => {
         setCurrentGiveawayWizardStep(1)
         setWizardGiveawayData({})
-        // Explicitly blur the active element before opening the drawer
         if (document.activeElement instanceof HTMLElement) {
             document.activeElement.blur()
         }
@@ -158,7 +294,7 @@ export function HomePage() {
                                     currentStep={currentPoolWizardStep}
                                     poolData={wizardPoolData}
                                     onStepChange={handlePoolWizardStepChange}
-                                    onComplete={handlePoolWizardComplete}
+                                    onComplete={data => void handlePoolWizardComplete(data)}
                                 />
                             </DrawerContent>
                         </Drawer>
