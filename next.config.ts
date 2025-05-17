@@ -20,6 +20,9 @@ const nextConfig: NextConfig = {
 
     poweredByHeader: false,
     devIndicators: false,
+    compiler: {
+        removeConsole: process.env.NODE_ENV === 'production',
+    },
 }
 
 export default nextConfig
