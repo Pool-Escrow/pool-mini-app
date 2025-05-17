@@ -3,7 +3,7 @@
 import { Button } from '@/components/DemoComponents'
 import type { Giveaway } from '@/components/GiveawayWizard'
 import { ParticipantsList } from '@/components/ParticipantsList'
-import { useUserRole } from '@/components/providers'
+import { useUserRole } from '@/contexts/UserRoleContext'
 import { getGiveawayById } from '@/lib/giveawayStorage'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -125,7 +125,10 @@ export default function GiveawayPage({ params }: { params: Params }) {
             'from-blue-100 to-blue-300',
         ]
 
-        const charSum = [...giveawayId].reduce((acc, char) => acc + char.charCodeAt(0), 0)
+        // Convert giveawayId to string and calculate sum of character codes
+        const charSum = String(giveawayId)
+            .split('')
+            .reduce((acc, char) => acc + char.charCodeAt(0), 0)
         const colorIndex = charSum % giveawayColors.length
 
         return giveawayColors[colorIndex]
@@ -308,9 +311,8 @@ export default function GiveawayPage({ params }: { params: Params }) {
             <div className='flex-1 p-4'>
                 {activeTab === 'participants' ? (
                     <ParticipantsList
-                        poolId={giveaway.id ?? ''}
+                        participants={giveaway.participants?.map(p => p.address as `0x${string}`)}
                         isAdmin={isAdmin}
-                        poolAmount={giveaway.amount}
                         key={refreshKey}
                     />
                 ) : (
