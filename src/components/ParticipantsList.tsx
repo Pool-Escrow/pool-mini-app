@@ -1,65 +1,54 @@
 'use client'
 
-import { getPoolRegistrations } from '@/lib/registrationStorage'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
+import { type Address } from 'viem'
 
-interface Participant {
+interface ParticipantDisplayInfo {
     id: string
     name: string
     avatar?: string
-    status: 'joined' | 'paid' | 'attending'
-    isPlaceholder?: boolean // Added to identify placeholder entries
+    isPlaceholder?: boolean
 }
 
 interface ParticipantsListProps {
-    poolId: string // Used to fetch participants for a specific pool
+    participants: readonly Address[] | undefined
     isAdmin?: boolean
     poolAmount?: number
 }
 
-export function ParticipantsList({ poolId, isAdmin = false, poolAmount = 100 }: ParticipantsListProps) {
-    // State for storing participants
-    const [participants, setParticipants] = useState<Participant[]>([])
+export function ParticipantsList({
+    participants: participantAddresses,
+    isAdmin = false,
+    poolAmount = 100,
+}: ParticipantsListProps) {
+    const [displayParticipants, setDisplayParticipants] = useState<ParticipantDisplayInfo[]>([])
 
-    // Load participants from registration storage
     useEffect(() => {
-        // For a real app, this would fetch actual participant details
-        // For our demo, we'll just load registration data and display simple info
-        const registrations = getPoolRegistrations(poolId)
-
-        // Convert registrations to participants
-        // In a real app, we would fetch user profiles using the userAddress
-        const loadedParticipants = registrations.map((reg, index) => {
-            // Create a deterministic avatar based on address
-            const addressLastChar = reg.userAddress.slice(-1)
-            const avatarId = (parseInt(addressLastChar, 16) % 10) + 1 // 1-10 range
-            const gender = avatarId % 2 === 0 ? 'men' : 'women'
-
-            return {
-                id: reg.userAddress,
-                name: `Participant ${index + 1}`, // In a real app, we would fetch the user's name
-                avatar: `https://randomuser.me/api/portraits/${gender}/${avatarId}.jpg`,
-                status: 'joined' as const,
-            }
-        })
-
-        // If no participants, show some placeholders
-        if (loadedParticipants.length === 0) {
-            setParticipants([
+        if (participantAddresses && participantAddresses.length > 0) {
+            const loadedParticipants = participantAddresses.map((address, index) => {
+                const addressLastChar = address.slice(-1)
+                const avatarId = (parseInt(addressLastChar, 16) % 10) + 1
+                const gender = avatarId % 2 === 0 ? 'men' : 'women'
+                return {
+                    id: address,
+                    name: `Participant ${index + 1} (${address.substring(0, 6)}...)`,
+                    avatar: `https://randomuser.me/api/portraits/${gender}/${avatarId}.jpg`,
+                }
+            })
+            setDisplayParticipants(loadedParticipants)
+        } else {
+            setDisplayParticipants([
                 {
-                    id: '1',
+                    id: 'placeholder-1',
                     name: 'No participants yet!',
-                    status: 'joined' as const,
                     isPlaceholder: true,
                 },
             ])
-        } else {
-            setParticipants(loadedParticipants)
         }
-    }, [poolId])
+    }, [participantAddresses])
 
-    const handleParticipantClick = (participant: Participant) => {
+    const handleParticipantClick = (participant: ParticipantDisplayInfo) => {
         // Only admins can click on participants to pay them
         if (!isAdmin) return
 
@@ -75,12 +64,13 @@ export function ParticipantsList({ poolId, isAdmin = false, poolAmount = 100 }: 
             <div className='flex items-center justify-between'>
                 <h2 className='text-lg font-bold text-black'>Participants</h2>
                 <span className='text-sm text-gray-500'>
-                    {participants.length} {participants.length === 1 ? 'person' : 'people'}
+                    {displayParticipants.filter(p => !p.isPlaceholder).length}{' '}
+                    {displayParticipants.filter(p => !p.isPlaceholder).length === 1 ? 'person' : 'people'}
                 </span>
             </div>
 
             <div className='space-y-3'>
-                {participants.map(participant => (
+                {displayParticipants.map(participant => (
                     <div
                         key={participant.id}
                         className={`flex items-center rounded-lg p-3 ${
@@ -125,9 +115,7 @@ export function ParticipantsList({ poolId, isAdmin = false, poolAmount = 100 }: 
                                     Users will populate here when they join
                                 </span>
                             ) : (
-                                isAdmin && (
-                                    <span className='block text-xs text-gray-500'>Click to pay this participant</span>
-                                )
+                                isAdmin && <span className='block text-xs text-gray-500'>Click to pay (test)</span>
                             )}
                         </div>
                     </div>
