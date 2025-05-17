@@ -120,16 +120,16 @@ export function WelcomeScreen() {
                                 <div className='flex-1'>
                                     <div className='text-lg font-semibold text-gray-900'>{pool.name}</div>
                                     <div className='text-sm text-gray-500'>
-                                        {pool.registrations || 0}/{pool.maxEntries} Registered
+                                        {pool.participants?.length ?? 0}/{pool.softCap} Registered
                                     </div>
                                     <div className='text-sm text-gray-500'>
-                                        Starts in {formatTimeRemaining(pool.startTime)}
+                                        Starts in {formatTimeRemaining(pool.startTime.toFixed(0))}
                                     </div>
                                 </div>
                                 <div className='flex flex-col items-end'>
-                                    {pool.depositAmount > 0 && (
+                                    {pool.depositAmountPerPerson > 0 && (
                                         <div className='mb-2 rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-gray-900 shadow-sm backdrop-blur-sm'>
-                                            ${pool.depositAmount} Buy-in
+                                            ${pool.depositAmountPerPerson} Buy-in
                                         </div>
                                     )}
                                     <div className='text-blue-500'>
