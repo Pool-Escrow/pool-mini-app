@@ -3,13 +3,17 @@ import { getPoolWithContractFallback } from '@/lib/poolDataService' // Import re
 import type { Pool } from '@/types/pool' // Import real Pool type
 import { type Metadata } from 'next' // Added ResolvingMetadata
 
-export async function generateMetadata({
-    params,
-    searchParams,
-}: {
-    params: { id: string }
-    searchParams: Record<string, string | string[] | undefined>
+// Define Promise types for params and searchParams as per Next.js 15
+type PageComponentParams = Promise<{ id: string }>
+type PageComponentSearchParams = Promise<Record<string, string | string[] | undefined>>
+
+export async function generateMetadata(props: {
+    params: PageComponentParams
+    searchParams: PageComponentSearchParams
 }): Promise<Metadata> {
+    const params = await props.params
+    const searchParams = await props.searchParams
+
     const poolId = params.id
 
     if (poolId === 'favicon.ico') {
@@ -31,7 +35,7 @@ export async function generateMetadata({
     } else {
         console.warn(
             `[Metadata] chainId not found or invalid in searchParams for pool ${poolId}. Metadata might be incomplete or incorrect. Query:`,
-            searchParams,
+            searchParams, // This is the awaited searchParams object
         )
         return {
             title: 'Pool Data Error',
@@ -83,6 +87,12 @@ export async function generateMetadata({
     }
 }
 
-export default function Page({ params }: { params: { id: string } }) {
-    return <PoolPageClient id={params.id} />
+export default async function Page(props: {
+    params: PageComponentParams
+    searchParams: PageComponentSearchParams // Included for PageProps compatibility
+}) {
+    const params = await props.params
+    // const awaitedSearchParams = await props.searchParams; // Await if needed, good for type matching
+    const { id } = params
+    return <PoolPageClient id={id} />
 }
