@@ -1,10 +1,12 @@
-import { z } from 'zod'
+import * as z from 'zod'
 
 // Schema for ChooseImageStep
 export const ChooseImageStepSchema = z.object({
-    selectedImage: z.string().min(1, { message: 'Please select or upload an image for the pool.' }),
-    // Optionally, if it must be a URL, add .url({ message: "Invalid image URL provided." })
-    // For simplicity, starting with min(1) to ensure something is selected/uploaded.
+    imageUrl: z.string().min(1, { message: 'Image selection is required.' }),
+    // If you are using a File object for upload, you might use something like:
+    // imageFile: z.instanceof(File, { message: "Image selection is required." })
+    //    .refine((file) => file.size > 0, "Image file cannot be empty.")
+    //    .refine((file) => file.type.startsWith("image/"), "File must be an image."),
 })
 
 export type ChooseImageStepValues = z.infer<typeof ChooseImageStepSchema>
@@ -24,21 +26,36 @@ export const NameDescriptionStepSchema = z.object({
 export type NameDescriptionStepValues = z.infer<typeof NameDescriptionStepSchema>
 
 // Schema for RegistrationTimeStep
-export const RegistrationTimeStepSchema = z.object({
-    registrationEnd: z
-        .date({
-            required_error: 'Registration end date is required.',
-            invalid_type_error: "That's not a valid date!",
-        })
-        .min(new Date(), { message: 'Registration end date must be in the future.' }),
-    // poolVisibility can be 'public' or 'private' (or other values you define)
-    poolVisibility: z.enum(['public', 'private'], {
-        required_error: 'Pool visibility is required.',
-        invalid_type_error: 'Invalid pool visibility selected.',
-    }),
-})
+export const RegistrationTimeStepSchema = z
+    .object({
+        registrationStart: z
+            .date({
+                required_error: 'Registration start date is required.',
+                invalid_type_error: "That's not a valid date!",
+            })
+            .min(new Date(Date.now() - 86400000), {
+                message: 'Registration start date cannot be too far in the past.',
+            }),
+        registrationEnd: z
+            .date({
+                required_error: 'Registration end date is required.',
+                invalid_type_error: "That's not a valid date!",
+            })
+            .min(new Date(), { message: 'Registration end date must be in the future.' }),
+        // poolVisibility removed
+        // poolVisibility: z.enum(['public', 'private'], {
+        //     required_error: 'Pool visibility is required.',
+        //     invalid_type_error: 'Invalid pool visibility selected.',
+        // }),
+    })
+    .refine(data => data.registrationEnd > data.registrationStart, {
+        message: 'Registration end date must be after the start date.',
+        path: ['registrationEnd'],
+    })
 
 export type RegistrationTimeStepValues = z.infer<typeof RegistrationTimeStepSchema>
+
+export const ethereumAddressRegex = /^(0x)?[0-9a-fA-F]{40}$/
 
 // Schema for PoolConfigStep
 // This schema now more closely matches the fields in the PoolConfigStep.tsx component
@@ -57,7 +74,8 @@ export const PoolConfigStepSchema = z
             .int({ message: 'Max entries must be a whole number.' })
             .positive({ message: 'Max entries must be greater than 0.' })
             .optional(), // Still optional for unlimited entries
-        rulesLink: z.string().url({ message: 'Please enter a valid URL for the rules.' }).optional(), // Making optional for now, can be required later
+        rulesLink: z.string().url({ message: 'Please enter a valid URL for the rules.' }).optional().or(z.literal('')),
+        hasRulesLink: z.boolean().optional(),
 
         selectedTokenKey: z.string({ required_error: 'Please select a token.' }), // e.g., 'eth', 'usdc', 'custom'
 
@@ -79,10 +97,16 @@ export const PoolConfigStepSchema = z
                 invalid_type_error: 'Amount per winner must be a number.',
             })
             .positive({ message: 'Amount per winner must be greater than 0.' }),
+        // tokenAddress: z.string().regex(ethereumAddressRegex, { message: 'Invalid Ethereum address.' }), // This was the duplicate, removed.
+        // The actual tokenAddress used will be customTokenAddress if selectedTokenKey is 'custom', or a predefined one otherwise.
+        // So, the specific `tokenAddress` field directly in the schema might be for something else or can be removed if customTokenAddress covers it.
+        // For now, I will assume customTokenAddress handles the specific address for custom tokens.
+        // If a general tokenAddress is needed for non-custom selected tokens, it's not explicitly here but derived in component logic.
     })
     .superRefine((data, ctx) => {
         if (data.selectedTokenKey === 'custom') {
-            if (!data.customTokenAddress || !/^0x[a-fA-F0-9]{40}$/.test(data.customTokenAddress)) {
+            if (!data.customTokenAddress || !ethereumAddressRegex.test(data.customTokenAddress)) {
+                // Used ethereumAddressRegex here
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
                     path: ['customTokenAddress'],
