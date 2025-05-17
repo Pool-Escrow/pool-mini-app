@@ -1,10 +1,9 @@
-'use client'
-
 import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { ChooseImageStepSchema, type ChooseImageStepValues } from '@/lib/validators/poolCreationSchemas'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Image from 'next/image'
+import type { SubmitHandler } from 'react-hook-form'
 import { useForm } from 'react-hook-form'
 
 interface ChooseImageStepProps {
@@ -20,27 +19,24 @@ export function ChooseImageStep({ onNext }: ChooseImageStepProps) {
     const form = useForm<ChooseImageStepValues>({
         resolver: zodResolver(ChooseImageStepSchema),
         defaultValues: {
-            selectedImage: '',
+            imageUrl: '',
         },
+        mode: 'onChange',
     })
 
-    const onSubmit = (data: ChooseImageStepValues) => {
+    const onSubmit: SubmitHandler<ChooseImageStepValues> = data => {
         onNext(data)
     }
 
     return (
         <Form {...form}>
-            <form
-                onSubmit={e => {
-                    void form.handleSubmit(onSubmit)(e)
-                }}
-                className='flex flex-col items-center p-4 sm:p-8'>
+            <form onSubmit={e => void form.handleSubmit(onSubmit)(e)} className='flex flex-col items-center p-4 sm:p-8'>
                 <h2 className='mb-2 text-center text-2xl font-semibold'>Choose Image*</h2>
                 <p className='mb-8 text-center text-sm text-gray-500'>Choose from one of our 8 templates</p>
 
                 <FormField
                     control={form.control}
-                    name='selectedImage'
+                    name='imageUrl'
                     render={({ field }) => (
                         <FormItem className='w-full max-w-md'>
                             <FormControl>
@@ -51,7 +47,6 @@ export function ChooseImageStep({ onNext }: ChooseImageStepProps) {
                                             type='button'
                                             onClick={() => {
                                                 field.onChange(template.path)
-                                                void form.trigger('selectedImage')
                                             }}
                                             className={`aspect-video overflow-hidden rounded-lg bg-gray-200 transition-colors hover:bg-gray-300 ${field.value === template.path ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
                                             aria-label={`Select image ${template.name}`}>
@@ -73,7 +68,10 @@ export function ChooseImageStep({ onNext }: ChooseImageStepProps) {
                     )}
                 />
 
-                <Button type='submit' className='mt-4 w-full max-w-xs' disabled={form.formState.isSubmitting}>
+                <Button
+                    type='submit'
+                    className='mt-4 w-full max-w-xs'
+                    disabled={form.formState.isSubmitting || !form.formState.isValid}>
                     Continue
                 </Button>
             </form>

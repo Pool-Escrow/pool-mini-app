@@ -1,5 +1,3 @@
-'use client'
-
 import { CONTRACT_CONFIG } from '@/config/contract-config'
 import { PREDEFINED_TOKENS } from '@/config/tokens'
 import { useCreatePool } from '@/hooks/use-pool-contract'
@@ -26,14 +24,12 @@ export function ReviewAndCreateStep({ poolData, onConfirm, onBack }: ReviewAndCr
     const { createPool, parsedCreatePoolError, isCreatingPool: isSubmittingCreateTx } = useCreatePool()
     const [creationError, setCreationError] = useState<string | null>(null)
     const [submittedTxHash, setSubmittedTxHash] = useState<Hash | undefined>(undefined)
+    const [onConfirmCalled, setOnConfirmCalled] = useState(false) // Gate to prevent multiple calls
 
     const {
-        // status: _txStatus,
-        // transaction: _txData,
         error: txConfirmError,
         isLoading: isTxLoading,
         isSuccess: isTxSuccess,
-        // isError: _isTxConfirmedError,
     } = useTransactionStatus(submittedTxHash)
 
     const displayValue = (value: string | number | boolean | Date | undefined | null, placeholder = 'Not set') =>
@@ -44,38 +40,55 @@ export function ReviewAndCreateStep({ poolData, onConfirm, onBack }: ReviewAndCr
             setCreationError('Pool contract address is not configured for the current network.')
             return
         }
-        if (
-            !poolData.registrationStart ||
-            !poolData.registrationEnd ||
-            !poolData.name ||
-            poolData.depositAmount === undefined ||
-            poolData.tokenAddress === undefined ||
-            poolData.tokenDecimals === undefined ||
-            poolData.winnerCount === undefined ||
-            poolData.amountPerWinner === undefined
-        ) {
-            setCreationError(
-                'One or more required pool data fields are missing. Please go back and complete all steps.',
-            )
-            return
-        }
 
         setCreationError(null)
         setSubmittedTxHash(undefined)
 
         try {
-            const timeStart = BigInt(Math.floor(new Date(poolData.registrationStart).getTime() / 1000))
-            const timeEnd = BigInt(Math.floor(new Date(poolData.registrationEnd).getTime() / 1000)) // Assuming registrationEnd is a full date string
+            // Critical check: Ensure all necessary data for contract args is present before proceeding.
+            const missingFields: string[] = []
+            if (!poolData.startTime) missingFields.push('startTime (Unix timestamp)')
+            if (!poolData.endTime) missingFields.push('endTime (Unix timestamp)')
+            if (!poolData.name) missingFields.push('name')
+            if (poolData.depositAmountPerPerson === undefined) missingFields.push('depositAmountPerPerson')
+            if (!poolData.tokenContractAddress) missingFields.push('tokenContractAddress')
+            if (poolData.totalWinners === undefined) missingFields.push('totalWinners')
+            if (poolData.amountPerWinner === undefined) missingFields.push('amountPerWinner')
+            if (!poolData.onChainTokenDecimals) missingFields.push('onChainTokenDecimals')
 
-            const args = {
-                timeStart,
-                timeEnd,
-                poolName: poolData.name,
-                depositAmountPerPerson: parseUnits(poolData.depositAmount.toString(), poolData.tokenDecimals),
-                token: poolData.tokenAddress as Address,
-                totalWinners: poolData.winnerCount,
-                amountPerWinner: parseUnits(poolData.amountPerWinner.toString(), poolData.tokenDecimals),
+            if (missingFields.length > 0) {
+                console.error(
+                    'Critical data missing in ReviewAndCreateStep. Missing or invalid fields:',
+                    missingFields.join(', '),
+                    'Full data object:',
+                    poolData,
+                )
+                setCreationError(
+                    `Critical pool information is missing or incorrect: ${missingFields.join(
+                        ', ',
+                    )}. Please review your input or try creating the pool again.`,
+                )
+                return
             }
+
+            // startTime and endTime are already Unix timestamps in the new interface
+            const args = {
+                timeStart: BigInt(poolData.startTime!),
+                timeEnd: BigInt(poolData.endTime!),
+                poolName: poolData.name!,
+                depositAmountPerPerson: parseUnits(
+                    poolData.depositAmountPerPerson!.toString(),
+                    poolData.onChainTokenDecimals!,
+                ),
+                token: poolData.tokenContractAddress! as Address,
+                totalWinners: poolData.totalWinners!,
+                amountPerWinner: parseUnits(poolData.amountPerWinner!.toString(), poolData.onChainTokenDecimals!),
+            }
+
+            console.log('Submitting pool creation with args:', args)
+            console.log('Chain ID:', chainId)
+            console.log('Pool Contract Address:', poolContractAddress)
+            console.log('Pool Data used for args:', poolData)
 
             const txHash = await createPool(poolContractAddress, args)
             if (txHash) {
@@ -87,10 +100,11 @@ export function ReviewAndCreateStep({ poolData, onConfirm, onBack }: ReviewAndCr
     }
 
     useEffect(() => {
-        if (isTxSuccess && submittedTxHash) {
+        if (isTxSuccess && submittedTxHash && !onConfirmCalled) {
             onConfirm(submittedTxHash)
+            setOnConfirmCalled(true) // Set the gate
         }
-    }, [isTxSuccess, submittedTxHash, onConfirm])
+    }, [isTxSuccess, submittedTxHash, onConfirm, onConfirmCalled])
 
     const overallIsLoading = isSubmittingCreateTx || (submittedTxHash && isTxLoading)
 
@@ -127,9 +141,7 @@ export function ReviewAndCreateStep({ poolData, onConfirm, onBack }: ReviewAndCr
                     <p className='text-sm font-medium text-gray-500'>Registration Starts</p>
                     <p className='text-gray-700'>
                         {displayValue(
-                            poolData.registrationStart
-                                ? new Date(poolData.registrationStart).toLocaleString()
-                                : undefined,
+                            poolData.startTime ? new Date(poolData.startTime * 1000).toLocaleString() : undefined,
                         )}
                     </p>
                 </div>
@@ -137,22 +149,17 @@ export function ReviewAndCreateStep({ poolData, onConfirm, onBack }: ReviewAndCr
                     <p className='text-sm font-medium text-gray-500'>Registration Ends</p>
                     <p className='text-gray-700'>
                         {displayValue(
-                            poolData.registrationEnd ? new Date(poolData.registrationEnd).toLocaleString() : undefined,
+                            poolData.endTime ? new Date(poolData.endTime * 1000).toLocaleString() : undefined,
                         )}
                     </p>
                 </div>
-                {/* Registration Enabled display can be kept if it's still relevant for off-chain logic */}
-                {/* <div>
-                    <p className='text-sm font-medium text-gray-500'>Registration Enabled</p>
-                    <p className='text-gray-700'>{displayValue(poolData.registrationEnabled)}</p>
-                </div> */}
 
                 <hr className='my-3' />
 
                 <h3 className='text-md font-semibold text-gray-700'>Pool Configuration</h3>
                 <div>
                     <p className='text-sm font-medium text-gray-500'>Deposit Amount (per entry)</p>
-                    <p className='text-gray-700'>{displayValue(poolData.depositAmount)}</p>
+                    <p className='text-gray-700'>{displayValue(poolData.depositAmountPerPerson)}</p>
                 </div>
                 <div>
                     <p className='text-sm font-medium text-gray-500'>Amount Per Winner</p>
@@ -160,7 +167,7 @@ export function ReviewAndCreateStep({ poolData, onConfirm, onBack }: ReviewAndCr
                 </div>
                 <div>
                     <p className='text-sm font-medium text-gray-500'>Max Entries (Soft Cap)</p>
-                    <p className='text-gray-700'>{displayValue(poolData.maxEntries)}</p>
+                    <p className='text-gray-700'>{displayValue(poolData.softCap)}</p>
                 </div>
                 <div>
                     <p className='text-sm font-medium text-gray-500'>Rules Link</p>
@@ -185,16 +192,17 @@ export function ReviewAndCreateStep({ poolData, onConfirm, onBack }: ReviewAndCr
                     <p className='text-sm font-medium text-gray-500'>Token</p>
                     {poolData.selectedTokenKey && PREDEFINED_TOKENS[poolData.selectedTokenKey] ? (
                         <p className='text-gray-700'>Token: {PREDEFINED_TOKENS[poolData.selectedTokenKey].symbol}</p>
-                    ) : poolData.selectedTokenKey === 'custom' && poolData.tokenAddress ? (
-                        <p className='text-gray-700'>Token: Custom - {poolData.tokenAddress}</p>
+                    ) : poolData.selectedTokenKey === 'custom' && poolData.tokenContractAddress ? (
+                        <p className='text-gray-700'>Token: Custom - {poolData.tokenContractAddress}</p>
                     ) : (
-                        // Fallback display if selectedTokenKey is not set or tokenAddress is missing for custom
-                        <p className='text-gray-700'>{displayValue(poolData.tokenAddress, 'Token not specified')}</p>
+                        <p className='text-gray-700'>
+                            {displayValue(poolData.tokenContractAddress, 'Token not specified')}
+                        </p>
                     )}
                 </div>
                 <div>
                     <p className='text-sm font-medium text-gray-500'>Number of Winners</p>
-                    <p className='text-gray-700'>{displayValue(poolData.winnerCount)}</p>
+                    <p className='text-gray-700'>{displayValue(poolData.totalWinners)}</p>
                 </div>
             </div>
 

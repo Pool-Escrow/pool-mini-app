@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { PREDEFINED_TOKENS } from '@/config/tokens'
 import { PoolConfigStepSchema, type PoolConfigStepValues } from '@/lib/validators/poolCreationSchemas'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -27,12 +28,15 @@ export function PoolConfigStep({ initialData, onNext, onBack }: PoolConfigStepPr
             customTokenAddress: initialData?.customTokenAddress ?? '',
             customTokenSymbol: initialData?.customTokenSymbol ?? '',
             customTokenDecimals: initialData?.customTokenDecimals ?? undefined,
-            winnerCount: initialData?.winnerCount ?? 1,
+            winnerCount: initialData?.winnerCount ?? undefined,
             amountPerWinner: initialData?.amountPerWinner ?? undefined,
+            hasRulesLink: initialData?.hasRulesLink ?? true,
         },
+        mode: 'onChange',
     })
 
     const selectedTokenKey = form.watch('selectedTokenKey')
+    const showRulesLink = form.watch('hasRulesLink')
 
     useEffect(() => {
         if (selectedTokenKey !== CUSTOM_TOKEN_KEY) {
@@ -43,22 +47,32 @@ export function PoolConfigStep({ initialData, onNext, onBack }: PoolConfigStepPr
     }, [selectedTokenKey, form])
 
     const handleFormSubmit = (data: PoolConfigStepValues): void => {
-        const finalData = { ...data }
-        if (data.selectedTokenKey !== CUSTOM_TOKEN_KEY && PREDEFINED_TOKENS[data.selectedTokenKey]) {
-            const predefined = PREDEFINED_TOKENS[data.selectedTokenKey]
-            finalData.customTokenAddress = predefined.address
-            finalData.customTokenSymbol = predefined.symbol
-            finalData.customTokenDecimals = predefined.decimals
+        const processedData: Partial<
+            PoolConfigStepValues & { tokenAddress?: string; tokenDecimals?: number; hasRulesLink?: boolean }
+        > = {
+            ...data,
         }
-        onNext(finalData)
+
+        if (!data.hasRulesLink) {
+            processedData.rulesLink = ''
+        }
+
+        if (data.selectedTokenKey === CUSTOM_TOKEN_KEY) {
+            processedData.tokenAddress = data.customTokenAddress
+            processedData.tokenDecimals = data.customTokenDecimals
+        } else if (PREDEFINED_TOKENS[data.selectedTokenKey]) {
+            const predefinedToken = PREDEFINED_TOKENS[data.selectedTokenKey]
+            processedData.tokenAddress = predefinedToken.address
+            processedData.tokenDecimals = predefinedToken.decimals
+        }
+
+        onNext(processedData as PoolConfigStepValues)
     }
 
     return (
         <Form {...form}>
             <form
-                onSubmit={e => {
-                    void form.handleSubmit(handleFormSubmit)(e)
-                }}
+                onSubmit={e => void form.handleSubmit(handleFormSubmit)(e)}
                 className='mx-auto flex w-full max-w-md flex-col items-center space-y-6 p-4 sm:p-8'>
                 <h2 className='mb-2 text-center text-2xl font-semibold'>Pool Configuration</h2>
                 <p className='text-muted-foreground mb-6 text-center text-sm'>
@@ -76,7 +90,10 @@ export function PoolConfigStep({ initialData, onNext, onBack }: PoolConfigStepPr
                                     type='number'
                                     placeholder='e.g., 10'
                                     {...field}
-                                    onChange={event => field.onChange(+event.target.value)}
+                                    value={field.value ?? ''}
+                                    onChange={event =>
+                                        field.onChange(event.target.value === '' ? undefined : +event.target.value)
+                                    }
                                 />
                             </FormControl>
                             <FormDescription>Required token amount for one entry.</FormDescription>
@@ -150,7 +167,12 @@ export function PoolConfigStep({ initialData, onNext, onBack }: PoolConfigStepPr
                                             type='number'
                                             placeholder='e.g., 18'
                                             {...field}
-                                            onChange={event => field.onChange(+event.target.value)}
+                                            value={field.value ?? ''}
+                                            onChange={event =>
+                                                field.onChange(
+                                                    event.target.value === '' ? undefined : +event.target.value,
+                                                )
+                                            }
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -171,6 +193,7 @@ export function PoolConfigStep({ initialData, onNext, onBack }: PoolConfigStepPr
                                     type='number'
                                     placeholder='e.g., 100 (leave blank for unlimited)'
                                     {...field}
+                                    value={field.value ?? ''}
                                     onChange={event =>
                                         field.onChange(event.target.value === '' ? undefined : +event.target.value)
                                     }
@@ -195,7 +218,10 @@ export function PoolConfigStep({ initialData, onNext, onBack }: PoolConfigStepPr
                                     type='number'
                                     placeholder='e.g., 1'
                                     {...field}
-                                    onChange={event => field.onChange(+event.target.value)}
+                                    value={field.value ?? ''}
+                                    onChange={event =>
+                                        field.onChange(event.target.value === '' ? undefined : +event.target.value)
+                                    }
                                 />
                             </FormControl>
                             <FormMessage />
@@ -214,7 +240,10 @@ export function PoolConfigStep({ initialData, onNext, onBack }: PoolConfigStepPr
                                     type='number'
                                     placeholder='e.g., 1000'
                                     {...field}
-                                    onChange={event => field.onChange(+event.target.value)}
+                                    value={field.value ?? ''}
+                                    onChange={event =>
+                                        field.onChange(event.target.value === '' ? undefined : +event.target.value)
+                                    }
                                 />
                             </FormControl>
                             <FormDescription>The amount each winner will receive.</FormDescription>
@@ -225,18 +254,42 @@ export function PoolConfigStep({ initialData, onNext, onBack }: PoolConfigStepPr
 
                 <FormField
                     control={form.control}
-                    name='rulesLink'
+                    name='hasRulesLink'
                     render={({ field }) => (
-                        <FormItem className='w-full'>
-                            <FormLabel>Rules Link (Optional)</FormLabel>
+                        <FormItem className='flex w-full flex-row items-center justify-between rounded-lg border p-3 shadow-sm'>
+                            <div className='space-y-0.5'>
+                                <FormLabel>Enable Terms & Conditions Link</FormLabel>
+                                <FormDescription>
+                                    Provide a link to detailed terms and conditions for the pool.
+                                </FormDescription>
+                            </div>
                             <FormControl>
-                                <Input placeholder='https://example.com/pool-rules' {...field} />
+                                <Switch checked={field.value} onCheckedChange={field.onChange} />
                             </FormControl>
-                            <FormDescription>Link to a page detailing the pool rules.</FormDescription>
-                            <FormMessage />
                         </FormItem>
                     )}
                 />
+
+                {showRulesLink && (
+                    <FormField
+                        control={form.control}
+                        name='rulesLink'
+                        render={({ field }) => (
+                            <FormItem className='w-full'>
+                                <FormLabel>Rules Link</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        placeholder='https://example.com/pool-rules'
+                                        {...field}
+                                        value={field.value ?? ''}
+                                    />
+                                </FormControl>
+                                <FormDescription>Link to a page detailing the pool rules.</FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
 
                 <div className='mt-8 flex w-full flex-col gap-4 sm:flex-row'>
                     {onBack && (
@@ -244,7 +297,10 @@ export function PoolConfigStep({ initialData, onNext, onBack }: PoolConfigStepPr
                             Back
                         </Button>
                     )}
-                    <Button type='submit' className='w-full'>
+                    <Button
+                        type='submit'
+                        className='w-full'
+                        disabled={form.formState.isSubmitting || !form.formState.isValid}>
                         Continue
                     </Button>
                 </div>
