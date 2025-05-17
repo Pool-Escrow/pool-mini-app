@@ -1,5 +1,5 @@
-import { env } from '@/env'
 import { useTransactionStatus } from '@/hooks/use-transaction-status'
+import { getExplorerLink } from '@/utils/formatting'
 import { ExternalLinkIcon, Loader2 } from 'lucide-react'
 import React, { useCallback, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
@@ -7,10 +7,10 @@ import { BaseError, type Hash } from 'viem'
 
 // Placeholder for utility function - should be created in @/lib/utils.ts or similar
 // IMPORTANT: This needs to be chain-aware in a real app.
-const getBlockExplorerUrl = (hash: Hash): string => {
-    const L2_EXPLORER_URL = env.NEXT_PUBLIC_L2_EXPLORER_URL ?? 'https://sepolia.basescan.org'
-    return `${L2_EXPLORER_URL}/tx/${hash}`
-}
+// const getBlockExplorerUrl = (hash: Hash): string => {
+//     const L2_EXPLORER_URL = env.NEXT_PUBLIC_BASE_SEPOLIA_EXPLORER_URL ?? 'https://sepolia.basescan.org'
+//     return `${L2_EXPLORER_URL}/tx/${hash}`
+// }
 
 export interface NotifyTransactionProps {
     hash?: Hash // Can be initially undefined
@@ -126,7 +126,9 @@ const ToastUpdater: React.FC<ToastUpdaterProps> = ({
     const { transaction, error, isLoading, isSuccess, isError, isIdle } = useTransactionStatus(hash)
 
     useEffect(() => {
-        const explorerLink = hash ? getBlockExplorerUrl(hash) : undefined
+        const explorerLinkData = hash && chainId ? getExplorerLink(chainId, hash, 'tx') : null
+        const explorerUrl = explorerLinkData?.url
+
         let toastType: 'loading' | 'success' | 'error' | 'message' = 'message'
 
         // Typed toastProps using a subset of Sonner's possible properties
@@ -151,7 +153,7 @@ const ToastUpdater: React.FC<ToastUpdaterProps> = ({
                 <ToastContent
                     title={`${title} (Pending)`}
                     description={pendingDescription ?? `Processing ${hash?.substring(0, 10)}...`}
-                    explorerLink={explorerLink}
+                    explorerLink={explorerUrl}
                 />
             )
             sonnerProps.duration = Infinity
@@ -164,7 +166,7 @@ const ToastUpdater: React.FC<ToastUpdaterProps> = ({
                 <ToastContent
                     title={`${title} (Success)`}
                     description={successDescription ?? successMsg}
-                    explorerLink={explorerLink}
+                    explorerLink={explorerUrl}
                 />
             )
         } else if (isError) {
@@ -201,8 +203,8 @@ const ToastUpdater: React.FC<ToastUpdaterProps> = ({
                 <ToastContent
                     title={`${title} (Failed)`}
                     description={finalErrorDesc}
-                    explorerLink={explorerLink}
-                    errorDetails={techDetails} // Pass technical details
+                    explorerLink={explorerUrl}
+                    errorDetails={techDetails}
                 />
             )
         }

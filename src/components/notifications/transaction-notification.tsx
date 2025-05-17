@@ -1,24 +1,16 @@
-import { env } from '@/env'
 import { useTransactionStatus } from '@/hooks/use-transaction-status'
+import { getExplorerLink } from '@/utils/formatting'
 import { CheckCircleIcon, ExternalLinkIcon, LoaderCircleIcon, XCircleIcon } from 'lucide-react'
 import React, { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { type Hash } from 'viem'
+import { useAccount } from 'wagmi'
 
 interface TransactionNotificationProps {
     hash?: Hash // The transaction hash, can be initially undefined
     title: string
     description?: string
     // onClose is implicitly handled by sonner's dismiss or auto-dismissal
-}
-
-const getBlockExplorerUrl = (hash: Hash): string => {
-    const chainId = env.NEXT_PUBLIC_CHAIN_ID
-    if (chainId === '8453') {
-        return `https://basescan.org/tx/${hash}`
-    }
-    // Default to Base Sepolia for development or other chain IDs
-    return `https://sepolia.basescan.org/tx/${hash}`
 }
 
 export function useSonnerTransactionToast() {
@@ -72,6 +64,7 @@ const TransactionToastInternal: React.FC<TransactionToastInternalProps> = ({
     initialDescription,
     onDismiss,
 }) => {
+    const { chainId: connectedChainId } = useAccount()
     const {
         status, // The status from useTransactionStatus
         transaction, // Assuming useTransactionStatus returns this for the receipt
@@ -165,7 +158,7 @@ const TransactionToastInternal: React.FC<TransactionToastInternalProps> = ({
             )}
             {effectiveHash && (
                 <a
-                    href={getBlockExplorerUrl(effectiveHash)}
+                    href={getExplorerLink(connectedChainId, effectiveHash, 'tx')?.url}
                     target='_blank'
                     rel='noopener noreferrer'
                     className='mt-1.5 ml-[22px] flex items-center text-xs text-blue-600 hover:text-blue-700 focus:underline focus:outline-none dark:text-blue-400 dark:hover:text-blue-300'>
