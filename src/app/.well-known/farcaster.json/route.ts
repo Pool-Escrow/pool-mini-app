@@ -1,4 +1,4 @@
-import { env } from '@/env'
+import { env } from '../../../env'
 
 function withValidProperties(properties: Record<string, undefined | string | string[]>) {
     return Object.fromEntries(
@@ -21,7 +21,7 @@ export function GET() {
             signature: env.FARCASTER_SIGNATURE,
         },
         frame: withValidProperties({
-            version: '1',
+            version: 'next',
             name: env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
             subtitle: env.NEXT_PUBLIC_APP_SUBTITLE,
             description: env.NEXT_PUBLIC_APP_DESCRIPTION,
@@ -38,6 +38,7 @@ export function GET() {
             ogTitle: env.NEXT_PUBLIC_APP_OG_TITLE,
             ogDescription: env.NEXT_PUBLIC_APP_OG_DESCRIPTION,
             ogImageUrl: env.NEXT_PUBLIC_APP_OG_IMAGE,
+            aspectRatio: '1:1',
         }),
     })
 }

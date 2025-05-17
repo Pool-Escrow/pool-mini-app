@@ -4,13 +4,28 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 // MockPool interface and getPoolData function are removed as we use real data service
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-    const poolId = params.id
+export async function GET(request: NextRequest) {
+    // Extract the poolId from the URL pathname
+    const pathname = request.nextUrl.pathname
+    const poolId = pathname.split('/').pop() ?? ''
+
     if (!poolId) {
         return new NextResponse('Missing pool ID', { status: 400 })
     }
 
-    const pool: Pool | null = await getPoolWithContractFallback(poolId)
+    const searchParams = request.nextUrl.searchParams
+    const chainIdString = searchParams.get('chainId')
+
+    if (!chainIdString) {
+        return new NextResponse('Missing chain ID', { status: 400 })
+    }
+
+    const chainId = parseInt(chainIdString, 10)
+    if (isNaN(chainId)) {
+        return new NextResponse('Invalid chain ID format', { status: 400 })
+    }
+
+    const pool: Pool | null = await getPoolWithContractFallback(poolId, chainId)
 
     if (!pool) {
         // Message updated to reflect fallback attempt
@@ -20,7 +35,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     const appBaseUrl = process.env.NEXT_PUBLIC_URL ?? 'https://pool-mini.vercel.app'
     // Use the dynamic image generation endpoint
-    const imageUrl = `${appBaseUrl}/api/farcaster/frame/image/${pool.id}` // Updated to dynamic image URL
+    const imageUrl = `${appBaseUrl}/api/farcaster/frame/image/${pool.id}?chainId=${chainId}` // Updated to dynamic image URL
 
     const frameButtons: string[] = []
 

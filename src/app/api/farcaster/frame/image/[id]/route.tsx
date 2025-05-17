@@ -4,54 +4,68 @@ import { ImageResponse } from 'next/og'
 import { type NextRequest } from 'next/server'
 
 // Mock Pool type and data fetching - replace with actual imports and logic
-interface MockPoolForImage {
-    id: string
-    name: string
-    status: 'open' | 'funded' | 'ended'
-    creatorName?: string
-    // Add other relevant fields, e.g., number of participants, total amount
-}
+// interface MockPoolForImage {  // Removed
+//     id: string
+//     name: string
+//     status: 'open' | 'funded' | 'ended'
+//     creatorName?: string
+//     // Add other relevant fields, e.g., number of participants, total amount
+// } Removed
 
-async function getPoolDataForImage(poolId: string): Promise<MockPoolForImage | null> {
-    // In a real app, fetch this from your database (e.g., Redis, Postgres)
-    let result: MockPoolForImage | null = null
-
-    if (poolId === '1') {
-        result = {
-            id: '1',
-            name: 'Community Fun Fest Pool',
-            status: 'open',
-            creatorName: 'Dev Team',
-        }
-    } else if (poolId === '2') {
-        result = {
-            id: '2',
-            name: 'Charity Drive Q2',
-            status: 'funded',
-            creatorName: 'Alice B.',
-        }
-    } else if (poolId === '3') {
-        result = {
-            id: '3',
-            name: 'Hackathon Winnings Pool',
-            status: 'ended',
-            creatorName: 'The Winners',
-        }
-    }
-    return Promise.resolve(result)
-}
+// async function getPoolDataForImage(poolId: string): Promise<MockPoolForImage | null> { // Removed
+//     // In a real app, fetch this from your database (e.g., Redis, Postgres)
+//     let result: MockPoolForImage | null = null
+//
+//     if (poolId === '1') {
+//         result = {
+//             id: '1',
+//             name: 'Community Fun Fest Pool',
+//             status: 'open',
+//             creatorName: 'Dev Team',
+//         }
+//     } else if (poolId === '2') {
+//         result = {
+//             id: '2',
+//             name: 'Charity Drive Q2',
+//             status: 'funded',
+//             creatorName: 'Alice B.',
+//         }
+//     } else if (poolId === '3') {
+//         result = {
+//             id: '3',
+//             name: 'Hackathon Winnings Pool',
+//             status: 'ended',
+//             creatorName: 'The Winners',
+//         }
+//     }
+//     return Promise.resolve(result)
+// } Removed
 
 export const runtime = 'edge' // Vercel OG recommends Edge runtime
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-    const poolId = params.id
+export async function GET(req: NextRequest) {
+    // Extract the poolId from the URL pathname
+    const pathname = req.nextUrl.pathname
+    const poolId = pathname.split('/').pop() ?? ''
 
     if (!poolId) {
         return new Response('Missing pool ID', { status: 400 })
     }
 
+    const searchParams = req.nextUrl.searchParams
+    const chainIdString = searchParams.get('chainId')
+
+    if (!chainIdString) {
+        return new Response('Missing chain ID', { status: 400 })
+    }
+
+    const chainId = parseInt(chainIdString, 10)
+    if (isNaN(chainId)) {
+        return new Response('Invalid chain ID format', { status: 400 })
+    }
+
     try {
-        const pool: Pool | null = await getPoolWithContractFallback(poolId)
+        const pool: Pool | null = await getPoolWithContractFallback(poolId, chainId)
 
         if (!pool) {
             return new Response(`Pool not found: ${poolId}`, { status: 404 })
