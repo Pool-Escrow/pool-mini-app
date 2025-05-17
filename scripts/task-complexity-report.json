@@ -1,8 +1,8 @@
 {
   "meta": {
-    "generatedAt": "2025-05-16T22:10:13.915Z",
-    "tasksAnalyzed": 17,
-    "thresholdScore": 5,
+    "generatedAt": "2025-05-16T23:08:18.993Z",
+    "tasksAnalyzed": 14,
+    "thresholdScore": 8,
     "projectName": "Pool Farcaster Mini App",
     "usedResearch": true
   },
@@ -10,138 +10,114 @@
     {
       "taskId": 9,
       "taskTitle": "Extend PoolCard to display on-chain pool data",
-      "complexityScore": 4,
+      "complexityScore": 5,
       "recommendedSubtasks": 6,
-      "expansionPrompt": "Break down the task of extending PoolCard.tsx to display on-chain pool data into logical subtasks, including analyzing the existing component, implementing token information display, adding pool statistics, integrating blockchain explorer links, implementing data formatting utilities, and testing the enhanced component.",
-      "reasoning": "This task involves extending an existing component with new functionality. The complexity is moderate as it requires understanding the current component structure, implementing formatting utilities, and integrating them. The task is well-defined with clear requirements and examples, and the existing subtasks are appropriately structured."
+      "expansionPrompt": "Break down the task of extending PoolCard.tsx to display on-chain pool data into logical subtasks, including analyzing the existing component structure, implementing token information display, adding pool statistics, integrating blockchain explorer links, implementing data formatting utilities, and comprehensive testing.",
+      "reasoning": "This task involves enhancing an existing component with new data display capabilities. The complexity is moderate (5/10) because it requires understanding the existing component structure, implementing multiple data formatting utilities, and ensuring proper integration with blockchain data. The task is well-defined with clear requirements and has existing subtasks that cover the main aspects of implementation."
     },
     {
       "taskId": 10,
       "taskTitle": "Create contract event listeners for UI updates",
       "complexityScore": 7,
       "recommendedSubtasks": 8,
-      "expansionPrompt": "Break down the implementation of contract event listeners into subtasks covering infrastructure setup, specific event listeners (Transfer, Approval, custom events), notification system, state synchronization, React hooks creation, and comprehensive testing.",
-      "reasoning": "This task involves creating a system to listen for blockchain events and update the UI accordingly. It requires deep understanding of both blockchain event handling and frontend state management. The complexity comes from handling asynchronous events, maintaining state consistency, and implementing proper error handling across multiple event types."
+      "expansionPrompt": "Break down the implementation of contract event listeners for UI updates into subtasks covering infrastructure setup, specific event listeners (Transfer, Approval, custom events), notification system, state synchronization, React hooks integration, and comprehensive testing.",
+      "reasoning": "This task involves creating a system to listen for blockchain events and update the UI accordingly. It has higher complexity (7/10) due to the need for real-time data synchronization, handling network disconnections, implementing multiple event types, and ensuring proper state management across the application. The existing 8 subtasks appropriately cover the scope."
     },
     {
       "taskId": 11,
       "taskTitle": "Implement efficient blockchain data caching",
       "complexityScore": 8,
       "recommendedSubtasks": 9,
-      "expansionPrompt": "Divide the blockchain data caching implementation into subtasks covering cache key generation strategy, caching library configuration, implementation for different data types (account balances, paginated data, contract reads), cache invalidation mechanisms (block-based, event-driven), optimistic updates, and comprehensive testing.",
-      "reasoning": "This task involves creating a sophisticated caching system for blockchain data, which requires deep understanding of both caching strategies and blockchain data patterns. The complexity is high due to the need to handle various data types, implement multiple invalidation strategies, and ensure data consistency while optimizing performance."
+      "expansionPrompt": "Break down the implementation of blockchain data caching into subtasks covering cache key generation strategy, caching library configuration, specific data type caching (account balances, paginated data, contract reads), cache invalidation mechanisms (block-based, event-driven), optimistic updates, and comprehensive testing.",
+      "reasoning": "This task involves creating a sophisticated caching system for blockchain data. It has high complexity (8/10) due to the need for handling various data types, implementing multiple invalidation strategies, ensuring data consistency between cache and blockchain, and optimizing performance. The existing 9 subtasks provide good coverage of the required components."
     },
     {
       "taskId": 12,
       "taskTitle": "Create transaction retry mechanism",
       "complexityScore": 7,
       "recommendedSubtasks": 7,
-      "expansionPrompt": "Break down the transaction retry mechanism implementation into subtasks covering retry logic design, failure classification, implementation of the retry hook/service, UI components for retry options, transaction queue management, specific handling for different failure types, and comprehensive testing.",
-      "reasoning": "This task involves creating a robust system to handle failed transactions with retry options. The complexity comes from needing to classify different types of failures, implement appropriate retry strategies, manage a transaction queue, and provide clear user feedback throughout the process."
+      "expansionPrompt": "Break down the implementation of a transaction retry mechanism into subtasks covering retry logic design, failure classification, implementation of the core retry service, UI components for retry options, transaction queue management, specific handling for different failure types, and comprehensive testing.",
+      "reasoning": "This task involves creating a system to handle failed transactions with retry options. It has higher complexity (7/10) due to the need for handling various failure scenarios, implementing a transaction queue, providing user feedback, and ensuring proper state management during retries. The existing 7 subtasks appropriately cover the scope."
     },
     {
       "taskId": 13,
       "taskTitle": "Enhance Frame generation with on-chain pool data",
       "complexityScore": 6,
       "recommendedSubtasks": 7,
-      "expansionPrompt": "Divide the frame generation enhancement task into subtasks covering metadata schema definition, on-chain data fetching service, integration with frame generation logic, dynamic image template design, content generation implementation, blockchain status indicators, and comprehensive testing.",
-      "reasoning": "This task requires integrating on-chain data into the frame generation system, which involves both blockchain data fetching and dynamic content generation. The complexity comes from needing to design templates, implement data fetching services, and ensure the frames accurately reflect blockchain state."
+      "expansionPrompt": "Break down the enhancement of frame generation with on-chain pool data into subtasks covering metadata schema definition, data fetching service implementation, frame generation logic integration, dynamic image template design, content generation, blockchain status indicators, and comprehensive testing.",
+      "reasoning": "This task involves updating the frame generation system to include on-chain data. It has moderate-to-high complexity (6/10) due to the need for integrating with blockchain data, designing dynamic templates, implementing status indicators, and ensuring proper rendering across different client platforms. The existing 7 subtasks provide good coverage of the required components."
     },
     {
       "taskId": 14,
       "taskTitle": "Implement frame action handlers for pool interactions",
       "complexityScore": 7,
       "recommendedSubtasks": 8,
-      "expansionPrompt": "Break down the implementation of frame action handlers into subtasks covering API endpoint structure design, authentication middleware, payload validation, response generation module, specific action handlers for different interactions, integration with pool business logic, and comprehensive testing.",
-      "reasoning": "This task involves creating API handlers for frame actions, which requires understanding both the Farcaster frame protocol and the application's business logic. The complexity comes from implementing authentication, validation, specific action handlers, and ensuring proper integration with the pool management system."
+      "expansionPrompt": "Break down the implementation of frame action handlers for pool interactions into subtasks covering API endpoint structure definition, authentication middleware, payload validation, response generation module, specific action handlers (join pool, view details), integration with pool business logic, and comprehensive testing.",
+      "reasoning": "This task involves creating API handlers for frame actions. It has higher complexity (7/10) due to the need for implementing authentication, validation, multiple action types, integration with business logic, and ensuring proper error handling. The existing 8 subtasks appropriately cover the scope."
     },
     {
       "taskId": 15,
       "taskTitle": "Create winner announcement frame templates",
       "complexityScore": 5,
       "recommendedSubtasks": 6,
-      "expansionPrompt": "Divide the winner announcement frame templates task into subtasks covering core template structure design, specific template variations for different winner scenarios, dynamic content population logic, data formatting rules, sharing capabilities integration, and comprehensive testing.",
-      "reasoning": "This task involves designing and implementing templates for announcing pool winners through Farcaster frames. The complexity is moderate as it requires designing multiple template variations, implementing dynamic content population, and ensuring proper data formatting."
+      "expansionPrompt": "Break down the creation of winner announcement frame templates into subtasks covering core template structure design, specific template variations for different winner scenarios, dynamic content population logic, data formatting rules, sharing capabilities integration, and comprehensive testing.",
+      "reasoning": "This task involves developing templates for announcing pool winners. It has moderate complexity (5/10) as it primarily focuses on design and content presentation rather than complex logic. The existing 6 subtasks provide good coverage of the required components."
     },
     {
       "taskId": 16,
       "taskTitle": "Implement winner selection interface",
-      "complexityScore": 7,
+      "complexityScore": 8,
       "recommendedSubtasks": 9,
-      "expansionPrompt": "Break down the winner selection interface implementation into subtasks covering UI design, random selection algorithm, manual selection interface, integration into main selection page, transaction preparation flow, smart contract interaction, post-selection confirmation displays, unit testing, and end-to-end testing.",
-      "reasoning": "This task involves creating a complex interface for selecting winners from pool participants, with both random and manual selection options. The complexity comes from implementing selection algorithms, smart contract interactions, transaction handling, and providing appropriate user feedback throughout the process."
+      "expansionPrompt": "Break down the implementation of a winner selection interface into subtasks covering UI design, random selection algorithm, manual selection interface, integration into main page, transaction preparation flow, smart contract interaction, post-selection confirmation displays, unit testing, and end-to-end testing.",
+      "reasoning": "This task involves creating an interface for selecting winners from pool participants. It has high complexity (8/10) due to the need for implementing both random and manual selection methods, integrating with smart contracts, handling transactions, providing user feedback, and ensuring proper testing across different scenarios. The existing 9 subtasks provide comprehensive coverage."
     },
     {
       "taskId": 17,
       "taskTitle": "Create prize distribution dashboard",
       "complexityScore": 8,
       "recommendedSubtasks": 9,
-      "expansionPrompt": "Divide the prize distribution dashboard implementation into subtasks covering data model definition, backend claim submission logic, distribution status management, core UI layout, claim management components, distribution status monitoring UI, frontend-backend integration, admin functionality, and comprehensive testing.",
-      "reasoning": "This task involves creating a comprehensive dashboard for managing prize distribution to winners. The complexity is high due to the need to implement both backend and frontend components, handle various distribution states, and provide administrative controls for managing the distribution process."
+      "expansionPrompt": "Break down the creation of a prize distribution dashboard into subtasks covering data model definition, backend claim submission logic, distribution status tracking, core UI layout, claim management components, distribution status monitoring UI, frontend-backend integration, admin functionality, and comprehensive testing.",
+      "reasoning": "This task involves developing a dashboard for managing prize distribution. It has high complexity (8/10) due to the need for implementing both frontend and backend components, handling various distribution states, providing administrative controls, and ensuring proper data consistency. The existing 9 subtasks provide comprehensive coverage."
     },
     {
       "taskId": 18,
       "taskTitle": "Implement pool analytics with on-chain data",
       "complexityScore": 8,
       "recommendedSubtasks": 8,
-      "expansionPrompt": "Break down the pool analytics implementation into subtasks covering core metrics definition, on-chain data fetching service, metric calculation engine, historical data storage, TVL/volume visualization, APY/fee analytics visualization, impermanent loss calculator, and comprehensive testing.",
-      "reasoning": "This task involves creating a sophisticated analytics system for tracking and visualizing pool performance metrics using on-chain data. The complexity is high due to the need to fetch and process blockchain data, implement complex calculations, store historical data, and create interactive visualizations."
+      "expansionPrompt": "Break down the implementation of pool analytics with on-chain data into subtasks covering metric definition, data fetching service, calculation engine, historical data storage, TVL/volume visualization, APY/fee analytics visualization, impermanent loss calculator, and comprehensive testing.",
+      "reasoning": "This task involves creating an analytics system for tracking pool performance metrics. It has high complexity (8/10) due to the need for fetching and processing on-chain data, implementing complex calculations, storing historical data, creating visualizations, and ensuring proper testing. The existing 8 subtasks provide comprehensive coverage."
     },
     {
       "taskId": 19,
       "taskTitle": "Add sponsorship functionality",
       "complexityScore": 7,
       "recommendedSubtasks": 8,
-      "expansionPrompt": "Divide the sponsorship functionality implementation into subtasks covering data structure design, smart contract logic, frontend UI, token approval workflow, sponsorship deposit workflow, backend indexing service, smart contract testing, and end-to-end testing.",
-      "reasoning": "This task involves implementing functionality for sponsors to contribute additional tokens to a pool's prize. The complexity comes from needing to implement both smart contract logic and frontend components, handle token approvals and deposits, and ensure proper tracking of sponsorships."
-    },
-    {
-      "taskId": 20,
-      "taskTitle": "Create multi-wallet support system",
-      "complexityScore": 6,
-      "recommendedSubtasks": 7,
-      "expansionPrompt": "Break down the multi-wallet support system implementation into subtasks covering wallet abstraction layer design, specific wallet integrations (MetaMask, WalletConnect, Coinbase Wallet), unified connection UI/UX, error handling, and comprehensive testing.",
-      "reasoning": "This task involves implementing support for multiple wallet providers to ensure broad compatibility. The complexity comes from needing to create a consistent abstraction layer, integrate with different wallet APIs, and handle various connection scenarios and errors."
-    },
-    {
-      "taskId": 21,
-      "taskTitle": "Implement offline support and recovery",
-      "complexityScore": 8,
-      "recommendedSubtasks": 9,
-      "expansionPrompt": "Divide the offline support and recovery implementation into subtasks covering network status detection, offline data storage, request queueing mechanism, queue processing logic, retry strategies, specific disconnection handling, UI feedback, conflict resolution, and comprehensive testing.",
-      "reasoning": "This task involves creating a sophisticated system to handle network disconnections and provide graceful recovery. The complexity is high due to the need to detect network status, queue operations, handle reconnection, resolve conflicts, and provide appropriate user feedback throughout the process."
-    },
-    {
-      "taskId": 22,
-      "taskTitle": "Create gas optimization system",
-      "complexityScore": 9,
-      "recommendedSubtasks": 8,
-      "expansionPrompt": "Break down the gas optimization system implementation into subtasks covering gas estimation module, real-time gas price monitoring, core optimization logic, transaction batching, transaction type-specific strategies, network condition handling, comprehensive testing, and deployment/monitoring strategy.",
-      "reasoning": "This task involves creating a sophisticated system to optimize gas usage for blockchain transactions. The complexity is very high due to the need to estimate gas requirements, monitor gas prices, implement optimization strategies for different transaction types, handle network conditions, and ensure transactions succeed with optimized settings."
-    },
-    {
-      "taskId": 23,
-      "taskTitle": "Implement contract call batching",
-      "complexityScore": 9,
-      "recommendedSubtasks": 10,
-      "expansionPrompt": "Divide the contract call batching implementation into subtasks covering multicall contract interface design, smart contract implementation, client-side encoding/decoding logic, transaction bundling strategy, batch queue management, execution and submission, partial failure handling, comprehensive testing, and gas optimization.",
-      "reasoning": "This task involves creating a sophisticated system to batch multiple contract calls into a single transaction. The complexity is very high due to the need to implement a multicall contract, develop client-side encoding/decoding logic, manage a batch queue, handle partial failures, and optimize gas usage."
+      "expansionPrompt": "Break down the implementation of sponsorship functionality into subtasks covering data structure design, smart contract logic, frontend UI, token approval workflow, sponsorship deposit workflow, backend indexing service, smart contract testing, and end-to-end testing.",
+      "reasoning": "This task involves implementing functionality for sponsors to contribute tokens to a pool's prize. It has higher complexity (7/10) due to the need for implementing both frontend and smart contract components, handling token approvals, managing transactions, and ensuring proper data indexing. The existing 8 subtasks provide comprehensive coverage."
     },
     {
       "taskId": 24,
       "taskTitle": "Create pool management dashboard",
-      "complexityScore": 8,
+      "complexityScore": 9,
       "recommendedSubtasks": 9,
-      "expansionPrompt": "Break down the pool management dashboard implementation into subtasks covering requirements definition, backend for status monitoring, frontend for status display, backend for participant management, frontend for participant management, backend for prize distribution, frontend for prize distribution, component integration, and comprehensive testing.",
-      "reasoning": "This task involves creating a comprehensive dashboard for pool creators to manage their pools. The complexity is high due to the need to implement multiple interconnected components for monitoring pool status, managing participants, and controlling prize distribution, with both backend and frontend aspects."
+      "expansionPrompt": "Break down the creation of a pool management dashboard into subtasks covering requirements definition, backend for status monitoring, frontend for status display, backend for participant management, frontend for participant management, backend for prize distribution, frontend for prize distribution, component integration, and comprehensive testing.",
+      "reasoning": "This task involves developing a comprehensive dashboard for pool management. It has very high complexity (9/10) due to the need for implementing multiple interconnected components, handling various pool states, managing participants and prizes, and ensuring proper integration across the application. The existing 9 subtasks provide comprehensive coverage."
+    },
+    {
+      "taskId": 37,
+      "taskTitle": "Task 37: Implement Chain Selector for Base Mainnet/Sepolia in Wallet Dropdown",
+      "complexityScore": 6,
+      "recommendedSubtasks": 4,
+      "expansionPrompt": "Break down the implementation of a chain selector for Base Mainnet/Sepolia in the wallet dropdown into subtasks covering environment variable setup, chain configuration management, UI component development, and dynamic application updates on chain switch.",
+      "reasoning": "This task involves implementing a chain selector for switching between networks. It has moderate-to-high complexity (6/10) due to the need for managing chain-specific configurations, updating contract addresses dynamically, handling wallet network switching, and ensuring proper UI feedback. The existing 4 subtasks appropriately cover the scope."
     },
     {
       "taskId": 40,
       "taskTitle": "Integrate Real Pool Data for Frames & App using Smart Contract and Redis",
-      "complexityScore": 8,
-      "recommendedSubtasks": 7,
-      "expansionPrompt": "Break down the integration of real pool data into subtasks covering data source identification, pool creation flow modifications, data fetching layer implementation, Farcaster Frame API updates, dynamic frame image generation, Redis client setup, and application-wide integration.",
-      "reasoning": "This task involves refactoring the application to use actual pool data from smart contracts and Redis. The complexity is high due to the need to coordinate between on-chain and off-chain data sources, implement atomic operations, create a robust data fetching layer, and update multiple components throughout the application."
+      "complexityScore": 9,
+      "recommendedSubtasks": 8,
+      "expansionPrompt": "Break down the integration of real pool data using smart contracts and Redis into subtasks covering data source identification, pool creation flow modification, data fetching layer implementation, Farcaster Frame API updates, dynamic frame image generation, Redis client setup, on-chain read logic implementation, and application-wide integration and testing.",
+      "reasoning": "This task involves refactoring the application to use actual pool data from smart contracts and Redis. It has very high complexity (9/10) due to the need for integrating multiple data sources, ensuring data consistency, implementing caching mechanisms, updating various components, and handling both on-chain and off-chain data. The existing 8 subtasks (including the additional one) provide comprehensive coverage."
     }
   ]
 }
