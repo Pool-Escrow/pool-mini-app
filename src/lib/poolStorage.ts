@@ -68,7 +68,7 @@ export const createPool = (poolData: Omit<Pool, 'id' | 'createdAt'>): Pool => {
     const newPool: Pool = {
         ...formattedData,
         id: crypto.randomUUID(),
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
     }
     pools.push(newPool)
     saveStoredPools(pools)

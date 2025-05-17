@@ -60,7 +60,9 @@ export const registerUserForPool = (poolId: string, userAddress: string): boolea
     void import('./poolStorage').then(({ getPoolById, updatePool }) => {
         const pool = getPoolById(poolId)
         if (pool) {
-            updatePool(poolId, { registrations: (pool.registrations ?? 0) + 1 })
+            updatePool(poolId, {
+                participants: [...(pool.participants ?? []), { address: userAddress, joinedAt: Date.now() }],
+            })
         }
     })
 
@@ -80,8 +82,8 @@ export const cancelUserRegistration = (poolId: string, userAddress: string): boo
         // Update the pool's registration count
         void import('./poolStorage').then(({ getPoolById, updatePool }) => {
             const pool = getPoolById(poolId)
-            if (pool && pool.registrations > 0) {
-                updatePool(poolId, { registrations: pool.registrations - 1 })
+            if (pool?.participants && pool.participants.length > 0) {
+                updatePool(poolId, { participants: pool.participants.filter(p => p.address !== userAddress) })
             }
         })
 
