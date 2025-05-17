@@ -1,20 +1,22 @@
 'use client'
 
+import { BlockchainErrorMessage } from '@/components/BlockchainErrorMessage'
 import { Button } from '@/components/DemoComponents'
 import { ParticipantsList } from '@/components/ParticipantsList'
-import { useUserRole } from '@/components/providers'
 import { RegistrationModal } from '@/components/RegistrationModal'
-import {
-    cancelUserRegistration,
-    initializeRegistrationsStorage,
-    isUserRegisteredForPool,
-    registerUserForPool,
-} from '@/lib/registrationStorage'
+import { TokenApprovalButton } from '@/components/token-approval/token-approval-button'
+import { getChainConfig } from '@/config/chainConfig'
+import { CONTRACT_CONFIG } from '@/config/contract-config'
+import { useChain } from '@/contexts/ChainContext'
+import { useUserRole } from '@/contexts/UserRoleContext'
+import { useGetParticipants, useJoinPool } from '@/hooks/use-pool-contract'
 import type { Pool } from '@/types/pool'
+import { BlockchainErrorType } from '@/utils/error-handling'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
-import { useAccount } from 'wagmi'
+import { parseUnits, type Address } from 'viem'
+import { useAccount, useChainId } from 'wagmi'
 
 interface PoolDashboardProps {
     pool: Pool
@@ -23,42 +25,57 @@ interface PoolDashboardProps {
 export function PoolDashboard({ pool }: PoolDashboardProps) {
     const [activeTab, setActiveTab] = useState<'description' | 'participants'>('participants')
     const { isAdmin: isGlobalAdmin } = useUserRole()
-    // Track if user is an admin (creator of the pool)
     const [isPoolAdmin, setIsPoolAdmin] = useState(false)
-    // Tracks if the current user is registered for the pool
     const [isRegistered, setIsRegistered] = useState(false)
-    // Track if registration modal is open
     const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false)
-    // Get user wallet address from wagmi
     const { address } = useAccount()
+    const { selectedChainId: appChainId } = useChain()
+    const walletChainId = useChainId()
+
     const [showAdminMenu, setShowAdminMenu] = useState(false)
     const adminMenuRef = useRef<HTMLDivElement>(null)
-    const [refreshKey, setRefreshKey] = useState(0)
 
-    // Calculate participant count
-    const participantCount: number = pool.registrations ?? pool.participants?.length ?? 0
+    const depositTokenAddress = pool.tokenContractAddress
+    const currentAppChainConfig = getChainConfig(appChainId)
+    const poolContractAddress = CONTRACT_CONFIG.getPoolContractAddress(appChainId)
 
-    // Initialize registrations storage and check user status
+    const {
+        data: participantsData,
+        isLoading: isLoadingParticipants,
+        error: participantsError,
+        refetch: refetchParticipants,
+    } = useGetParticipants(pool.id)
+
+    const { joinPool, isJoiningPool, isJoinPoolSuccess, joinPoolError } = useJoinPool()
+
+    const participantCount: number = participantsData?.length ?? 0
+
     useEffect(() => {
-        // Initialize registration storage
-        initializeRegistrationsStorage()
-
-        // Set admin status based on global admin role
         setIsPoolAdmin(isGlobalAdmin)
 
-        // If user has wallet connected, check if they're registered
-        if (address) {
-            const registered = isUserRegisteredForPool(pool.id, address)
+        if (address && participantsData) {
+            const registered = participantsData.some(pAddress => pAddress.toLowerCase() === address.toLowerCase())
             setIsRegistered(registered)
         } else {
             setIsRegistered(false)
         }
-    }, [address, isGlobalAdmin, pool.id])
+    }, [address, participantsData, isGlobalAdmin])
 
-    const handleOpenRegistrationModal = () => {
-        // If no wallet is connected, we can't register
+    useEffect(() => {
+        if (pool.id) {
+            void refetchParticipants()
+        }
+    }, [pool.id, refetchParticipants, isJoinPoolSuccess])
+
+    const _handleOpenRegistrationModal = () => {
         if (!address) {
             alert('Please connect your wallet to register for this event')
+            return
+        }
+        if (walletChainId !== appChainId) {
+            alert(
+                `Please switch your wallet to ${currentAppChainConfig?.name ?? `Chain ID ${appChainId}`} to register.`,
+            )
             return
         }
         setIsRegistrationModalOpen(true)
@@ -68,62 +85,55 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
         setIsRegistrationModalOpen(false)
     }
 
-    const handleRegister = () => {
-        if (!address) {
-            alert('Please connect your wallet to register for this event')
+    const handleRegister = async () => {
+        if (!address || !poolContractAddress || !depositTokenAddress) {
+            alert('Required information missing. Cannot register.')
+            return
+        }
+        if (walletChainId !== appChainId) {
+            alert(
+                `Please switch your wallet to ${currentAppChainConfig?.name ?? `Chain ID ${appChainId}`} to register.`,
+            )
             return
         }
 
-        // Register the user for the pool
-        const success = registerUserForPool(pool.id, address)
-        if (success) {
-            setIsRegistered(true)
+        try {
+            if (typeof pool.depositAmountPerPerson !== 'number' || typeof pool.onChainTokenDecimals !== 'number') {
+                alert('Pool data is incomplete for deposit (amount or decimals missing).')
+                return
+            }
 
-            // Force a component refresh by using a key update or state change
-            // This will cause the ParticipantsList to re-render with the new participant
-            setRefreshKey(prev => prev + 1)
+            const depositAmountBigInt = parseUnits(pool.depositAmountPerPerson.toString(), pool.onChainTokenDecimals)
 
-            console.log('User registered for pool:', pool.id)
-        } else {
-            console.log('User already registered for pool:', pool.id)
+            await joinPool({
+                poolContractAddress,
+                poolId: pool.id,
+                depositAmount: depositAmountBigInt,
+            })
+            handleCloseRegistrationModal()
+        } catch (e) {
+            console.error('Registration failed:', e)
         }
     }
 
     const handleCancelRegistration = () => {
-        if (!address) return
-
-        // Cancel the user's registration
-        const success = cancelUserRegistration(pool.id, address)
-        if (success) {
-            setIsRegistered(false)
-
-            // Force a component refresh by using a key update or state change
-            // This will cause the ParticipantsList to re-render without the cancelled participant
-            setRefreshKey(prev => prev + 1)
-
-            console.log('User cancelled registration for pool:', pool.id)
-        } else {
-            console.log('Failed to cancel registration - user may not be registered')
-        }
+        // Implementation needed if contract supports cancellation
     }
 
-    // Format pool time for display
     const formatPoolTime = () => {
-        if (!pool.registrationStart || !pool.registrationEnd) {
+        if (!pool.startTime || !pool.endTime) {
             return 'Registration time not set'
         }
 
         try {
             const now = new Date()
-            const regStartDate = new Date(pool.registrationStart)
-            const regEndDate = new Date(pool.registrationEnd)
+            const regStartDate = new Date(pool.startTime * 1000)
+            const regEndDate = new Date(pool.endTime * 1000)
 
-            // Check if dates are valid
             if (isNaN(regStartDate.getTime()) || isNaN(regEndDate.getTime())) {
                 return 'Registration dates not properly set'
             }
 
-            // Format the date for display
             const formatDate = (date: Date) => {
                 return (
                     date.toLocaleDateString('en-US', {
@@ -140,16 +150,11 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
                 )
             }
 
-            // If current time is before start date, show registration starts
             if (now < regStartDate) {
                 return `Registration starts: ${formatDate(regStartDate)}`
-            }
-            // If current time is between start and end, show registration ends
-            else if (now >= regStartDate && now < regEndDate) {
+            } else if (now >= regStartDate && now < regEndDate) {
                 return `Registration ends: ${formatDate(regEndDate)}`
-            }
-            // If registration period has passed
-            else {
+            } else {
                 return `Registration period has ended`
             }
         } catch (error) {
@@ -158,28 +163,27 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
         }
     }
 
-    const getRegistrationButtonText = () => {
-        if (pool.depositAmount > 0) {
-            return `Register for $${pool.depositAmount} USDC`
+    const _getRegistrationButtonText = () => {
+        if (pool.depositAmountPerPerson > 0) {
+            return `Register for ${pool.depositAmountPerPerson} ${pool.onChainTokenSymbol ?? 'tokens'}`
         }
         return 'Register'
     }
 
-    // Calculate progress percentage for the progress bar
     const getProgressPercentage = () => {
-        // if (pool.softCap === 0) return 0
-        // Calculate total amount raised based on registrations and buy-in
-        const totalRaised = pool.registrations * (pool.depositAmount ?? 0)
-        const percentage = (totalRaised / (pool.maxEntries * pool.depositAmount)) * 100
-        return Math.min(percentage, 100) // Cap at 100%
+        const currentParticipants = participantsData?.length ?? 0
+        const totalRaised = currentParticipants * (pool.depositAmountPerPerson ?? 0)
+        const maxCapacityAmount = (pool.softCap ?? 0) * (pool.depositAmountPerPerson ?? 0)
+        if (maxCapacityAmount === 0) return 0
+
+        const percentage = (totalRaised / maxCapacityAmount) * 100
+        return Math.min(percentage, 100)
     }
 
-    // Format currency for display
     const formatCurrency = (amount: number) => {
         return `$${amount.toLocaleString()}`
     }
 
-    // Close admin menu when clicking outside
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (adminMenuRef.current && !adminMenuRef.current.contains(event.target as Node)) {
@@ -193,12 +197,10 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
         }
     }, [])
 
-    // Calculate softCap for progress bar logic
-    const softCap = pool.maxEntries * pool.depositAmount
+    const displaySoftCap = pool.softCap ?? 0
 
     return (
         <div className='flex min-h-screen flex-col bg-white'>
-            {/* Header with back button */}
             <header className='bg-white p-4'>
                 <Link href='/' className='flex items-center text-blue-500'>
                     <svg
@@ -213,7 +215,6 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
                 </Link>
             </header>
 
-            {/* Event Cover Image */}
             <div className='relative h-44 w-full bg-gray-400'>
                 {pool.selectedImage ? (
                     <div className='relative h-full w-full'>
@@ -223,15 +224,12 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
                             alt={pool.name}
                             className='h-full w-full object-cover'
                             onError={e => {
-                                // On error, extract template number for fallback
                                 const target = e.target as HTMLImageElement
                                 target.style.display = 'none'
 
-                                // Get parent element
                                 const parent = target.parentElement!
                                 parent.classList.add('flex', 'items-center', 'justify-center')
 
-                                // Determine template number and color
                                 let templateNum = '?'
                                 let bgClass = 'bg-gradient-to-r from-blue-100 to-blue-300'
 
@@ -243,7 +241,6 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
                                     if (match) {
                                         templateNum = match[1]
 
-                                        // Set background color based on template number
                                         const colors = [
                                             'bg-gradient-to-r from-blue-100 to-blue-300',
                                             'bg-gradient-to-r from-green-100 to-green-300',
@@ -264,7 +261,6 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
 
                                 parent.className = `w-full h-full flex items-center justify-center ${bgClass}`
 
-                                // Add title with template number and pool name
                                 const content = document.createElement('div')
                                 content.className = 'text-center'
 
@@ -289,7 +285,6 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
                 )}
             </div>
 
-            {/* Pool Title and Admin Menu */}
             <div className='flex items-center justify-between bg-white p-4'>
                 <h1 className='truncate text-2xl font-bold text-gray-900'>{pool.name}</h1>
                 {isPoolAdmin && (
@@ -308,7 +303,6 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
                             </svg>
                         </button>
 
-                        {/* Dropdown menu */}
                         {showAdminMenu && (
                             <div className='absolute right-0 z-10 mt-2 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg'>
                                 <button
@@ -335,15 +329,16 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
                 )}
             </div>
 
-            {/* Pool Details: Soft Cap, Buy-in, Timing, Status */}
             <div className='grid grid-cols-2 gap-x-4 gap-y-2 bg-white px-4 pb-4 text-sm text-gray-700 sm:grid-cols-4'>
                 <div>
                     <span className='font-medium text-gray-500'>Soft Cap:</span>{' '}
-                    {pool.maxEntries > 0 ? formatCurrency(pool.maxEntries * pool.depositAmount) : 'N/A'}
+                    {pool.softCap && pool.depositAmountPerPerson > 0
+                        ? formatCurrency(pool.softCap * pool.depositAmountPerPerson)
+                        : 'N/A'}
                 </div>
                 <div>
                     <span className='font-medium text-gray-500'>Buy-in:</span>{' '}
-                    {pool.depositAmount > 0 ? formatCurrency(pool.depositAmount) : 'Free'}
+                    {pool.depositAmountPerPerson > 0 ? formatCurrency(pool.depositAmountPerPerson) : 'Free'}
                 </div>
                 <div className='col-span-2 sm:col-span-1'>
                     <span className='font-medium text-gray-500'>Status:</span>{' '}
@@ -354,14 +349,20 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
                 </div>
             </div>
 
-            {/* Progress Bar Section */}
-            {softCap > 0 && (
-                <div className='mt-2 h-2 w-full rounded-full bg-gray-200'>
-                    <div className='h-full rounded-full bg-blue-500' style={{ width: `${getProgressPercentage()}%` }} />
+            {displaySoftCap > 0 && pool.depositAmountPerPerson > 0 && (
+                <div className='bg-white px-4 pb-2'>
+                    <div className='text-sm text-gray-700'>
+                        {participantCount} / {pool.softCap} spots filled
+                    </div>
+                    <div className='mt-2 h-2 w-full rounded-full bg-gray-200'>
+                        <div
+                            className='h-2 rounded-full bg-blue-500'
+                            style={{ width: `${getProgressPercentage()}%` }}
+                        />
+                    </div>
                 </div>
             )}
 
-            {/* Tabs: Description and Participants */}
             <div className='border-b border-gray-200 bg-white px-4'>
                 <nav className='-mb-px flex space-x-6' aria-label='Tabs'>
                     <button
@@ -385,7 +386,6 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
                 </nav>
             </div>
 
-            {/* Tab Content */}
             <div className='flex-1 p-4'>
                 {activeTab === 'description' ? (
                     <div className='space-y-4 text-gray-800'>
@@ -407,43 +407,77 @@ export function PoolDashboard({ pool }: PoolDashboardProps) {
 
                         <div className='mt-6'>
                             <h3 className='text-md mb-2 font-bold'>Buy-In</h3>
-                            <p>${pool.depositAmount} USD</p>
+                            <p>${pool.depositAmountPerPerson} USD</p>
                         </div>
                     </div>
                 ) : (
-                    <ParticipantsList key={refreshKey} poolId={pool.id} poolAmount={pool.depositAmount} />
+                    <>
+                        {isLoadingParticipants && <p>Loading participants...</p>}
+                        {participantsData && (
+                            <ParticipantsList
+                                participants={participantsData}
+                                isAdmin={isPoolAdmin}
+                                poolAmount={pool.depositAmountPerPerson}
+                            />
+                        )}
+                    </>
                 )}
             </div>
 
-            {/* Action Button - Only show for non-admins */}
             {!isPoolAdmin && (
                 <div className='border-t border-gray-200 p-4'>
-                    {!isRegistered ? (
-                        <Button
-                            className='w-full rounded-lg bg-blue-500 py-3 font-medium text-white hover:bg-blue-600'
-                            onClick={handleOpenRegistrationModal}>
-                            {getRegistrationButtonText()}
-                        </Button>
-                    ) : (
-                        <div className='flex flex-col items-center justify-center text-center'>
-                            <p className='mb-2 font-medium text-green-600'>You are registered for this event!</p>
-                            <Button
-                                className='w-full rounded-lg bg-gray-200 py-3 font-medium text-gray-700 hover:bg-gray-300'
-                                variant='secondary'
-                                onClick={handleCancelRegistration}>
-                                Cancel Registration
-                            </Button>
-                        </div>
+                    {isLoadingParticipants && <p>Loading registration status...</p>}
+                    {participantsError && (
+                        <BlockchainErrorMessage
+                            error={{
+                                message: (participantsError as Error)?.message || 'Error fetching participants',
+                                type: BlockchainErrorType.UNKNOWN,
+                                suggestion: 'Please refresh the page or check your connection.',
+                            }}
+                        />
                     )}
+                    {!isLoadingParticipants &&
+                        !participantsError &&
+                        (isRegistered ? (
+                            <div className='flex flex-col items-center justify-center text-center'>
+                                <p className='mb-2 font-medium text-green-600'>You are registered for this event!</p>
+                                <Button
+                                    className='w-full rounded-lg bg-gray-200 py-3 font-medium text-gray-700 hover:bg-gray-300'
+                                    variant='secondary'
+                                    onClick={handleCancelRegistration}>
+                                    Cancel Registration
+                                </Button>
+                            </div>
+                        ) : pool.depositAmountPerPerson > 0 &&
+                          depositTokenAddress &&
+                          pool.onChainTokenDecimals !== undefined &&
+                          poolContractAddress ? (
+                            <TokenApprovalButton
+                                tokenAddress={pool.tokenContractAddress as Address}
+                                spenderAddress={poolContractAddress}
+                                requiredAmount={pool.depositAmountPerPerson.toString()}
+                                tokenDecimals={pool.onChainTokenDecimals}
+                                tokenSymbol={pool.onChainTokenSymbol ?? 'tokens'}
+                                onApprovalSuccess={() => void handleRegister()}
+                                disabled={isJoiningPool}
+                            />
+                        ) : (
+                            <Button
+                                onClick={() => void handleRegister()}
+                                disabled={isJoiningPool}
+                                className='w-full rounded-lg bg-blue-500 py-3 font-medium text-white hover:bg-blue-600'>
+                                {isJoiningPool ? 'Registering...' : 'Register (Free)'}
+                            </Button>
+                        ))}
+                    {joinPoolError && <BlockchainErrorMessage error={joinPoolError} />}
                 </div>
             )}
 
-            {/* Registration Modal */}
             <RegistrationModal
                 isOpen={isRegistrationModalOpen}
                 onCloseAction={handleCloseRegistrationModal}
+                onRegisterAction={() => void handleRegister()}
                 pool={pool}
-                onRegisterAction={handleRegister}
             />
         </div>
     )

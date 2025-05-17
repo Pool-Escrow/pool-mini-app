@@ -127,9 +127,9 @@ export function PoolCard({ pool, creatorName = 'Anonymous', creatorAvatar = '', 
                     {renderPoolImage()}
 
                     {/* Buy-in badge */}
-                    {pool.depositAmount > 0 && (
+                    {pool.depositAmountPerPerson > 0 && (
                         <div className='absolute top-3 right-3 rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-gray-900 shadow-sm backdrop-blur-sm'>
-                            Buy-in: {pool.depositAmount} {pool.tokenSymbol ?? 'Tokens'}
+                            Buy-in: {pool.depositAmountPerPerson} {pool.onChainTokenSymbol ?? 'Tokens'}
                         </div>
                     )}
                 </div>
@@ -138,9 +138,9 @@ export function PoolCard({ pool, creatorName = 'Anonymous', creatorAvatar = '', 
                 <div className='p-4'>
                     <div className='mb-2 flex items-start justify-between'>
                         <h3 className='mr-2 truncate font-bold text-gray-900'>{pool.name}</h3>
-                        {pool.maxEntries > 0 && (
+                        {pool?.softCap != null && pool.softCap > 0 && (
                             <span className='rounded-full bg-blue-50 px-2 py-1 text-xs text-blue-600'>
-                                Cap: {pool.maxEntries}
+                                Cap: {pool.softCap}
                             </span>
                         )}
                     </div>
@@ -150,19 +150,50 @@ export function PoolCard({ pool, creatorName = 'Anonymous', creatorAvatar = '', 
                     </p>
 
                     {/* Token Info Section */}
-                    {(pool.tokenSymbol != null || pool.tokenAddress != null) && (
+                    {(pool.onChainTokenSymbol != null || pool.tokenContractAddress != null) && (
                         <div className='mb-3 border-t border-gray-100 pt-3 text-xs text-gray-500'>
                             <div className='flex items-center'>
                                 <span className='font-medium'>Token:</span>
-                                <span className='ml-1 text-gray-700'>{pool.tokenSymbol ?? 'Unnamed Token'}</span>
+                                <span className='ml-1 text-gray-700'>{pool.onChainTokenSymbol ?? 'Unnamed Token'}</span>
                             </div>
-                            {pool.tokenAddress && (
+                            {pool.tokenContractAddress && (
                                 <div className='flex items-center'>
                                     <span className='font-medium'>Address:</span>
-                                    <span className='ml-1 truncate text-gray-700' title={pool.tokenAddress}>
-                                        {formatAddress(pool.tokenAddress)}
+                                    <span className='ml-1 truncate text-gray-700' title={pool.tokenContractAddress}>
+                                        {formatAddress(pool.tokenContractAddress)}
                                     </span>
-                                    {/* TODO: Add copy to clipboard button here */}
+                                    <button
+                                        onClick={e => {
+                                            e.preventDefault() // Prevent Link navigation
+                                            e.stopPropagation() // Stop event bubbling
+                                            if (pool.tokenContractAddress) {
+                                                navigator.clipboard
+                                                    .writeText(pool.tokenContractAddress)
+                                                    .then(() => {
+                                                        // Optional: Add feedback like a temporary message or icon change
+                                                        console.log('Address copied to clipboard')
+                                                    })
+                                                    .catch(err => {
+                                                        console.error('Failed to copy address: ', err)
+                                                    })
+                                            }
+                                        }}
+                                        title='Copy address'
+                                        className='ml-2 rounded p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:ring-1 focus:ring-gray-300 focus:outline-none'>
+                                        <svg
+                                            xmlns='http://www.w3.org/2000/svg'
+                                            className='h-3.5 w-3.5' // Adjusted size
+                                            fill='none'
+                                            viewBox='0 0 24 24'
+                                            stroke='currentColor'
+                                            strokeWidth='2'>
+                                            <path
+                                                strokeLinecap='round'
+                                                strokeLinejoin='round'
+                                                d='M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z'
+                                            />
+                                        </svg>
+                                    </button>
                                 </div>
                             )}
                             {/* TODO: Display current price if available in Pool type and add tooltip for metadata */}
@@ -183,7 +214,11 @@ export function PoolCard({ pool, creatorName = 'Anonymous', creatorAvatar = '', 
                                     <span className='font-medium'>Total Value Locked:</span>
                                     {/* TODO: Properly format totalDeposited with token decimals and symbol (Subtask 9.5) */}
                                     <span className='ml-1 text-gray-700'>
-                                        {formatTokenAmount(pool.totalDeposited, pool.tokenDecimals, pool.tokenSymbol)}
+                                        {formatTokenAmount(
+                                            pool.totalDeposited,
+                                            pool.onChainTokenDecimals,
+                                            pool.onChainTokenSymbol,
+                                        )}
                                     </span>
                                 </div>
                             )}
@@ -192,11 +227,11 @@ export function PoolCard({ pool, creatorName = 'Anonymous', creatorAvatar = '', 
                     )}
 
                     {/* Blockchain Explorer Links */}
-                    {(pool.contractAddress != null || pool.tokenAddress != null) && (
+                    {(pool.tokenContractAddress != null || pool.tokenContractAddress != null) && (
                         <div className='mt-2 border-t border-gray-100 pt-2 text-xs'>
-                            {pool.contractAddress &&
+                            {pool.tokenContractAddress &&
                                 (() => {
-                                    const explorer = getExplorerLink(pool.chainId, pool.contractAddress, 'address')
+                                    const explorer = getExplorerLink(pool.chainId, pool.tokenContractAddress, 'address')
                                     return explorer ? (
                                         <div className='mb-1'>
                                             <a
@@ -209,9 +244,9 @@ export function PoolCard({ pool, creatorName = 'Anonymous', creatorAvatar = '', 
                                         </div>
                                     ) : null
                                 })()}
-                            {pool.tokenAddress &&
+                            {pool.tokenContractAddress &&
                                 (() => {
-                                    const explorer = getExplorerLink(pool.chainId, pool.tokenAddress, 'token')
+                                    const explorer = getExplorerLink(pool.chainId, pool.tokenContractAddress, 'token')
                                     return explorer ? (
                                         <a
                                             href={explorer.url}
