@@ -11,6 +11,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { useChain } from '@/contexts/ChainContext'
+import { useIsMiniApp } from '@/contexts/IsMiniAppContext'
 import { useUserRole } from '@/contexts/UserRoleContext'
 import { env } from '@/env'
 import { useWallet } from '@/hooks/use-wallet'
@@ -18,14 +19,14 @@ import { clearAllPools } from '@/lib/poolStorage'
 import { clearAllRegistrations } from '@/lib/registrationStorage'
 import { tokenAbi } from '@/types/contracts'
 import { Address, Avatar, EthBalance, Identity, Name } from '@coinbase/onchainkit/identity'
-import { ConnectWallet, Wallet } from '@coinbase/onchainkit/wallet'
+import { Wallet } from '@coinbase/onchainkit/wallet'
 import { sdk } from '@farcaster/frame-sdk'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Loader2, PinIcon, User } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { formatUnits } from 'viem'
-import { useAccount, useReadContract } from 'wagmi'
+import { useAccount, useConnect, useReadContract } from 'wagmi'
 import { base, baseSepolia } from 'wagmi/chains'
 import { Button } from './ui/button'
 import { ChainSelector } from './ui/ChainSelector'
@@ -55,13 +56,16 @@ const launchInWarpcastUrl = appUrl ? `https://warpcast.com/?launchFrameUrl=${enc
 
 export function Balance() {
     const { userRole, toggleUserRole } = useUserRole()
-    const { isConnected, disconnect: disconnectWallet, isWarpcast } = useWallet()
+    const { isConnected, disconnect: disconnectWallet } = useWallet()
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
     const [isAddingToWarpcastInBalance, setIsAddingToWarpcastInBalance] = useState(false)
     const [showWarpcastRedirectAlertInBalance, setShowWarpcastRedirectAlertInBalance] = useState(false)
     const { isLoadingChainSwitch, selectedChainId } = useChain()
     const { address: accountAddress, chain: connectedChain } = useAccount()
     const [avatarError, setAvatarError] = useState(false)
+
+    const isMiniApp = useIsMiniApp()
+    const { connect, connectors } = useConnect()
 
     useEffect(() => {
         if (isDrawerOpen) {
@@ -155,8 +159,15 @@ export function Balance() {
                 } catch (err) {
                     const error = err as FarcasterSDKError
                     console.warn('Failed to add frame via sdk.actions.addFrame():', error)
+
                     if (error.id === 'RejectedByUser') {
                         toast.info('Request to add app was cancelled.')
+                    } else if (isMiniApp) {
+                        if (error.id === 'InvalidDomainManifestJson') {
+                            toast.error('Could not save app: App manifest is invalid. Please contact support.')
+                        } else {
+                            toast.error('Could not save app at this time. Please try again later.')
+                        }
                     } else {
                         if (launchInWarpcastUrl) {
                             setShowWarpcastRedirectAlertInBalance(true)
@@ -171,8 +182,23 @@ export function Balance() {
     }
 
     const renderConnectButton = () => {
-        if (isWarpcast) {
-            return <ConnectWallet />
+        if (isMiniApp) {
+            if (isConnected) {
+                return <div className='text-xs text-gray-500'>{(accountAddress ?? '').slice(0, 6)}...</div>
+            }
+            const farcasterConnector = connectors.find(
+                c => c.id.toLowerCase().includes('farcaster') || c.id.toLowerCase().includes('frame'),
+            )
+            if (farcasterConnector) {
+                return (
+                    <button
+                        onClick={() => connect({ connector: farcasterConnector })}
+                        className='rounded-md bg-blue-500 px-3 py-1.5 text-sm text-white shadow-sm hover:bg-blue-600'>
+                        Connect Wallet
+                    </button>
+                )
+            }
+            return <div className='text-xs text-gray-500'>Connecting...</div>
         } else {
             return <ConnectButton />
         }
