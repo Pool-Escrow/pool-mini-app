@@ -1,66 +1,93 @@
-# MiniKit Template
+# <a name="top"></a>
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-onchain --mini`](), configured with:
+<div align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:4A90E2,50:7ED321,100:F5A623&height=200&section=header&text=Pool%20Mini&fontSize=70&fontColor=ffffff&animation=fadeIn&fontAlignY=40" width="100%" alt="Pool Mini Header" />
+  
+  <h2>Demystifying Web3 Social Finance: Making Group Funding & Giveaways Simple & Engaging on Base.</h2>
+  <p><strong>Pool Mini: Create and participate in token giveaways and funding pools directly within Farcaster!</strong></p>
+  
+  <img src="./public/cover.png" alt="Pool Mini Banner" width="300" style="margin: 15px 0;" />
+  
+  <p>
+    <a href="https://nextjs.org" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js" /></a>
+    <a href="https://base.org" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/Base-0052FF?style=for-the-badge&logo=base&logoColor=white" alt="Base" /></a>
+    <a href="https://docs.base.org/builderkits/onchainkit" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/OnchainKit-007bff?style=for-the-badge&logoColor=white" alt="OnchainKit" /></a>
+    <a href="https://docs.base.org/builderkits/minikit/overview" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/MiniKit-ffcc00?style=for-the-badge&logoColor=black" alt="MiniKit" /></a>
+    <a href="https://github.com/Pool-Escrow/pool-mini-app/blob/main/LICENSE" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License: MIT" /></a>
+  </p>
+  <p>
+    <a href="https://deepwiki.com/Pool-Escrow/pool-mini-app" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/Ask DeepWiki-00ccff?style=for-the-badge&logoColor=black" alt="Ask DeepWiki"/></a>
+  </p>
+</div>
 
-- [MiniKit](https://docs.base.org/builderkits/minikit/overview)
-- [OnchainKit](https://www.base.org/builders/onchainkit)
-- [Tailwind CSS](https://tailwindcss.com)
-- [Next.js](https://nextjs.org/docs)
+## 🌟 What is Pool Mini?
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Pool-Escrow/pool-mini-app)
+Pool Mini demystifies web3 social finance, making group funding and token giveaways simple, engaging, and accessible. Born from the need to simplify budget management and fund dispersal in web3—especially for multi-recipient scenarios like hackathon bounties or community events—Pool Mini brings this power directly into the Farcaster ecosystem.
 
-## Deployments
+As a Farcaster Mini-App, it leverages Pool's core functionalities to enhance community interaction. Influencers, communities, and projects can easily launch giveaways, crowdfund initiatives, or reward user engagement directly within the Farcaster feed. With an intuitive UX, AI-assisted parameter suggestions (planned), and quick onboarding, Pool Mini aims to make group funding fun and straightforward for both crypto-natives and newcomers.
+
+This project is a [Next.js](https://nextjs.org) application bootstrapped with `create-onchain --mini`, enhanced with [MiniKit](https://docs.base.org/builderkits/minikit/overview) and [OnchainKit](https://www.base.org/builders/onchainkit) for seamless Base integration, and styled with [Tailwind CSS](https://tailwindcss.com).
+
+<div align="right" style="margin-top: 1rem;">
+  <a href="#top" style="font-size: 0.8rem; color: #58a6ff;">↑ Go to top</a>
+</div>
+
+## 🚀 Deployments
 
 For information about deployed contracts and deployment history, see our [Deployment Documentation](./docs/deployment.md).
 
-- **Latest Base Mainnet Deployment**: [`0xA2cD9Ccd89C3c8760A701DaDD11174393443E495`](https://basescan.org/address/0xa2cd9ccd89c3c8760a701dadd11174393443e495)
-- **Latest Base Sepolia Testnet Deployment**: [`0xD571c6e319D13637A1DfF6F6e9fdb8d2803af3aE`](https://sepolia.basescan.org/address/0xd571c6e319d13637a1dff6f6e9fdb8d2803af3ae)
+- **Latest Base Mainnet Deployment (`Pool.sol`)**: [`0xA2cD9Ccd89C3c8760A701DaDD11174393443E495`](https://basescan.org/address/0xa2cd9ccd89c3c8760a701dadd11174393443e495)
+- **Latest Base Sepolia Testnet Deployment (`Pool.sol`)**: [`0xD571c6e319D13637A1DfF6F6e9fdb8d2803af3aE`](https://sepolia.basescan.org/address/0xd571c6e319d13637a1dff6f6e9fdb8d2803af3ae)
+- _(Refer to `deployment.md` for Droplet and other token contract addresses.)_
 
-## Getting Started
+## 🚀 Getting Started
 
-1. Install dependencies:
+### Prerequisites
 
-```bash
-bun install
-```
+- [Bun](https://bun.sh/docs/installation) (v1.0+ recommended)
+- [Git](https://git-scm.com/)
+- A Web3 wallet (e.g., MetaMask, Coinbase Wallet) with Base network(s) configured.
 
-2. Verify environment variables, these will be set up by the `bunx create-onchain --mini` command:
+### Environment Variables
 
-You can regenerate the FARCASTER Account Association environment variables by running `bunx create-onchain --manifest` in your project directory.
+This project uses `@t3-oss/env-nextjs` for managing and validating environment variables, ensuring type safety and reliability.
 
-The environment variables enable the following features:
+1.  Copy the `.env.example` file to `.env.local` (or other relevant files like `.env.development.local`, `.env.production.local`).
+    ```bash
+    cp .env.example .env.local
+    ```
+2.  Fill in the necessary values in `.env.local` according to the schema defined in `src/env.ts`.
 
-- Frame metadata - Sets up the Frame Embed that will be shown when you cast your frame
-- Account association - Allows users to add your frame to their account, enables notifications
-- Redis API keys - Enable Webhooks and background notifications for your application by storing users notification details
+Key environment variables include:
 
 ```bash
 # Required for Frame metadata
-NEXT_PUBLIC_URL=
-NEXT_PUBLIC_VERSION=
-NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME=
-NEXT_PUBLIC_ICON_URL=
-NEXT_PUBLIC_IMAGE_URL=
-NEXT_PUBLIC_SPLASH_IMAGE_URL=
-NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR=
+NEXT_PUBLIC_URL=http://localhost:3000 # Change for production
+NEXT_PUBLIC_VERSION=0.1.0
+NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME="Pool Mini App"
+NEXT_PUBLIC_ICON_URL=/icon.png # Relative to public folder
+NEXT_PUBLIC_IMAGE_URL=/cover.png # Relative to public folder
+NEXT_PUBLIC_SPLASH_IMAGE_URL=/splash.png # Relative to public folder
+NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR="#FFFFFF"
 
-# Required to allow users to add your frame
+# Required to allow users to add your frame to their Farcaster account
+# Regenerate these by running `bunx create-onchain --manifest` in your project directory
 FARCASTER_HEADER=
 FARCASTER_PAYLOAD=
 FARCASTER_SIGNATURE=
 
-# Required for webhooks and background notifications
+# Required for webhooks and background notifications via Upstash Redis
 REDIS_URL=
 REDIS_TOKEN=
+
+# Smart Contract Addresses (defaults are provided in src/config/contract-config.ts)
+# NEXT_PUBLIC_POOL_CONTRACT_BASE=0xA2cD9Ccd89C3c8760A701DaDD11174393443E495
+# NEXT_PUBLIC_POOL_CONTRACT_BASE_SEPOLIA=0xD571c6e319D13637A1DfF6F6e9fdb8d2803af3aE
+# NEXT_PUBLIC_TOKEN_CONTRACT_BASE= # e.g., USDC on Base
+# NEXT_PUBLIC_TOKEN_CONTRACT_BASE_SEPOLIA= # e.g., MockUSDC on Base Sepolia
 ```
 
-3. Start the development server:
-
-```bash
-bun dev
-```
-
-## Template Features
+## 🔧 Template Features
 
 ### Frame Configuration
 
@@ -89,64 +116,43 @@ The app is wrapped with `MiniKitProvider` in `providers.tsx`, configured with:
 - Sets up Frame SDK listeners
 - Applies Safe Area Insets
 
-## Customization
+## 🔗 Key Links & Resources
 
-To get started building your own frame, follow these steps:
+- **Live Application**: [app.poolparty.cc](https://app.poolparty.cc)
+- **GitHub Repository**: [github.com/Pool-Escrow/pool-mini-app](https://github.com/Pool-Escrow/pool-mini-app)
+- **DeepWiki (Contracts)**: [deepwiki.com/Pool-Escrow/Pool-Contracts](https://deepwiki.com/Pool-Escrow/Pool-Contracts)
+- **DeepWiki (Mini App)**: [deepwiki.com/Pool-Escrow/pool-mini-app](https://deepwiki.com/Pool-Escrow/pool-mini-app)
+- **MiniKit Documentation**: [docs.base.org/builderkits/minikit/overview](https://docs.base.org/builderkits/minikit/overview)
+- **OnchainKit Documentation**: [docs.base.org/builderkits/onchainkit/getting-started](https://docs.base.org/builderkits/onchainkit/getting-started)
+- **Next.js Documentation**: [nextjs.org/docs](https://nextjs.org/docs)
+- **Foundry Book (Smart Contracts)**: [book.getfoundry.sh](https://book.getfoundry.sh/)
 
-1. Remove the DemoComponents:
+<div align="right" style="margin-top: 1rem;">
+  <a href="#top" style="font-size: 0.8rem; color: #58a6ff;">↑ Go to top</a>
+</div>
 
-    - Delete `components/DemoComponents.tsx`
-    - Remove demo-related imports from `page.tsx`
+## 💖 Contributing
 
-2. Start building your Frame:
+We welcome contributions to Pool Mini! Whether it's feature suggestions, bug reports, or code contributions, please feel free to:
 
-    - Modify `page.tsx` to create your Frame UI
-    - Update theme variables in `theme.css`
-    - Adjust MiniKit configuration in `providers.tsx`
+- Open an issue to discuss a new feature or bug.
+- Submit a pull request with your improvements.
 
-3. Add your frame to your account:
-    - Cast your frame to see it in action
-    - Share your frame with others to start building your community
+Please ensure your code adheres to the project's linting and formatting standards:
 
-## Learn More
+```bash
+bun lint
+bun check-types # If you have a type checking script
+```
 
-- [MiniKit Documentation](https://docs.base.org/builderkits/minikit/overview)
-- [OnchainKit Documentation](https://docs.base.org/builderkits/onchainkit/getting-started)
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-- [Secure Smart Contract Deployments with Foundry](./docs/secure-deployments.md)
+<div align="right" style="margin-top: 1rem;">
+  <a href="#top" style="font-size: 0.8rem; color: #58a6ff;">↑ Go to top</a>
+</div>
 
-## Minikit CLI:
+## 📜 License
 
-Integrations:
-✓ MiniKit
-✓ OnchainKit
-✓ Base
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-Frameworks:
-
-- Wagmi
-- React
-- Next.js
-- Tailwind CSS
-- ESLint
-- Upstash Redis
-
-Before launching your app:
-
-- Set up account manifest
-    - Required for app discovery, notifications, and client integration
-    - Run `bunx create-onchain --manifest` from project root
-- Support webhooks and background notifications (optional)
-    - Set REDIS_URL and REDIS_TOKEN environment variables
-
-## Environment Variables Management with t3-env
-
-This project uses `t3-env` (`@t3-oss/env-nextjs`) to manage and validate environment variables for enhanced type safety and reliability.
-
-- A comprehensive schema for all required and optional environment variables is defined in `src/env.ts`. This schema uses Zod for validation.
-- To set up your local environment, copy the `.env.example` file to `.env.local` (or other relevant files like `.env.development.local`, `.env.production.local`). Then, fill in the necessary values according to the schema.
-- The application is configured to validate these environment variables at build time and runtime. If any required variables are missing or do not conform to the defined schema (e.g., incorrect type, malformed URL), an error will be thrown, preventing unexpected behavior.
-- If you need to skip environment variable validation for specific scenarios (e.g., during Docker builds or in certain CI environments), you can do so by setting the `SKIP_ENV_VALIDATION=true` environment variable.
-
-This approach ensures that the application runs with a predictable and validated set of environment variables, reducing runtime errors and improving the development workflow.
+<div align="right" style="margin-top: 1rem;">
+  <a href="#top" style="font-size: 0.8rem; color: #58a6ff;">↑ Go to top</a>
+</div>
