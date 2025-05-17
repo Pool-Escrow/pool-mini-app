@@ -1,0 +1,198 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Testing Standards with Vitest
+
+## Framework & Tools
+
+We use Vitest as our primary testing framework for its superior performance and compatibility with our tech stack.
+
+- **DO** use Vitest for all test files
+- **DO** use React Testing Library for component testing
+- **DO** use `@testing-library/jest-dom` for DOM assertions
+- **DON'T** use Jest or other testing frameworks
+
+## Test File Structure
+
+```typescript
+// ✅ DO: Follow this structure for test files
+import { render, screen } from '@testing-library/react'
+import { expect, describe, it, vi } from 'vitest'
+import '@testing-library/jest-dom'
+
+describe('ComponentName', () => {
+    it('should describe the specific behavior being tested', () => {
+        render(<Component />)
+        expect(screen.getByText('Some Text')).toBeInTheDocument()
+    })
+})
+```
+
+## Mocking
+
+### Next.js Components
+
+```typescript
+// ✅ DO: Mock Next.js components properly
+import type { ImageProps } from 'next/image'
+
+// Mock next/image
+vi.mock('next/image', () => ({
+    default: (props: Partial<ImageProps>) => {
+        const imgProps = {
+            ...props,
+            alt: props.alt ?? '',
+            src: typeof props.src === 'string' 
+                ? props.src 
+                : typeof props.src === 'object' && 'src' in props.src
+                ? props.src.src
+                : '',
+        }
+        return <img {...imgProps} />
+    },
+}))
+
+// Mock next/link
+vi.mock('next/link', () => ({
+    default: ({ children, href }) => (
+        <a href={href} data-testid='link'>{children}</a>
+    ),
+}))
+```
+
+## Testing Library Best Practices
+
+### Queries
+
+- **DO** prefer user-centric queries:
+  1. `getByRole` - most preferred
+  2. `getByLabelText` - form fields
+  3. `getByText` - non-interactive elements
+  4. `getByTestId` - last resort
+
+```typescript
+// ✅ DO: Use semantic queries
+expect(screen.getByRole('button', { name: /submit/i })).toBeInTheDocument()
+
+// ❌ DON'T: Use non-semantic queries when semantic ones are available
+expect(screen.getByTestId('submit-button')).toBeInTheDocument()
+```
+
+### Assertions
+
+- **DO** use Testing Library matchers from `@testing-library/jest-dom`
+- **DO** write assertions that reflect how users interact with your app
+
+```typescript
+// ✅ DO: Use semantic assertions
+expect(button).toBeEnabled()
+expect(input).toHaveValue('test')
+expect(element).toBeVisible()
+
+// ❌ DON'T: Test implementation details
+expect(component.state.isEnabled).toBe(true)
+```
+
+## Test Data
+
+### Mock Data
+
+- **DO** create reusable mock data factories
+- **DO** type your mock data properly
+- **DO** allow overrides for specific test cases
+
+```typescript
+// ✅ DO: Create typed mock data factories
+import type { User } from '@/types'
+
+export const createMockUser = (overrides: Partial<User> = {}): User => ({
+    id: '1',
+    name: 'Test User',
+    email: 'test@example.com',
+    ...overrides,
+})
+
+// In tests:
+const user = createMockUser({ name: 'Custom Name' })
+```
+
+## Configuration Files
+
+### vitest.config.ts
+
+```typescript
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+import tsconfigPaths from 'vite-tsconfig-paths'
+
+export default defineConfig({
+    plugins: [react(), tsconfigPaths()],
+    test: {
+        globals: true,
+        environment: 'jsdom',
+        setupFiles: ['./src/test/setup.ts'],
+        include: ['src/**/*.{test,spec}.{ts,tsx}'],
+        coverage: {
+            provider: 'v8',
+            reporter: ['text', 'json', 'html'],
+            exclude: [
+                'node_modules/',
+                'src/test/setup.ts',
+                '**/*.d.ts',
+                '**/*.config.*',
+                '**/types/**',
+            ],
+        },
+    },
+})
+```
+
+### setup.ts
+
+```typescript
+import '@testing-library/jest-dom'
+import { expect, afterEach } from 'vitest'
+import { cleanup } from '@testing-library/react'
+import * as matchers from '@testing-library/jest-dom/matchers'
+
+// Extend Vitest's expect
+expect.extend(matchers as any)
+
+// Cleanup after each test
+afterEach(() => {
+    cleanup()
+})
+```
+
+### TypeScript Configuration
+
+In `tsconfig.json`:
+```json
+{
+    "compilerOptions": {
+        "types": ["vitest/globals", "@testing-library/jest-dom"]
+    }
+}
+```
+
+## Running Tests
+
+Available npm scripts:
+- `npm test` - Run tests in watch mode
+- `npm test:coverage` - Run tests with coverage report
+
+## Coverage Requirements
+
+Minimum coverage thresholds:
+- Branches: 80%
+- Functions: 80%
+- Lines: 80%
+- Statements: 80%
+
+## References
+
+- [Vitest Documentation](mdc:https:/vitest.dev)
+- [Testing Library Documentation](mdc:https:/testing-library.com/docs)
+- [Jest DOM Matchers](mdc:https:/github.com/testing-library/jest-dom)
