@@ -12,6 +12,15 @@ const MANUAL_DISCONNECT_KEY = 'poolMiniUserManuallyDisconnected'
 const CONNECTION_ATTEMPT_TRACKER = '_connectionAttemptInProgress'
 
 /**
+ * Helper function for consistent and controlled debug logging
+ */
+const debugLog = (message: string, ...args: unknown[]) => {
+    if (process.env.NODE_ENV !== 'production') {
+        console.log(`[wallet] ${message}`, ...args)
+    }
+}
+
+/**
  * Hook for wallet connection and network management
  */
 export function useWallet() {
@@ -23,6 +32,7 @@ export function useWallet() {
 
     // Track whether we've attempted auto-connection to avoid multiple attempts
     const autoConnectAttempted = useRef(false)
+    const warpcastDetectionAttempted = useRef(false)
 
     // Connect related hooks
     const { connect, connectors, error: connectError, isPending: isConnectingHook } = useConnect()
@@ -48,35 +58,57 @@ export function useWallet() {
         }
     }, [isConnectingHook])
 
-    // Initial Warpcast detection and address fetch
+    // Initial Warpcast detection and address fetch - only run once on mount
     useEffect(() => {
         const initWarpcast = async () => {
-            const isMiniApp = await sdk.isInMiniApp()
+            try {
+                // Only check for MiniApp status if we haven't already detected it AND haven't attempted
+                if (!warpcastDetectionAttempted.current) {
+                    warpcastDetectionAttempted.current = true
 
-            if (isMiniApp) {
-                console.log('isMiniApp', isMiniApp)
-                setIsWarpcast(true)
+                    const isMiniApp = await sdk.isInMiniApp()
 
-                try {
-                    if (typeof window !== 'undefined' && window.ethereum) {
-                        // Create a viem wallet client for direct interaction
-                        const walletClient = createWalletClient({
-                            chain: base,
-                            transport: custom(window.ethereum),
-                        })
+                    if (isMiniApp) {
+                        debugLog('isMiniApp detected:', isMiniApp)
+                        setIsWarpcast(true)
 
-                        // Get address directly from Warpcast
-                        const addresses = await walletClient.getAddresses()
-                        console.log('addresses1', addresses)
-                        setWarpcastAddress(addresses[0])
+                        // Only try to get addresses if in MiniApp mode
+                        if (typeof window !== 'undefined' && window.ethereum) {
+                            try {
+                                // Create a viem wallet client for direct interaction
+                                const walletClient = createWalletClient({
+                                    chain: base,
+                                    transport: custom(window.ethereum),
+                                })
+
+                                // Get address directly from Warpcast
+                                const addresses = await walletClient.getAddresses()
+                                if (addresses.length > 0) {
+                                    debugLog('Warpcast addresses:', addresses)
+                                    setWarpcastAddress(addresses[0])
+                                }
+                            } catch (error) {
+                                console.error('Failed to get addresses from Warpcast:', error)
+                            }
+                        }
+                    } else {
+                        // Not in MiniApp mode
+                        debugLog('Not running in MiniApp, will use RainbowKit')
+                        setIsWarpcast(false)
                     }
-                } catch (error) {
-                    console.error('Failed to initialize Warpcast:', error)
                 }
+            } catch (error) {
+                console.error('Failed to initialize Warpcast detection:', error)
+                // Ensure flag is also set in case of error to prevent retries if appropriate
+                if (warpcastDetectionAttempted.current === false) {
+                    warpcastDetectionAttempted.current = true
+                }
+                setIsWarpcast(false)
             }
         }
 
-        if (!isConnected && mounted) {
+        // Only run the detection once we're mounted and if not already connected
+        if (mounted && !isConnected) {
             void initWarpcast()
         }
     }, [mounted, isConnected])
@@ -102,7 +134,7 @@ export function useWallet() {
         // Find the Warpcast connector in the connectors array
         const warpcastConnector = connectors.find(c => c.id === 'xyz.farcaster.MiniAppWallet')
         if (warpcastConnector) {
-            console.log('Auto-connecting to Warpcast connector', warpcastConnector)
+            debugLog('Auto-connecting to Warpcast connector', warpcastConnector.name)
             void connect({ connector: warpcastConnector })
         }
     }, [mounted, isWarpcast, isConnected, connectors, connect, isConnecting])
@@ -138,7 +170,7 @@ export function useWallet() {
 
                 const connectorToReconnect = connectors.find(c => c.id === lastConnectorId)
                 if (connectorToReconnect) {
-                    console.log('Attempting to auto-reconnect to:', connectorToReconnect.name)
+                    debugLog('Attempting to auto-reconnect to:', connectorToReconnect.name)
                     void connect({ connector: connectorToReconnect })
                 }
                 // If connector not found, localStorage will be cleared by the other useEffect when isConnected remains false
@@ -158,7 +190,7 @@ export function useWallet() {
                 setCurrentChainId(newChainId)
                 if (newChainId !== base.id) {
                     // toast.warning('Please switch to Base network')
-                    console.log('Please switch to Base network')
+                    debugLog('Please switch to Base network')
                 }
             }
 
@@ -180,7 +212,7 @@ export function useWallet() {
                 localStorage.setItem('lastConnectedConnectorId', activeConnector.id)
                 localStorage.removeItem(MANUAL_DISCONNECT_KEY) // Clear manual disconnect flag on successful connection
                 localStorage.removeItem(CONNECTION_ATTEMPT_TRACKER) // Clear connection attempt tracker
-                console.log('Wallet connected, saved to localStorage:', activeConnector.name, activeConnector.id)
+                debugLog('Wallet connected, saved to localStorage:', activeConnector.name, activeConnector.id)
             } else if (!isConnected) {
                 // Only clear if not actively trying to connect
                 // and if there was no recent connect error that might resolve.
@@ -197,7 +229,7 @@ export function useWallet() {
                         localStorage.removeItem('lastConnectedConnectorId')
                         // Always clear the connection attempt tracker when disconnecting
                         localStorage.removeItem(CONNECTION_ATTEMPT_TRACKER)
-                        console.log(
+                        debugLog(
                             'Wallet disconnected or connection failed, cleared from localStorage (keeping manual disconnect if set)',
                         )
                     }
@@ -217,25 +249,20 @@ export function useWallet() {
 
     // Connect to wallet
     const connectWallet = (connectorId?: string) => {
-        console.log(
-            '[use-wallet.tsx] connectWallet called. Mounted:',
-            mounted,
-            'IsConnected:',
-            isConnected,
-            'IsConnecting:',
-            isConnecting,
-        )
+        debugLog('connectWallet called. Mounted:', mounted, 'IsConnected:', isConnected, 'IsConnecting:', isConnecting)
+
         if (!mounted || isConnected || isConnecting) {
-            console.log('[use-wallet.tsx] connectWallet: Aborting due to mounted/isConnected/isConnecting status.')
+            debugLog('connectWallet: Aborting due to mounted/isConnected/isConnecting status.')
             return
         }
 
         // Prevent connection if manually disconnected
         const wasManuallyDisconnected =
             typeof window !== 'undefined' && localStorage.getItem(MANUAL_DISCONNECT_KEY) === 'true'
-        console.log('[use-wallet.tsx] connectWallet: wasManuallyDisconnected:', wasManuallyDisconnected)
+        debugLog('connectWallet: wasManuallyDisconnected:', wasManuallyDisconnected)
+
         if (wasManuallyDisconnected) {
-            console.log('[use-wallet.tsx] connectWallet: Connection prevented: Wallet was manually disconnected.')
+            debugLog('connectWallet: Connection prevented: Wallet was manually disconnected.')
             return
         }
 
@@ -258,6 +285,7 @@ export function useWallet() {
                     }
                 }
             } else {
+                // For RainbowKit, we might have a preferred connector ID or use the most common ones as fallbacks
                 const connectorToUse = connectorId
                     ? connectors.find(c => c.id === connectorId)
                     : (connectors.find(c => c.id === 'io.metamask') ??
@@ -265,7 +293,7 @@ export function useWallet() {
                       (connectors.length > 0 ? connectors[0] : undefined))
 
                 if (connectorToUse) {
-                    console.log('Attempting to connect with:', connectorToUse.name)
+                    debugLog('Attempting to connect with:', connectorToUse.name)
                     void connect({ connector: connectorToUse }) // Successful connect will clear MANUAL_DISCONNECT_KEY via useEffect
                 } else {
                     console.error('No suitable connector found for manual connection.')
@@ -287,7 +315,7 @@ export function useWallet() {
     // Disconnect wallet
     const disconnectWallet = () => {
         if (!mounted) return
-        console.log('Disconnecting wallet (custom function)')
+        debugLog('Disconnecting wallet (custom function)')
         if (typeof window !== 'undefined') {
             localStorage.setItem(MANUAL_DISCONNECT_KEY, 'true') // Set manual disconnect flag
             localStorage.removeItem(CONNECTION_ATTEMPT_TRACKER) // Clear connection attempt tracker
@@ -322,7 +350,7 @@ export function useWallet() {
                 params: [{ chainId: `0x${baseChainId.toString(16)}` }],
             })
             // toast.success(`Successfully switched to ${networkName}`)
-            console.log(`Successfully switched to ${networkName}`)
+            debugLog(`Successfully switched to ${networkName}`)
         } catch (error) {
             // Chain not added, try to add it
             interface SwitchChainError {
@@ -349,16 +377,16 @@ export function useWallet() {
                         ],
                     })
                     // toast.success('Successfully added and switched to Base network')
-                    console.log('Successfully added and switched to Base network')
+                    debugLog('Successfully added and switched to Base network')
                 } catch (addError) {
                     console.error('Failed to add network:', addError)
                     // toast.error('Failed to add Base network. Please try again.')
-                    console.log('Failed to add Base network. Please try again.')
+                    debugLog('Failed to add Base network. Please try again.')
                 }
             } else {
                 console.error('Failed to switch network:', error)
                 // toast.error('Failed to switch network. Please try again.')
-                console.log('Failed to switch network. Please try again.')
+                debugLog('Failed to switch network. Please try again.')
             }
         }
     }
