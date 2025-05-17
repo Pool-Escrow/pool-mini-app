@@ -1,7 +1,7 @@
 import { env } from '@/env'
 import '@/styles/globals.css'
 
-import Providers from '@/components/providers'
+import { DynamicWalletProviders } from '@/components/DynamicWalletProviders'
 import type { Metadata, Viewport } from 'next'
 
 import '@coinbase/onchainkit/styles.css'
@@ -16,6 +16,10 @@ export function generateMetadata(): Metadata {
     return {
         title: env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
         description: env.NEXT_PUBLIC_APP_DESCRIPTION,
+        icons: {
+            icon: '/favicon.ico',
+            apple: '/favicon.ico',
+        },
         other: {
             'fc:frame': JSON.stringify({
                 version: env.NEXT_PUBLIC_VERSION,
@@ -44,7 +48,7 @@ export default function RootLayout({
     return (
         <html lang='en'>
             <body className='bg-background'>
-                <Providers>{children}</Providers>
+                <DynamicWalletProviders>{children}</DynamicWalletProviders>
             </body>
         </html>
     )
