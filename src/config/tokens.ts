@@ -1,3 +1,4 @@
+import { env } from '@/env'
 import { type Address } from 'viem'
 
 export interface TokenConfig {
@@ -16,7 +17,7 @@ export const PREDEFINED_TOKENS: Record<string, TokenConfig> = {
     },
     droplet: {
         symbol: 'DROP',
-        address: '0x0165878A594ca255338adfa4d48449f69242Eb8F', // Placeholder Sepolia Test ERC20, replace as needed
+        address: env.NEXT_PUBLIC_TOKEN_CONTRACT_BASE_SEPOLIA,
         decimals: 18,
         logo: '/images/tokens/droplet.png',
     },
