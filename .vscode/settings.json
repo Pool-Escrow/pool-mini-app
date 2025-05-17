@@ -1,0 +1,71 @@
+{
+    // linting and formatting
+    "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+    "prettier.documentSelectors": ["**/.editorconfig", "**/.gitignore", "**/*.svg", "**/*.toml"],
+
+    // editor
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "always",
+        "source.organizeImports": "always"
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    // improves tailwind suggestions https://stackoverflow.com/a/68350950/2976642
+    "editor.quickSuggestions": { "strings": true },
+
+    // emmet
+    "emmet.syntaxProfiles": {
+        "jsx": { "attr_quotes": "single", "attr_name": "className" }
+    },
+    "emmet.includeLanguages": { "typescriptreact": "jsx" },
+
+    // files
+    "files.associations": {
+        "*.css": "tailwindcss",
+        ".env.*.local": "env",
+        ".env.local": "env",
+        ".npmrc": "ini"
+    },
+    "files.exclude": {
+        "contracts/lib": false
+    },
+    "search.exclude": {
+        "contracts/lib": true
+    },
+    "[env]": {
+        "editor.defaultFormatter": "IronGeek.vscode-env"
+    },
+
+    // github copilot
+    "github.copilot.enable": {
+        "env": false
+    },
+
+    // supermaven
+    "supermaven.enable": {
+        ".env*": false
+    },
+
+    // cody
+    "cody.autocomplete.languages": {
+        ".env*": false
+    },
+
+    // cursor
+    "cursor.cpp.disabledLanguages": ["env"],
+
+    // tailwindcss
+    "tailwindCSS.emmetCompletions": true,
+    "tailwindCSS.experimental.classRegex": [
+        // https://cva.style/docs/getting-started/installation#tailwind-css
+        ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+        ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+    ],
+    "css.lint.validProperties": ["field-sizing"],
+
+    // typescript
+    "typescript.tsdk": "./node_modules/typescript/lib",
+
+    // solidity
+    "solidity.compileUsingRemoteVersion": "v0.8.30+commit.04e3fff9"
+}
