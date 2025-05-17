@@ -1,3 +1,4 @@
+import { env } from '@/env'
 import { formatUnits } from 'viem'
 
 /**
@@ -48,7 +49,7 @@ const explorers: Record<number, ExplorerConfig> = {
     8453: {
         // Base Mainnet
         name: 'BaseScan',
-        baseUrl: 'https://basescan.org',
+        baseUrl: env.NEXT_PUBLIC_BASE_MAINNET_EXPLORER_URL || 'https://basescan.org',
         addressPath: '/address/',
         tokenPath: '/token/',
         txPath: '/tx/',
@@ -56,7 +57,7 @@ const explorers: Record<number, ExplorerConfig> = {
     84532: {
         // Base Sepolia
         name: 'BaseScan (Sepolia)',
-        baseUrl: 'https://sepolia.basescan.org',
+        baseUrl: env.NEXT_PUBLIC_BASE_SEPOLIA_EXPLORER_URL || 'https://sepolia.basescan.org',
         addressPath: '/address/',
         tokenPath: '/token/',
         txPath: '/tx/',
