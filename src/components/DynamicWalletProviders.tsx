@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { base, baseSepolia, type Chain } from 'wagmi/chains'
 
 import { ChainProvider } from '@/contexts/ChainContext'
+import { IsMiniAppProvider } from '@/contexts/IsMiniAppContext'
 import { UserRoleProvider } from '@/contexts/UserRoleContext'
 import { Toaster } from 'sonner'
 import FrameProvider from './frame-provider'
@@ -233,14 +234,20 @@ export function DynamicWalletProviders({ children }: { children: ReactNode }) {
     // Handle MiniApp environment
     if (isMiniApp) {
         return (
-            <MiniKitProvider apiKey={env.NEXT_PUBLIC_ONCHAINKIT_API_KEY} chain={base} config={MINIKIT_CONFIG}>
-                <FrameProvider>
-                    <ChainProvider>{coreAppStructure}</ChainProvider>
-                </FrameProvider>
-            </MiniKitProvider>
+            <IsMiniAppProvider value={true}>
+                <MiniKitProvider apiKey={env.NEXT_PUBLIC_ONCHAINKIT_API_KEY} chain={base} config={MINIKIT_CONFIG}>
+                    <FrameProvider>
+                        <ChainProvider>{coreAppStructure}</ChainProvider>
+                    </FrameProvider>
+                </MiniKitProvider>
+            </IsMiniAppProvider>
         )
     }
 
     // Handle browser environment - use lazy-loaded RainbowKit
-    return <RainbowKitProviders>{coreAppStructure}</RainbowKitProviders>
+    return (
+        <IsMiniAppProvider value={false}>
+            <RainbowKitProviders>{coreAppStructure}</RainbowKitProviders>
+        </IsMiniAppProvider>
+    )
 }
