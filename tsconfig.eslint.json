@@ -1,0 +1,13 @@
+{
+    "extends": "./tsconfig.json",
+    "include": [
+        "next-env.d.ts",
+        "**/*.ts",
+        "**/*.tsx",
+        ".next/types/**/*.ts",
+        "src/**/*.ts", // More explicit include for src
+        "src/**/*.tsx", // More explicit include for src
+        "src/app/.well-known/farcaster.json/route.ts" // Explicitly include the problematic file
+    ],
+    "exclude": ["node_modules"]
+}

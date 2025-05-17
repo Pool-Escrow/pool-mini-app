@@ -20,10 +20,7 @@ const eslintConfig = [
     eslintJs.configs.recommended,
 
     // Next.js configurations using FlatCompat
-    ...compat.extends('next/core-web-vitals'),
-    // next/typescript is often included in core-web-vitals or handled by tseslint directly.
-    // If you still need specific rules from it, you can add it.
-    // ...compat.extends("next/typescript"),
+    ...compat.extends('next/core-web-vitals', 'next/typescript'),
 
     // TypeScript configuration
     ...tseslint.config({
@@ -34,7 +31,7 @@ const eslintConfig = [
         languageOptions: {
             parser: tseslint.parser,
             parserOptions: {
-                project: './tsconfig.json', // Adjusted from tsconfig.eslint.json as per common practice with new @typescript-eslint
+                project: './tsconfig.eslint.json', // Changed to use tsconfig.eslint.json
                 tsconfigRootDir: __dirname,
             },
         },
