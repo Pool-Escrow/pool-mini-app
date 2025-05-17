@@ -5,12 +5,12 @@ import { useState } from 'react'
 
 export default function TestRegistrationPage() {
     const [registrationData, setRegistrationData] = useState<{
-        registrationStart: string
-        registrationEnd: string
+        registrationStart: Date
+        registrationEnd: Date
         registrationEnabled: boolean
     } | null>(null)
 
-    const handleNext = (data: { registrationStart: string; registrationEnd: string; registrationEnabled: boolean }) => {
+    const handleNext = (data: { registrationStart: Date; registrationEnd: Date; registrationEnabled: boolean }) => {
         setRegistrationData(data)
     }
 
@@ -22,11 +22,10 @@ export default function TestRegistrationPage() {
 
                     <RegistrationTimeStep
                         initialData={{
-                            registrationStart: '2024-11-25T16:45:00Z',
-                            registrationEnd: '2024-11-25T17:45:00Z',
-                            registrationEnabled: true,
+                            registrationStart: new Date('2024-11-25T16:45:00Z'),
+                            registrationEnd: new Date('2024-11-25T17:45:00Z'),
                         }}
-                        onNext={handleNext}
+                        onNext={data => handleNext({ ...data, registrationEnabled: true })}
                     />
 
                     {registrationData && (
