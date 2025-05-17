@@ -1,15 +1,17 @@
 import type { NextConfig } from 'next'
+import type { Configuration as WebpackConfiguration } from 'webpack'
 
 const externals = ['pino-pretty']
 
 const nextConfig: NextConfig = {
     // Silence warnings
     // https://github.com/WalletConnect/walletconnect-monorepo/issues/1908
-    webpack: (config: NextConfig['webpack'] & { externals: string[] }) => {
-        config.externals.push(...externals)
+    webpack: (config: WebpackConfiguration) => {
+        const currentExternals = Array.isArray(config.externals) ? config.externals : []
+        config.externals = [...currentExternals, ...externals]
         return config
     },
-    turbopack: { rules: { externals } },
+    turbopack: { rules: { externals: externals } },
     images: {
         remotePatterns: [
             { hostname: 'randomuser.me' },
@@ -27,6 +29,9 @@ const nextConfig: NextConfig = {
     experimental: {
         optimizeCss: true,
     },
+    // Add your tunnel URL here if you're using one for development with Warpcast/MiniApps
+    // This is to address the "Cross origin request detected" warning from Next.js dev server
+    allowedDevOrigins: ['https://deep-pillows-wait.loca.lt'],
 
     poweredByHeader: false,
     devIndicators: false,
@@ -41,17 +46,27 @@ const nextConfig: NextConfig = {
                 // Apply to all routes
                 source: '/:path*',
                 headers: [
-                    // IMPORTANT: Do NOT set Cross-Origin-Opener-Policy to 'same-origin'
-                    // This would break Coinbase Wallet SDK functionality
+                    // Allow embedding in iframes from any origin
+                    {
+                        key: 'X-Frame-Options',
+                        value: 'ALLOWALL',
+                    },
+                    // More permissive CORS policy
+                    {
+                        key: 'Access-Control-Allow-Origin',
+                        value: '*',
+                    },
+                    // Less restrictive opener policy
                     {
                         key: 'Cross-Origin-Opener-Policy',
-                        value: 'unsafe-none', // Required for Coinbase Wallet SDK
+                        value: 'unsafe-none',
                     },
+                    // Adjusted embedder policy
                     {
                         key: 'Cross-Origin-Embedder-Policy',
-                        value: 'credentialless', // Changed from require-corp to allow IPFS resources
+                        value: 'unsafe-none',
                     },
-                    // Add Cross-Origin-Resource-Policy to allow IPFS
+                    // Cross-origin resource sharing
                     {
                         key: 'Cross-Origin-Resource-Policy',
                         value: 'cross-origin',
@@ -82,6 +97,24 @@ const nextConfig: NextConfig = {
                     {
                         key: 'Access-Control-Allow-Headers',
                         value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version',
+                    },
+                ],
+            },
+            {
+                // Apply specifically to the well-known farcaster.json route
+                source: '/.well-known/farcaster.json',
+                headers: [
+                    {
+                        key: 'Access-Control-Allow-Origin',
+                        value: '*',
+                    },
+                    {
+                        key: 'Cache-Control',
+                        value: 'public, max-age=0, must-revalidate',
+                    },
+                    {
+                        key: 'Content-Type',
+                        value: 'application/json',
                     },
                 ],
             },
